@@ -66,7 +66,11 @@ export async function POST(request: Request) {
 
       // Branch + initial commit
       if (mainSha) {
-        await ensureBranchReady(token, REPO, branchName, mainSha, item.id, item.title);
+        const branchReady = await ensureBranchReady(token, REPO, branchName, mainSha, item.id, item.title);
+        if (!branchReady) {
+          console.error(`[kickoff-batch] ensureBranchReady failed for ${branchName}`);
+          return { itemId: item.id, success: false, error: "Failed to prepare branch — check GITHUB_TOKEN permissions" };
+        }
       }
 
       // Draft PR — reuse if already exists
