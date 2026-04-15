@@ -1,11 +1,40 @@
-// TODO Batch 1: Sidebar component
-// - Role-aware navigation (user / coach / admin menu items)
-// - BuildBase logo/wordmark at top
-// - Active route highlighting
-// - Mobile: collapsible sheet
 "use client";
 
-export function Sidebar() {
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Dumbbell,
+  TrendingUp,
+  MessageSquare,
+  Users,
+  BookOpen,
+  UserCog,
+  ClipboardList,
+} from "lucide-react";
+import { getNavItems, type NavItem } from "@/lib/profile";
+import type { UserRole } from "@/lib/types";
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  LayoutDashboard,
+  Dumbbell,
+  TrendingUp,
+  MessageSquare,
+  Users,
+  BookOpen,
+  UserCog,
+  ClipboardList,
+};
+
+interface SidebarProps {
+  role: UserRole;
+  hasCoach: boolean;
+}
+
+export function Sidebar({ role, hasCoach }: SidebarProps) {
+  const pathname = usePathname();
+  const items = getNavItems(role, hasCoach);
+
   return (
     <aside
       style={{
@@ -24,39 +53,76 @@ export function Sidebar() {
       className="hidden lg:flex"
     >
       {/* Logo */}
-      <div style={{ padding: "0 20px 20px", borderBottom: "1px solid #2A3D30", marginBottom: 12 }}>
-        <span style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
-          <span style={{ color: "#1C3A2A" }}>Build</span>
-          <span style={{ color: "#C84B1A" }}>Base</span>
-        </span>
-      </div>
-
-      {/* Nav items — placeholder */}
-      <nav style={{ flex: 1, padding: "0 12px" }}>
-        {[
-          { label: "Dashboard",   href: "/dashboard" },
-          { label: "Sessions",    href: "/sessions" },
-          { label: "Progress",    href: "/progress" },
-          { label: "Coach's Notes", href: "/coach-notes" },
-        ].map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
+      <div
+        style={{
+          padding: "0 20px 20px",
+          borderBottom: "1px solid #2A3D30",
+          marginBottom: 12,
+        }}
+      >
+        <Link href="/dashboard" style={{ textDecoration: "none" }}>
+          <span
             style={{
-              display: "block",
-              padding: "8px 12px",
-              borderRadius: 8,
-              color: "#8A9E8A",
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 500,
-              marginBottom: 2,
+              fontSize: 20,
+              fontWeight: 700,
+              fontFamily: "var(--font-display, sans-serif)",
             }}
           >
-            {item.label}
-          </a>
-        ))}
+            <span style={{ color: "#1C3A2A" }}>Build</span>
+            <span style={{ color: "#C84B1A" }}>Base</span>
+          </span>
+        </Link>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: "0 12px", overflowY: "auto" }}>
+        {items.map((item: NavItem) => {
+          const Icon = ICON_MAP[item.icon];
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 12px",
+                borderRadius: 8,
+                color: isActive ? "#E8F0E8" : "#8A9E8A",
+                background: isActive ? "#22332A" : "transparent",
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 500,
+                marginBottom: 2,
+                transition: "background 0.1s, color 0.1s",
+              }}
+            >
+              {Icon && <Icon size={16} />}
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
+
+      {/* Role badge */}
+      <div style={{ padding: "12px 20px", borderTop: "1px solid #2A3D30" }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "#4A5A4A",
+          }}
+        >
+          {role}
+        </span>
+      </div>
     </aside>
   );
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { MONITOR_COOKIE, MONITOR_LOGIN_PATH } from "@/lib/constants";
+import { isRouteAllowed } from "@/lib/rbac";
+import type { UserRole } from "@/lib/types";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -50,7 +52,12 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password");
   const isPublicRoute =
-    pathname === "/" || isAuthRoute || pathname.startsWith("/monitor") || pathname.startsWith("/auth");
+    pathname === "/" ||
+    isAuthRoute ||
+    pathname.startsWith("/monitor") ||
+    pathname.startsWith("/api/monitor/") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/onboarding");
 
   if (!user && !isPublicRoute) {
     const loginUrl = new URL("/login", request.url);
@@ -60,6 +67,27 @@ export async function proxy(request: NextRequest) {
 
   if (user && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // ── Role-based route protection ───────────────────────────────────────────
+  // Only query the DB when the route actually requires a specific role.
+  if (user) {
+    const isCoachRoute = pathname.startsWith("/clients") || pathname.startsWith("/playbook");
+    const isAdminRoute = pathname.startsWith("/admin");
+
+    if (isCoachRoute || isAdminRoute) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const role = (profile?.role ?? "user") as UserRole;
+
+      if (!isRouteAllowed(pathname, role)) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
   }
 
   return response;
