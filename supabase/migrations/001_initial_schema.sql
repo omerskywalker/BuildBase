@@ -291,7 +291,7 @@ CREATE POLICY "session_logs_own" ON session_logs FOR ALL USING (
   OR EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND (p.role = 'coach' OR p.role = 'admin'))
 );
 CREATE POLICY "set_logs_own" ON set_logs FOR ALL USING (
-  EXISTS (SELECT 1 FROM session_logs s WHERE s.id = session_logs.session_log_id AND (
+  EXISTS (SELECT 1 FROM session_logs s WHERE s.id = set_logs.session_log_id AND (
     s.user_id = auth.uid()
     OR EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND (p.role = 'coach' OR p.role = 'admin'))
   ))
