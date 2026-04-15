@@ -2,6 +2,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+
+function PulsingDot({ color }: { color: string }) {
+  return (
+    <motion.span
+      animate={{ opacity: [1, 0.25, 1], scale: [1, 1.4, 1] }}
+      transition={{ duration: 1.4, ease: "easeInOut", repeat: Infinity }}
+      style={{
+        display: "inline-block",
+        width: 7,
+        height: 7,
+        borderRadius: "50%",
+        background: color,
+        marginRight: 5,
+        verticalAlign: "middle",
+        flexShrink: 0,
+      }}
+    />
+  );
+}
 
 export function KickoffButton({ itemId, disabled }: { itemId: string; disabled: boolean }) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -23,7 +43,7 @@ export function KickoffButton({ itemId, disabled }: { itemId: string; disabled: 
       if (!res.ok || !data.success) throw new Error(data.error ?? "Kickoff failed");
       setPrUrl(data.prUrl ?? null);
       setState("done");
-      // Refresh after a short delay so KV override shows in-progress
+      // Refresh after short delay so KV override shows in-progress
       setTimeout(() => router.refresh(), 800);
     } catch (err) {
       console.error(err);
@@ -39,28 +59,48 @@ export function KickoffButton({ itemId, disabled }: { itemId: string; disabled: 
         target="_blank"
         rel="noopener"
         style={{
+          display: "inline-flex",
+          alignItems: "center",
           fontSize: 11, fontWeight: 700, color: "#3060A0",
           background: "rgba(48,96,160,0.1)", border: "1px solid rgba(48,96,160,0.3)",
           borderRadius: 6, padding: "3px 10px", textDecoration: "none",
           pointerEvents: prUrl ? "auto" : "none",
         }}>
-        ✓ Started{prUrl ? " → PR" : ""}
+        <PulsingDot color="#3060A0" />
+        Started{prUrl ? " → PR" : ""}
       </a>
     );
   }
 
+  if (state === "loading") {
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          fontSize: 11, fontWeight: 700, color: "#C84B1A",
+          background: "rgba(200,75,26,0.08)", border: "1px solid rgba(200,75,26,0.25)",
+          borderRadius: 6, padding: "3px 10px",
+        }}>
+        <PulsingDot color="#C84B1A" />
+        Starting…
+      </span>
+    );
+  }
+
+  const isError = state === "error";
   return (
-    <button onClick={() => void handleStart()} disabled={state === "loading"}
+    <button
+      onClick={() => void handleStart()}
       style={{
         fontSize: 11, fontWeight: 700,
-        color: state === "error" ? "#B83020" : "#C84B1A",
-        background: state === "error" ? "rgba(184,48,32,0.08)" : "rgba(200,75,26,0.08)",
-        border: `1px solid ${state === "error" ? "rgba(184,48,32,0.3)" : "rgba(200,75,26,0.25)"}`,
+        color: isError ? "#B83020" : "#C84B1A",
+        background: isError ? "rgba(184,48,32,0.08)" : "rgba(200,75,26,0.08)",
+        border: `1px solid ${isError ? "rgba(184,48,32,0.3)" : "rgba(200,75,26,0.25)"}`,
         borderRadius: 6, padding: "3px 10px",
-        cursor: state === "loading" ? "not-allowed" : "pointer",
-        opacity: state === "loading" ? 0.6 : 1,
+        cursor: "pointer",
       }}>
-      {state === "loading" ? "Starting…" : state === "error" ? "Failed — retry" : "▶ Start"}
+      {isError ? "Failed — retry" : "▶ Start"}
     </button>
   );
 }

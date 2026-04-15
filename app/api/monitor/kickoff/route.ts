@@ -42,7 +42,14 @@ export async function POST(request: Request) {
   // 2. Branch + initial commit — ensures PR creation won't fail with "no commits between branches"
   const mainSha = await getMainSha(token, REPO);
   if (mainSha) {
-    await ensureBranchReady(token, REPO, branchName, mainSha, itemId, item.title);
+    const branchReady = await ensureBranchReady(token, REPO, branchName, mainSha, itemId, item.title);
+    if (!branchReady) {
+      console.error(`[kickoff] ensureBranchReady failed for ${branchName}`);
+      return NextResponse.json(
+        { success: false, error: "Failed to prepare branch — check GITHUB_TOKEN permissions" },
+        { status: 502 }
+      );
+    }
   }
 
   // 3. Draft PR — reuses existing if one is already open for this branch
