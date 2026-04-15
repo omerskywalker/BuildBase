@@ -80,9 +80,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "1-4",
         title: "Seed script: default 12-week program",
         description: "36 sessions, all exercises with default weights per tier + gender, insertable via admin panel or script.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-1-seed",
+        pr: 10,
         scope: {
           owns: ["scripts/seed.ts", "supabase/seed.sql"],
           avoid: ["app/(auth)/", "proxy.ts"],
