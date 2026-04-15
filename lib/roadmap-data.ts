@@ -54,9 +54,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "1-2",
         title: "Role-based routing + RLS policies",
         description: "proxy.ts guards per role, all tables have RLS policies enforcing admin/coach/user access.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-1-rbac",
+        pr: 8,
         scope: {
           owns: ["proxy.ts"],
           avoid: ["app/(auth)/", "scripts/"],
