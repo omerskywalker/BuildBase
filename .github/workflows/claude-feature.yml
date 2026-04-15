@@ -1,0 +1,114 @@
+name: Claude Feature Implementation
+
+on:
+  workflow_dispatch:
+    inputs:
+      item_id:
+        description: "Roadmap item ID (e.g. 1-1)"
+        required: true
+        type: string
+      item_title:
+        description: "Roadmap item title"
+        required: true
+        type: string
+      item_description:
+        description: "Roadmap item description"
+        required: true
+        type: string
+      branch_name:
+        description: "Branch name to create (e.g. feat/batch-1-auth)"
+        required: true
+        type: string
+      retry:
+        description: "Is this a retry run?"
+        required: false
+        default: "false"
+        type: string
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${{ inputs.branch_name }}" || git checkout "${{ inputs.branch_name }}"
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are implementing roadmap item ${{ inputs.item_id }} for BuildBase.
+
+            **Item:** ${{ inputs.item_title }}
+            **Description:** ${{ inputs.item_description }}
+            **Branch:** ${{ inputs.branch_name }}
+
+            Read CLAUDE.md first for full project context, conventions, and architecture.
+            Read WIKI/index.md for current project status.
+            Read WIKI/gotchas.md for known pitfalls.
+
+            Implement this roadmap item completely:
+            1. Write all necessary code changes
+            2. Write tests (see CLAUDE.md for test requirements)
+            3. Run `pnpm tsc --noEmit` and fix all type errors
+            4. Run `pnpm test` and fix all failing tests
+            5. Update `lib/roadmap-data.ts`: set status to "in-progress" for item ${{ inputs.item_id }}
+
+            Do NOT push or create a PR — the workflow handles that.
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+      - name: Test
+        run: pnpm test
+
+      - name: Commit and push
+        run: |
+          git add -A
+          git commit -m "feat: implement ${{ inputs.item_id }} — ${{ inputs.item_title }}
+
+          Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>" || echo "Nothing to commit"
+          git push origin "${{ inputs.branch_name }}"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ inputs.branch_name }}
+          base: main
+          title: "feat(${{ inputs.item_id }}): ${{ inputs.item_title }}"
+          body: |
+            ## Roadmap Item ${{ inputs.item_id }}
+
+            **${{ inputs.item_title }}**
+
+            ${{ inputs.item_description }}
+
+            ---
+            🤖 Implemented by [Claude Code](https://claude.ai/claude-code) via workflow dispatch.
