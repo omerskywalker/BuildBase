@@ -19,6 +19,11 @@ on:
         description: "Branch name to create (e.g. feat/batch-1-auth)"
         required: true
         type: string
+      issue_number:
+        description: "GitHub Issue number tracking this item (e.g. 13)"
+        required: false
+        default: ""
+        type: string
       retry:
         description: "Is this a retry run?"
         required: false
@@ -31,6 +36,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout
@@ -66,6 +72,7 @@ jobs:
             **Item:** ${{ inputs.item_title }}
             **Description:** ${{ inputs.item_description }}
             **Branch:** ${{ inputs.branch_name }}
+            ${{ inputs.issue_number != '' && format('**GitHub Issue:** #{0} — read it for full context and implementation notes.', inputs.issue_number) || '' }}
 
             Read CLAUDE.md first for full project context, conventions, and architecture.
             Read WIKI/index.md for current project status.
@@ -78,8 +85,9 @@ jobs:
             4. Run `pnpm test` and fix all failing tests
             5. If the description above contains a FILE SCOPE CONTRACT section, you are running in
                parallel with other agents. In that case, do NOT modify lib/roadmap-data.ts —
-               the kickoff system manages status. Otherwise, set status to "in-progress" for
-               item ${{ inputs.item_id }} in lib/roadmap-data.ts.
+               the kickoff system manages status. Otherwise, set status to "in-progress" and
+               pr to the PR number for item ${{ inputs.item_id }} in lib/roadmap-data.ts.
+               ${{ inputs.issue_number != '' && format('Also set issue to {0} in lib/roadmap-data.ts for this item.', inputs.issue_number) || '' }}
 
             Do NOT push or create a PR — the workflow handles that.
 
@@ -98,6 +106,7 @@ jobs:
           git push origin "${{ inputs.branch_name }}"
 
       - name: Create Pull Request
+        id: create_pr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -110,6 +119,8 @@ jobs:
             **${{ inputs.item_title }}**
 
             ${{ inputs.item_description }}
+
+            ${{ inputs.issue_number != '' && format('Closes #{0}', inputs.issue_number) || '' }}
 
             ---
             🤖 Implemented by [Claude Code](https://claude.ai/claude-code) via workflow dispatch.

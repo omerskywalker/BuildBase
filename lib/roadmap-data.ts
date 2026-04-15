@@ -14,6 +14,8 @@ export interface RoadmapItem {
   tests: boolean;
   branch?: string;
   pr?: number;
+  /** GitHub Issue number created at kickoff time. Closed automatically when PR merges. */
+  issue?: number;
   /** File scope contract for parallel agent execution. */
   scope?: ItemScope;
 }
