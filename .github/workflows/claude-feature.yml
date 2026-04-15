@@ -77,26 +77,26 @@ jobs:
             **Item:** ${{ inputs.item_title }}
             **Description:** ${{ inputs.item_description }}
             **Branch:** ${{ inputs.branch_name }}
-            ${{ inputs.issue_number != '' && format('**GitHub Issue:** #{0} — read it for full context and implementation notes.', inputs.issue_number) || '' }}
-            ${{ inputs.pr_number != '' && format('**Draft PR:** #{0} — this PR already exists, push commits to it.', inputs.pr_number) || '' }}
+            ${{ inputs.issue_number != '' && format('**GitHub Issue:** #{0} — read it for the full implementation spec. The PR body already includes `Closes #{0}` so the issue auto-closes when this PR merges.', inputs.issue_number) || '' }}
+            ${{ inputs.pr_number != '' && format('**Draft PR:** #{0} — already open, push commits to it. Do NOT create a new PR.', inputs.pr_number) || '' }}
 
             Read CLAUDE.md first for full project context, conventions, and architecture.
             Read WIKI/index.md for current project status.
             Read WIKI/gotchas.md for known pitfalls.
 
             Implement this roadmap item completely:
-            1. Write all necessary code changes
-            2. Write tests (see CLAUDE.md for test requirements)
-            3. Run `pnpm tsc --noEmit` and fix all type errors
-            4. Run `pnpm test` and fix all failing tests
-            5. If the description above contains a FILE SCOPE CONTRACT section, you are running in
-               parallel with other agents. In that case, do NOT modify lib/roadmap-data.ts —
-               the kickoff system manages status. Otherwise, set status to "in-progress" and
-               pr to the PR number for item ${{ inputs.item_id }} in lib/roadmap-data.ts.
-               ${{ inputs.issue_number != '' && format('Also set issue to {0} in lib/roadmap-data.ts for this item.', inputs.issue_number) || '' }}
-               ${{ inputs.pr_number != '' && format('Set pr to {0} in lib/roadmap-data.ts for this item.', inputs.pr_number) || '' }}
+            1. Read GitHub Issue #${{ inputs.issue_number }} for the full spec, file scope contract, and agent references.
+            2. Write all necessary code changes, respecting the FILE SCOPE CONTRACT if present.
+            3. Write tests (see CLAUDE.md for test requirements).
+            4. Run `pnpm tsc --noEmit` and fix all type errors.
+            5. Run `pnpm test` and fix all failing tests.
+            6. Update lib/roadmap-data.ts for item ${{ inputs.item_id }}:
+               - Set status to "in-progress"
+               ${{ inputs.pr_number != '' && format('- Set pr to {0}', inputs.pr_number) || '' }}
+               ${{ inputs.issue_number != '' && format('- Set issue to {0} (already set, just confirm)', inputs.issue_number) || '' }}
+               EXCEPTION: if the description contains FILE SCOPE CONTRACT, skip lib/roadmap-data.ts entirely — the kickoff system manages it.
 
-            Do NOT create a new PR — a draft PR already exists (#${{ inputs.pr_number }}). Just push your commits.
+            Do NOT create a new PR — draft PR #${{ inputs.pr_number }} already exists.
 
       - name: Type check
         run: pnpm tsc --noEmit
