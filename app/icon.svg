@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Deep forest green background, rounded like a modern app icon -->
+  <rect width="32" height="32" rx="7.5" fill="#0F1A14"/>
+
+  <!-- Subtle inner shadow layer for depth -->
+  <rect width="32" height="32" rx="7.5" fill="url(#vignette)" opacity="0.25"/>
+
+  <defs>
+    <!-- Radial vignette for subtle depth -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stop-color="#0F1A14" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="1"/>
+    </radialGradient>
+
+    <!-- Plate gradient: bright top, darker base — gives a forged metal feel -->
+    <linearGradient id="plate-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E06025"/>
+      <stop offset="50%" stop-color="#C84B1A"/>
+      <stop offset="100%" stop-color="#7A2D0D"/>
+    </linearGradient>
+
+    <!-- Bar gradient: subtler, recedes behind the plates -->
+    <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A83C14"/>
+      <stop offset="100%" stop-color="#5A1E08"/>
+    </linearGradient>
+
+    <!-- Plate highlight: tiny bright strip at top edge -->
+    <linearGradient id="highlight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.18"/>
+      <stop offset="30%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Bar (behind the plates in z-order) ── -->
+  <rect x="10.5" y="13.5" width="11" height="5" rx="1.5" fill="url(#bar-grad)"/>
+
+  <!-- ── Left weight plate ── -->
+  <rect x="3" y="8" width="7.5" height="16" rx="2.5" fill="url(#plate-grad)"/>
+  <!-- Left plate highlight -->
+  <rect x="3" y="8" width="7.5" height="6" rx="2.5" fill="url(#highlight)"/>
+
+  <!-- ── Right weight plate ── -->
+  <rect x="21.5" y="8" width="7.5" height="16" rx="2.5" fill="url(#plate-grad)"/>
+  <!-- Right plate highlight -->
+  <rect x="21.5" y="8" width="7.5" height="6" rx="2.5" fill="url(#highlight)"/>
+</svg>
