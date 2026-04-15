@@ -4,6 +4,19 @@ Real failures and non-obvious pitfalls. Read before writing any code.
 
 ## Next.js 16
 
+### proxy.ts — no `runtime` config key allowed
+
+Next.js 16 proxy always runs on Node.js. Declaring `runtime` in the config export throws a Vercel build error:
+`Route segment config is not allowed in Proxy file. Proxy always runs on Node.js runtime.`
+
+```ts
+// WRONG — build error
+export const config = { runtime: "nodejs", matcher: [...] };
+
+// CORRECT
+export const config = { matcher: [...] };
+```
+
 ### proxy.ts — not middleware.ts
 Next.js 16 renamed `middleware.ts` to `proxy.ts`. The exported function must be named `proxy` (not `middleware`). The file already exists at the root — **do not create a new `middleware.ts`**.
 
