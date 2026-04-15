@@ -48,7 +48,8 @@ export async function ensureBranchReady(
   });
 
   if (!createRes.ok && createRes.status !== 422) {
-    console.error(`[github] createBranch failed: ${createRes.status}`);
+    const txt = await createRes.text();
+    console.error(`[github] createBranch failed: ${createRes.status} — ${txt}`);
     return false;
   }
 
@@ -56,7 +57,11 @@ export async function ensureBranchReady(
   const branchRes = await fetch(`${GH_API}/repos/${repo}/git/ref/heads/${branchName}`, {
     headers: ghHeaders(token),
   });
-  if (!branchRes.ok) return false;
+  if (!branchRes.ok) {
+    const txt = await branchRes.text();
+    console.error(`[github] getBranchRef failed: ${branchRes.status} — ${txt}`);
+    return false;
+  }
   const branchData = await branchRes.json() as { object: { sha: string } };
   const branchSha = branchData.object?.sha;
 
