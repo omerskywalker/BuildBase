@@ -41,9 +41,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "1-1",
         title: "Supabase Auth integration (email/password)",
         description: "Login, signup, logout, password reset flows using @supabase/ssr.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-1-auth",
+        pr: 7,
         scope: {
           owns: ["app/(auth)/", "app/auth/callback/", "components/AuthForm.tsx"],
           avoid: ["proxy.ts", "scripts/"],
