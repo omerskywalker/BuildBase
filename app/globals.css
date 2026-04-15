@@ -1,0 +1,52 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Design tokens ─────────────────────────────────────── */
+@theme {
+  /* Backgrounds */
+  --color-bg-base:     #0F1A14;
+  --color-bg-surface:  #152019;
+  --color-bg-elevated: #1C2A20;
+  --color-bg-hover:    #22332A;
+
+  /* Borders */
+  --color-border-subtle: #2A3D30;
+  --color-border-strong: #3A5040;
+
+  /* Content */
+  --color-content-primary:   #E8F0E8;
+  --color-content-secondary: #8A9E8A;
+  --color-content-muted:     #4A5A4A;
+
+  /* Brand */
+  --color-brand:       #1C3A2A;
+  --color-accent:      #C84B1A;
+  --color-accent-dim:  #8C3410;
+
+  /* Semantic */
+  --color-success: #2D7A3A;
+  --color-warning: #C08030;
+  --color-error:   #B83020;
+  --color-info:    #3060A0;
+
+  /* Effort scale */
+  --color-effort-1: #D32F2F;
+  --color-effort-2: #F57C00;
+  --color-effort-3: #FBC02D;
+  --color-effort-4: #388E3C;
+  --color-effort-5: #1B5E20;
+
+  /* Typography */
+  --font-sans:    "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+/* ─── Base ───────────────────────────────────────────────── */
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-content-primary);
+}
