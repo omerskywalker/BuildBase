@@ -1,4 +1,5 @@
 import { ROADMAP, REPO, getBatchProgress, getOverallProgress, type RoadmapItem, type ItemStatus } from "@/lib/roadmap-data";
+import { getRoadmapOverrides } from "@/lib/storage";
 import { KickoffButton } from "./KickoffButton";
 import { BatchKickoffButton } from "./BatchKickoffButton";
 import { InProgressBadge } from "./InProgressBadge";
@@ -92,10 +93,25 @@ function ProgressBar({ pct, color = "#C84B1A" }: { pct: number; color?: string }
   );
 }
 
-function ItemRow({ item, prData }: { item: RoadmapItem; prData: Awaited<ReturnType<typeof fetchPrStatus>> }) {
+function ItemRow({
+  item,
+  prData,
+  kvStatus,
+  kvPr,
+  kvIssue,
+}: {
+  item: RoadmapItem;
+  prData: Awaited<ReturnType<typeof fetchPrStatus>>;
+  kvStatus?: ItemStatus;
+  kvPr?: number;
+  kvIssue?: number;
+}) {
   const dot = prData ? ciDot(prData.ci.conclusion) : null;
   const isMerged = prData?.pr?.merged_at != null;
-  const effectiveStatus: ItemStatus = isMerged ? "done" : item.status;
+  // KV override takes precedence over static status; merged PR always wins as "done"
+  const effectiveStatus: ItemStatus = isMerged ? "done" : (kvStatus ?? item.status);
+  const effectivePr = item.pr ?? kvPr;
+  const effectiveIssue = item.issue ?? kvIssue;
 
   return (
     <div style={{ padding: "12px 0", borderBottom: "1px solid #1C2A20", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -136,16 +152,16 @@ function ItemRow({ item, prData }: { item: RoadmapItem; prData: Awaited<ReturnTy
           <RetryButton itemId={item.id} />
         )}
 
-        {item.issue && (
-          <a href={`https://github.com/${REPO}/issues/${item.issue}`} target="_blank" rel="noopener"
+        {effectiveIssue && (
+          <a href={`https://github.com/${REPO}/issues/${effectiveIssue}`} target="_blank" rel="noopener"
             style={{ fontSize: 11, color: "#8A9E8A", textDecoration: "none", background: "rgba(138,158,138,0.08)", border: "1px solid rgba(138,158,138,0.2)", borderRadius: 6, padding: "2px 8px" }}>
-            #{item.issue}
+            #{effectiveIssue}
           </a>
         )}
-        {item.pr && (
-          <a href={`https://github.com/${REPO}/pull/${item.pr}`} target="_blank" rel="noopener"
+        {effectivePr && (
+          <a href={`https://github.com/${REPO}/pull/${effectivePr}`} target="_blank" rel="noopener"
             style={{ fontSize: 11, color: "#3060A0", textDecoration: "none", background: "rgba(48,96,160,0.08)", border: "1px solid rgba(48,96,160,0.2)", borderRadius: 6, padding: "2px 8px" }}>
-            PR #{item.pr}
+            PR #{effectivePr}
           </a>
         )}
         {dot && <span style={{ fontSize: 11, fontWeight: 600, color: dot.color }}>{dot.label}</span>}
@@ -161,20 +177,25 @@ function ItemRow({ item, prData }: { item: RoadmapItem; prData: Awaited<ReturnTy
 }
 
 export default async function RoadmapMonitorPage() {
-  const prStatuses = await fetchAllPrStatuses();
+  const [prStatuses, kvOverrides] = await Promise.all([
+    fetchAllPrStatuses(),
+    getRoadmapOverrides(),
+  ]);
   const overall = getOverallProgress();
 
   const allItems = ROADMAP.flatMap((b) => b.items);
   const inProgressIds = allItems
     .filter((item) => {
       const isMerged = prStatuses[item.id]?.pr?.merged_at != null;
-      return (isMerged ? "done" : item.status) === "in-progress";
+      const effective = isMerged ? "done" : (kvOverrides[item.id]?.status ?? item.status);
+      return effective === "in-progress";
     })
     .map((item) => item.id);
   const doneIds = allItems
     .filter((item) => {
       const isMerged = prStatuses[item.id]?.pr?.merged_at != null;
-      return (isMerged ? "done" : item.status) === "done";
+      const effective = isMerged ? "done" : (kvOverrides[item.id]?.status ?? item.status);
+      return effective === "done";
     })
     .map((item) => item.id);
 
@@ -203,9 +224,23 @@ export default async function RoadmapMonitorPage() {
 
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px" }}>
         {ROADMAP.map((batch) => {
-          const { total, done, inProgress } = getBatchProgress(batch);
+          const total = batch.items.length;
+          const done = batch.items.filter((i) => {
+            const isMerged = prStatuses[i.id]?.pr?.merged_at != null;
+            const eff = isMerged ? "done" : (kvOverrides[i.id]?.status ?? i.status);
+            return eff === "done";
+          }).length;
+          const inProgress = batch.items.filter((i) => {
+            const isMerged = prStatuses[i.id]?.pr?.merged_at != null;
+            const eff = isMerged ? "done" : (kvOverrides[i.id]?.status ?? i.status);
+            return eff === "in-progress";
+          }).length;
           const batchPct = Math.round((done / total) * 100);
-          const notStartedCount = batch.items.filter((i) => i.status === "not-started").length;
+          const notStartedCount = batch.items.filter((i) => {
+            const isMerged = prStatuses[i.id]?.pr?.merged_at != null;
+            const eff = (isMerged ? "done" : (kvOverrides[i.id]?.status ?? i.status)) as ItemStatus;
+            return eff === "not-started";
+          }).length;
           const allDone = done === total;
           return (
             <div key={batch.number} style={{ marginTop: 24, background: "#152019", border: "1px solid #2A3D30", borderRadius: 12, overflow: "hidden" }}>
@@ -235,7 +270,14 @@ export default async function RoadmapMonitorPage() {
               </div>
               <div style={{ padding: "0 16px" }}>
                 {batch.items.map((item) => (
-                  <ItemRow key={item.id} item={item} prData={prStatuses[item.id] ?? null} />
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    prData={prStatuses[item.id] ?? null}
+                    kvStatus={kvOverrides[item.id]?.status}
+                    kvPr={kvOverrides[item.id]?.pr}
+                    kvIssue={kvOverrides[item.id]?.issue}
+                  />
                 ))}
               </div>
             </div>

@@ -19,11 +19,12 @@ export function KickoffButton({ itemId, disabled }: { itemId: string; disabled: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId }),
       });
-      const data = await res.json() as { success?: boolean; prUrl?: string; error?: string };
+      const data = await res.json() as { success?: boolean; prUrl?: string | null; prNumber?: number | null; error?: string };
       if (!res.ok || !data.success) throw new Error(data.error ?? "Kickoff failed");
       setPrUrl(data.prUrl ?? null);
       setState("done");
-      setTimeout(() => router.refresh(), 1500);
+      // Refresh after a short delay so KV override shows in-progress
+      setTimeout(() => router.refresh(), 800);
     } catch (err) {
       console.error(err);
       setState("error");
@@ -31,11 +32,19 @@ export function KickoffButton({ itemId, disabled }: { itemId: string; disabled: 
     }
   }
 
-  if (state === "done" && prUrl) {
+  if (state === "done") {
     return (
-      <a href={prUrl} target="_blank" rel="noopener"
-        style={{ fontSize: 11, fontWeight: 700, color: "#2D7A3A", background: "rgba(45,122,58,0.1)", border: "1px solid rgba(45,122,58,0.3)", borderRadius: 6, padding: "3px 10px", textDecoration: "none" }}>
-        ✓ PR opened →
+      <a
+        href={prUrl ?? undefined}
+        target="_blank"
+        rel="noopener"
+        style={{
+          fontSize: 11, fontWeight: 700, color: "#3060A0",
+          background: "rgba(48,96,160,0.1)", border: "1px solid rgba(48,96,160,0.3)",
+          borderRadius: 6, padding: "3px 10px", textDecoration: "none",
+          pointerEvents: prUrl ? "auto" : "none",
+        }}>
+        ✓ Started{prUrl ? " → PR" : ""}
       </a>
     );
   }

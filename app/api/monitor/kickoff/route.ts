@@ -1,64 +1,8 @@
 import { NextResponse } from "next/server";
 import { ROADMAP, REPO } from "@/lib/roadmap-data";
+import { getRoadmapOverrides, setRoadmapOverride } from "@/lib/storage";
+import { getMainSha, ensureBranchReady, createDraftPr, createIssue } from "@/lib/github-api";
 import { MONITOR_COOKIE } from "@/lib/constants";
-
-const GH_API = "https://api.github.com";
-
-function ghHeaders(token: string) {
-  return {
-    Authorization: `Bearer ${token}`,
-    Accept: "application/vnd.github+json",
-    "Content-Type": "application/json",
-  };
-}
-
-/** Creates a GitHub Issue for a roadmap item. Returns the issue number, or null on failure. */
-async function createIssue(
-  token: string,
-  item: { id: string; title: string; description: string; branch?: string; scope?: { owns: string[]; avoid: string[] } }
-): Promise<number | null> {
-  const scopeSection = item.scope
-    ? `\n### File Scope\n- **Owns:** ${item.scope.owns.map((p) => `\`${p}\``).join(", ")}\n- **Avoid:** ${item.scope.avoid.map((p) => `\`${p}\``).join(", ")}`
-    : "";
-
-  const body = [
-    `## BuildBase Roadmap Item \`${item.id}\``,
-    "",
-    `**${item.title}**`,
-    "",
-    item.description,
-    "",
-    "---",
-    "",
-    "### Implementation Notes",
-    `- Branch: \`${item.branch ?? `feat/item-${item.id}`}\``,
-    scopeSection,
-    "",
-    "### Agent References",
-    `- [\`CLAUDE.md\`](https://github.com/${REPO}/blob/main/CLAUDE.md) — project conventions, architecture, design tokens`,
-    `- [\`WIKI/index.md\`](https://github.com/${REPO}/blob/main/WIKI/index.md) — current status, file map`,
-    `- [\`WIKI/gotchas.md\`](https://github.com/${REPO}/blob/main/WIKI/gotchas.md) — known pitfalls, read first`,
-    "",
-    "---",
-    "*Opened automatically by the BuildBase roadmap monitor at kickoff.*",
-  ]
-    .filter((line) => line !== undefined)
-    .join("\n");
-
-  const res = await fetch(`${GH_API}/repos/${REPO}/issues`, {
-    method: "POST",
-    headers: ghHeaders(token),
-    body: JSON.stringify({ title: `[${item.id}] ${item.title}`, body }),
-  });
-
-  if (!res.ok) {
-    console.error("Failed to create issue:", res.status, await res.text());
-    return null;
-  }
-
-  const data = await res.json() as { number: number };
-  return data.number;
-}
 
 export async function POST(request: Request) {
   // Verify monitor session
@@ -85,39 +29,74 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: "GITHUB_TOKEN not configured" }, { status: 500 });
   }
 
-  // Create a GitHub Issue for this item (best-effort — dispatch proceeds even if this fails)
-  const issueNumber = await createIssue(token, item);
+  const branchName = item.branch ?? `feat/item-${itemId}`;
 
-  // Trigger workflow_dispatch on GitHub Actions
-  const res = await fetch(
-    `${GH_API}/repos/${REPO}/actions/workflows/claude-feature.yml/dispatches`,
+  // Check KV for an existing in-progress record so we don't duplicate issues/PRs on retry
+  const existingOverrides = await getRoadmapOverrides();
+  const existing = existingOverrides[itemId];
+
+  // 1. Issue — reuse if we already have one (static data or KV)
+  const existingIssue = item.issue ?? existing?.issue ?? null;
+  const issueNumber = existingIssue ?? await createIssue(token, REPO, item);
+
+  // 2. Branch + initial commit — ensures PR creation won't fail with "no commits between branches"
+  const mainSha = await getMainSha(token, REPO);
+  if (mainSha) {
+    await ensureBranchReady(token, REPO, branchName, mainSha, itemId, item.title);
+  }
+
+  // 3. Draft PR — reuses existing if one is already open for this branch
+  const pr = await createDraftPr(token, REPO, branchName, item, issueNumber);
+  const prNumber = pr?.number ?? existing?.pr ?? null;
+  const prUrl = pr?.html_url ?? null;
+
+  // 4. KV override — flips UI to in-progress immediately
+  await setRoadmapOverride(itemId, {
+    status: "in-progress",
+    pr: prNumber ?? undefined,
+    issue: issueNumber ?? undefined,
+    startedAt: existing?.startedAt ?? new Date().toISOString(),
+  });
+
+  // 5. Workflow dispatch
+  const dispatchRes = await fetch(
+    `https://api.github.com/repos/${REPO}/actions/workflows/claude-feature.yml/dispatches`,
     {
       method: "POST",
-      headers: ghHeaders(token),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         ref: "main",
         inputs: {
           item_id: itemId,
           item_title: item.title,
           item_description: item.description,
-          branch_name: item.branch ?? `feat/item-${itemId}`,
+          branch_name: branchName,
           issue_number: issueNumber != null ? String(issueNumber) : "",
+          pr_number: prNumber != null ? String(prNumber) : "",
           retry: retry ? "true" : "false",
         },
       }),
     }
   );
 
-  if (!res.ok && res.status !== 204) {
-    const text = await res.text();
-    console.error("GitHub dispatch failed:", res.status, text);
-    return NextResponse.json({ success: false, error: `GitHub dispatch failed: ${res.status}` }, { status: 502 });
+  if (!dispatchRes.ok && dispatchRes.status !== 204) {
+    const text = await dispatchRes.text();
+    console.error("[kickoff] dispatch failed:", dispatchRes.status, text);
+    return NextResponse.json(
+      { success: false, error: `GitHub dispatch failed: ${dispatchRes.status}` },
+      { status: 502 }
+    );
   }
 
   return NextResponse.json({
     success: true,
     issueNumber,
     issueUrl: issueNumber != null ? `https://github.com/${REPO}/issues/${issueNumber}` : null,
-    prUrl: null, // PR URL will be available once CI creates it
+    prNumber,
+    prUrl,
   });
 }

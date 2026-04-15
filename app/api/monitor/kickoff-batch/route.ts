@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { ROADMAP, REPO } from "@/lib/roadmap-data";
+import { getRoadmapOverrides, setRoadmapOverride } from "@/lib/storage";
+import { getMainSha, ensureBranchReady, createDraftPr, createIssue } from "@/lib/github-api";
 import { MONITOR_COOKIE } from "@/lib/constants";
 
 export async function POST(request: Request) {
@@ -33,15 +35,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: "GITHUB_TOKEN not configured" }, { status: 500 });
   }
 
-  // Only dispatch not-started items
   const itemsToKickoff = batch.items.filter((i) => i.status === "not-started");
   if (itemsToKickoff.length === 0) {
     return NextResponse.json({ success: false, error: "No not-started items in this batch" }, { status: 400 });
   }
 
-  // Dispatch all in parallel — each gets a file scope contract so agents don't overlap
+  // Fetch once — reused across all parallel kickoffs
+  const [mainSha, existingOverrides] = await Promise.all([
+    getMainSha(token, REPO),
+    getRoadmapOverrides(),
+  ]);
+
   const results = await Promise.all(
     itemsToKickoff.map(async (item) => {
+      const branchName = item.branch ?? `feat/item-${item.id}`;
+      const existing = existingOverrides[item.id];
+
       const scopeLines = item.scope
         ? [
             `FILE SCOPE CONTRACT (parallel agent — do NOT violate):`,
@@ -51,6 +60,28 @@ export async function POST(request: Request) {
           ].join("\n")
         : `CRITICAL: Do NOT modify lib/roadmap-data.ts — the kickoff system manages status.`;
 
+      // Issue — reuse if already exists
+      const existingIssue = item.issue ?? existing?.issue ?? null;
+      const issueNumber = existingIssue ?? await createIssue(token, REPO, item);
+
+      // Branch + initial commit
+      if (mainSha) {
+        await ensureBranchReady(token, REPO, branchName, mainSha, item.id, item.title);
+      }
+
+      // Draft PR — reuse if already exists
+      const pr = await createDraftPr(token, REPO, branchName, item, issueNumber);
+      const prNumber = pr?.number ?? existing?.pr ?? null;
+
+      // KV override
+      await setRoadmapOverride(item.id, {
+        status: "in-progress",
+        pr: prNumber ?? undefined,
+        issue: issueNumber ?? undefined,
+        startedAt: existing?.startedAt ?? new Date().toISOString(),
+      });
+
+      // Workflow dispatch
       const res = await fetch(
         `https://api.github.com/repos/${REPO}/actions/workflows/claude-feature.yml/dispatches`,
         {
@@ -66,7 +97,9 @@ export async function POST(request: Request) {
               item_id: item.id,
               item_title: item.title,
               item_description: `${item.description}\n\n${scopeLines}`,
-              branch_name: item.branch ?? `feat/item-${item.id}`,
+              branch_name: branchName,
+              issue_number: issueNumber != null ? String(issueNumber) : "",
+              pr_number: prNumber != null ? String(prNumber) : "",
               retry: "false",
             },
           }),
@@ -75,7 +108,7 @@ export async function POST(request: Request) {
 
       if (!res.ok && res.status !== 204) {
         const text = await res.text();
-        console.error(`Dispatch failed for item ${item.id}:`, res.status, text);
+        console.error(`[kickoff-batch] dispatch failed for ${item.id}:`, res.status, text);
         return { itemId: item.id, success: false, error: `GitHub dispatch failed: ${res.status}` };
       }
 

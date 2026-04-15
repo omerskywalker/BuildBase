@@ -25,14 +25,6 @@ export const metadata: Metadata = {
     "A structured fitness coaching platform for coaches and individuals. Program, track, and progress with purpose.",
   keywords: ["fitness", "coaching", "strength training", "workout tracker"],
   metadataBase: new URL(APP_URL),
-  icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml", sizes: "any" },
-    ],
-    apple: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-  },
   openGraph: {
     title: "BuildBase — Structured Fitness Coaching",
     description:
