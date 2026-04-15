@@ -55,6 +55,7 @@ export async function proxy(request: NextRequest) {
     pathname === "/" ||
     isAuthRoute ||
     pathname.startsWith("/monitor") ||
+    pathname.startsWith("/api/monitor/") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/onboarding");
 
