@@ -2,6 +2,14 @@
 
 Real failures and non-obvious pitfalls. Read before writing any code.
 
+## Tooling / Hooks
+
+### posttooluse-validate hook — false positive on proxy.ts
+
+The `posttooluse-validate` hook fires on every edit to `proxy.ts` with a recommendation to "rename middleware.ts to proxy.ts." **Ignore it.** The file is already correctly named `proxy.ts` and exports `async function proxy` — that IS the Next.js 16 pattern. The hook's routing-middleware skill hasn't been updated to recognize the new filename.
+
+---
+
 ## Next.js 16
 
 ### proxy.ts — no `runtime` config key allowed

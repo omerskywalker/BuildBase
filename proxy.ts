@@ -45,7 +45,11 @@ export async function proxy(request: NextRequest) {
 
   // ── Route protection ───────────────────────────────────────────────────────
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
-  const isPublicRoute = pathname === "/" || isAuthRoute || pathname.startsWith("/monitor");
+  const isPublicRoute =
+    pathname === "/" ||
+    isAuthRoute ||
+    pathname.startsWith("/monitor") ||
+    pathname.startsWith("/api/monitor/");
 
   if (!user && !isPublicRoute) {
     const loginUrl = new URL("/login", request.url);
