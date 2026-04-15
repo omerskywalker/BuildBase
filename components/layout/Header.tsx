@@ -1,10 +1,13 @@
-// TODO Batch 1: Header component
-// - Mobile hamburger menu (opens Sidebar sheet)
-// - Page title (dynamic)
-// - User avatar + sign out dropdown
 "use client";
 
-export function Header() {
+import { LogOut } from "lucide-react";
+import { signOut } from "@/lib/actions/auth";
+
+interface HeaderProps {
+  fullName: string;
+}
+
+export function Header({ fullName }: HeaderProps) {
   return (
     <header
       style={{
@@ -23,15 +26,55 @@ export function Header() {
       {/* Mobile logo */}
       <span
         className="lg:hidden"
-        style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-space-grotesk, sans-serif)" }}
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          fontFamily: "var(--font-display, sans-serif)",
+        }}
       >
         <span style={{ color: "#1C3A2A" }}>Build</span>
         <span style={{ color: "#C84B1A" }}>Base</span>
       </span>
 
-      {/* Right side placeholder */}
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2A3D30" }} />
+      {/* Spacer for desktop (sidebar takes left side) */}
+      <div className="hidden lg:block" />
+
+      {/* Right: user name + sign out */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span
+          style={{
+            fontSize: 13,
+            color: "#8A9E8A",
+            maxWidth: 160,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {fullName}
+        </span>
+
+        <form action={signOut}>
+          <button
+            type="submit"
+            title="Sign out"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "transparent",
+              border: "1px solid #2A3D30",
+              color: "#8A9E8A",
+              cursor: "pointer",
+              transition: "border-color 0.15s, color 0.15s",
+            }}
+          >
+            <LogOut size={15} />
+          </button>
+        </form>
       </div>
     </header>
   );

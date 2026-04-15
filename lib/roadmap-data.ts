@@ -67,9 +67,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "1-3",
         title: "Profile creation on first login",
         description: "After OAuth callback, create profiles row if missing. Onboarding flag set to false.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-1-profiles",
+        pr: 9,
         scope: {
           owns: ["app/auth/callback/"],
           avoid: ["proxy.ts", "scripts/"],

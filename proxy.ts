@@ -52,7 +52,11 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password");
   const isPublicRoute =
-    pathname === "/" || isAuthRoute || pathname.startsWith("/monitor") || pathname.startsWith("/auth");
+    pathname === "/" ||
+    isAuthRoute ||
+    pathname.startsWith("/monitor") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/onboarding");
 
   if (!user && !isPublicRoute) {
     const loginUrl = new URL("/login", request.url);
