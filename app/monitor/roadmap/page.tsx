@@ -136,6 +136,12 @@ function ItemRow({ item, prData }: { item: RoadmapItem; prData: Awaited<ReturnTy
           <RetryButton itemId={item.id} />
         )}
 
+        {item.issue && (
+          <a href={`https://github.com/${REPO}/issues/${item.issue}`} target="_blank" rel="noopener"
+            style={{ fontSize: 11, color: "#8A9E8A", textDecoration: "none", background: "rgba(138,158,138,0.08)", border: "1px solid rgba(138,158,138,0.2)", borderRadius: 6, padding: "2px 8px" }}>
+            #{item.issue}
+          </a>
+        )}
         {item.pr && (
           <a href={`https://github.com/${REPO}/pull/${item.pr}`} target="_blank" rel="noopener"
             style={{ fontSize: 11, color: "#3060A0", textDecoration: "none", background: "rgba(48,96,160,0.08)", border: "1px solid rgba(48,96,160,0.2)", borderRadius: 6, padding: "2px 8px" }}>
