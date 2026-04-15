@@ -1,5 +1,6 @@
 import { ROADMAP, REPO, getBatchProgress, getOverallProgress, type RoadmapItem, type ItemStatus } from "@/lib/roadmap-data";
 import { KickoffButton } from "./KickoffButton";
+import { BatchKickoffButton } from "./BatchKickoffButton";
 import { InProgressBadge } from "./InProgressBadge";
 import { RoadmapPoller } from "./RoadmapPoller";
 import { RetryButton } from "./RetryButton";
@@ -198,19 +199,27 @@ export default async function RoadmapMonitorPage() {
         {ROADMAP.map((batch) => {
           const { total, done, inProgress } = getBatchProgress(batch);
           const batchPct = Math.round((done / total) * 100);
+          const notStartedCount = batch.items.filter((i) => i.status === "not-started").length;
+          const allDone = done === total;
           return (
             <div key={batch.number} style={{ marginTop: 24, background: "#152019", border: "1px solid #2A3D30", borderRadius: 12, overflow: "hidden" }}>
               <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #2A3D30", background: "#0F1A14" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "#C84B1A", background: "rgba(200,75,26,0.1)", border: "1px solid rgba(200,75,26,0.2)", borderRadius: 6, padding: "2px 8px" }}>
                       Batch {batch.number}
                     </span>
                     <h2 style={{ fontSize: 15, fontWeight: 700, color: "#E8F0E8", fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
                       {batch.title}
                     </h2>
+                    <BatchKickoffButton
+                      batchNumber={batch.number}
+                      itemCount={notStartedCount}
+                      parallelizable={batch.parallelizable}
+                      allDone={allDone}
+                    />
                   </div>
-                  <span style={{ fontSize: 12, color: "#4A5A4A" }}>
+                  <span style={{ fontSize: 12, color: "#4A5A4A", whiteSpace: "nowrap" }}>
                     {done}/{total}
                     {inProgress > 0 && <span style={{ color: "#3060A0" }}> · {inProgress} active</span>}
                   </span>

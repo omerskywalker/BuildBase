@@ -1,5 +1,11 @@
 export type ItemStatus = "not-started" | "in-progress" | "done" | "paused";
 
+/** Paths this agent owns and should NOT be touched by sibling agents in the same batch. */
+export interface ItemScope {
+  owns: string[];   // Route/file paths this item's agent creates (e.g. "app/(coach)/playbook/")
+  avoid: string[];  // Paths owned by other items in the same batch
+}
+
 export interface RoadmapItem {
   id: string;
   title: string;
@@ -8,12 +14,16 @@ export interface RoadmapItem {
   tests: boolean;
   branch?: string;
   pr?: number;
+  /** File scope contract for parallel agent execution. */
+  scope?: ItemScope;
 }
 
 export interface RoadmapBatch {
   number: number;
   title: string;
   summary: string;
+  /** When true, all not-started items can be dispatched in parallel without merge conflicts. */
+  parallelizable: boolean;
   items: RoadmapItem[];
 }
 
@@ -24,6 +34,8 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 1,
     title: "Foundation",
     summary: "Supabase auth, role-based routing, RLS policies, profile creation, and default 12-week program seed.",
+    // Items chain: auth → RBAC → profiles → seed. Each depends on prior work.
+    parallelizable: false,
     items: [
       {
         id: "1-1",
@@ -32,6 +44,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-1-auth",
+        scope: {
+          owns: ["app/(auth)/", "app/auth/callback/", "components/AuthForm.tsx"],
+          avoid: ["proxy.ts", "scripts/"],
+        },
       },
       {
         id: "1-2",
@@ -40,6 +56,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-1-rbac",
+        scope: {
+          owns: ["proxy.ts"],
+          avoid: ["app/(auth)/", "scripts/"],
+        },
       },
       {
         id: "1-3",
@@ -48,6 +68,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-1-profiles",
+        scope: {
+          owns: ["app/auth/callback/"],
+          avoid: ["proxy.ts", "scripts/"],
+        },
       },
       {
         id: "1-4",
@@ -56,6 +80,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-1-seed",
+        scope: {
+          owns: ["scripts/seed.ts", "supabase/seed.sql"],
+          avoid: ["app/(auth)/", "proxy.ts"],
+        },
       },
     ],
   },
@@ -63,6 +91,8 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 2,
     title: "Session Tracker",
     summary: "Onboarding flow, interactive session tracker with weekly pagination, set logging, and effort/soreness prompts.",
+    // Items 2-2/2-3/2-4 all touch app/(app)/sessions/ — sequential to avoid conflicts.
+    parallelizable: false,
     items: [
       {
         id: "2-1",
@@ -71,6 +101,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-onboarding",
+        scope: {
+          owns: ["app/(app)/onboarding/"],
+          avoid: ["app/(app)/sessions/"],
+        },
       },
       {
         id: "2-2",
@@ -79,6 +113,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-tracker",
+        scope: {
+          owns: ["app/(app)/sessions/page.tsx", "app/(app)/sessions/SessionCard.tsx"],
+          avoid: ["app/(app)/onboarding/"],
+        },
       },
       {
         id: "2-3",
@@ -87,6 +125,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-set-logging",
+        scope: {
+          owns: ["app/(app)/sessions/SetRow.tsx", "app/(app)/sessions/WeightControl.tsx", "app/api/sessions/"],
+          avoid: ["app/(app)/onboarding/"],
+        },
       },
       {
         id: "2-4",
@@ -95,6 +137,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-prompts",
+        scope: {
+          owns: ["app/(app)/sessions/EffortPrompt.tsx", "app/(app)/sessions/SorenessPrompt.tsx"],
+          avoid: ["app/(app)/onboarding/"],
+        },
       },
     ],
   },
@@ -102,6 +148,7 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 3,
     title: "Phase View",
     summary: "Program overview with session status indicators, progress bars, completed session detail, and future session preview.",
+    parallelizable: true,
     items: [
       {
         id: "3-1",
@@ -110,6 +157,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-3-phase-view",
+        scope: {
+          owns: ["app/(app)/progress/"],
+          avoid: ["app/(app)/sessions/SessionDetailModal.tsx", "app/(app)/sessions/SessionPreview.tsx"],
+        },
       },
       {
         id: "3-2",
@@ -118,6 +169,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-3-session-detail",
+        scope: {
+          owns: ["app/(app)/sessions/SessionDetailModal.tsx"],
+          avoid: ["app/(app)/progress/", "app/(app)/sessions/SessionPreview.tsx"],
+        },
       },
       {
         id: "3-3",
@@ -126,6 +181,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-3-session-preview",
+        scope: {
+          owns: ["app/(app)/sessions/SessionPreview.tsx"],
+          avoid: ["app/(app)/progress/", "app/(app)/sessions/SessionDetailModal.tsx"],
+        },
       },
     ],
   },
@@ -133,6 +192,7 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 4,
     title: "Coach Features",
     summary: "Playbook, client list, form assessments (internal only), Solid Form badge, and coach notes with banner + history.",
+    parallelizable: true,
     items: [
       {
         id: "4-1",
@@ -141,6 +201,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-playbook",
+        scope: {
+          owns: ["app/(coach)/playbook/"],
+          avoid: ["app/(coach)/clients/", "app/(app)/coach-notes/", "components/CoachNotesBanner.tsx"],
+        },
       },
       {
         id: "4-2",
@@ -149,6 +213,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-clients",
+        scope: {
+          owns: ["app/(coach)/clients/page.tsx", "app/(coach)/clients/[id]/page.tsx"],
+          avoid: ["app/(coach)/playbook/", "app/(app)/coach-notes/", "components/CoachNotesBanner.tsx", "app/(coach)/clients/[id]/FormAssessmentPanel.tsx"],
+        },
       },
       {
         id: "4-3",
@@ -157,6 +225,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-form-assessment",
+        scope: {
+          owns: ["app/(coach)/clients/[id]/FormAssessmentPanel.tsx", "app/api/coach/form-assessment/"],
+          avoid: ["app/(coach)/playbook/", "app/(app)/coach-notes/", "components/CoachNotesBanner.tsx"],
+        },
       },
       {
         id: "4-4",
@@ -165,6 +237,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-coach-notes",
+        scope: {
+          owns: ["app/(app)/coach-notes/", "components/CoachNotesBanner.tsx", "app/api/coach/notes/"],
+          avoid: ["app/(coach)/playbook/", "app/(coach)/clients/"],
+        },
       },
     ],
   },
@@ -172,6 +248,7 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 5,
     title: "Admin Panel",
     summary: "User + coach management tables, role assignment, user creation form, and per-user workout override editor.",
+    parallelizable: true,
     items: [
       {
         id: "5-1",
@@ -180,6 +257,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-5-admin-users",
+        scope: {
+          owns: ["app/(admin)/users/page.tsx", "app/api/admin/users/"],
+          avoid: ["app/(admin)/users/create/", "app/(admin)/overrides/"],
+        },
       },
       {
         id: "5-2",
@@ -188,6 +269,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-5-create-user",
+        scope: {
+          owns: ["app/(admin)/users/create/", "app/api/admin/users/create/"],
+          avoid: ["app/(admin)/users/page.tsx", "app/(admin)/overrides/"],
+        },
       },
       {
         id: "5-3",
@@ -196,6 +281,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-5-overrides",
+        scope: {
+          owns: ["app/(admin)/overrides/", "app/api/admin/overrides/"],
+          avoid: ["app/(admin)/users/"],
+        },
       },
     ],
   },
@@ -203,6 +292,7 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 6,
     title: "Metrics",
     summary: "Progress charts, weekly volume, streaks, PRs, milestones with animations, and effort/soreness trends.",
+    parallelizable: true,
     items: [
       {
         id: "6-1",
@@ -211,6 +301,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-6-charts",
+        scope: {
+          owns: ["app/(app)/progress/charts/", "components/LiftChart.tsx"],
+          avoid: ["app/(app)/progress/milestones/", "app/(app)/progress/trends/"],
+        },
       },
       {
         id: "6-2",
@@ -219,6 +313,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-6-milestones",
+        scope: {
+          owns: ["app/(app)/progress/milestones/", "components/MilestoneCard.tsx", "components/StreakBadge.tsx"],
+          avoid: ["app/(app)/progress/charts/", "app/(app)/progress/trends/"],
+        },
       },
       {
         id: "6-3",
@@ -227,6 +325,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-6-insights",
+        scope: {
+          owns: ["app/(app)/progress/trends/", "components/TrendChart.tsx"],
+          avoid: ["app/(app)/progress/charts/", "app/(app)/progress/milestones/"],
+        },
       },
     ],
   },
@@ -234,6 +336,7 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 7,
     title: "Workout Template Editor",
     summary: "Admin program editor with drag-and-drop sessions, exercise library CRUD, weight editor, and program versioning.",
+    parallelizable: true,
     items: [
       {
         id: "7-1",
@@ -242,6 +345,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-7-program-editor",
+        scope: {
+          owns: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/page.tsx", "app/api/admin/programs/"],
+          avoid: ["app/(admin)/programs/[id]/session-editor/", "app/(admin)/programs/[id]/exercises/"],
+        },
       },
       {
         id: "7-2",
@@ -250,6 +357,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-7-session-editor",
+        scope: {
+          owns: ["app/(admin)/programs/[id]/session-editor/"],
+          avoid: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/exercises/"],
+        },
       },
       {
         id: "7-3",
@@ -258,6 +369,10 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-7-exercise-library",
+        scope: {
+          owns: ["app/(admin)/programs/[id]/exercises/", "app/api/admin/exercises/"],
+          avoid: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/session-editor/"],
+        },
       },
     ],
   },
@@ -265,6 +380,7 @@ export const ROADMAP: RoadmapBatch[] = [
     number: 8,
     title: "Monitor / Roadmap",
     summary: "PIN-gated /monitor/roadmap with KickoffButton → GitHub workflow_dispatch, RoadmapPoller, and RetryButton.",
+    parallelizable: false,
     items: [
       {
         id: "8-1",

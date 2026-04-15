@@ -76,7 +76,10 @@ jobs:
             2. Write tests (see CLAUDE.md for test requirements)
             3. Run `pnpm tsc --noEmit` and fix all type errors
             4. Run `pnpm test` and fix all failing tests
-            5. Update `lib/roadmap-data.ts`: set status to "in-progress" for item ${{ inputs.item_id }}
+            5. If the description above contains a FILE SCOPE CONTRACT section, you are running in
+               parallel with other agents. In that case, do NOT modify lib/roadmap-data.ts —
+               the kickoff system manages status. Otherwise, set status to "in-progress" for
+               item ${{ inputs.item_id }} in lib/roadmap-data.ts.
 
             Do NOT push or create a PR — the workflow handles that.
 
