@@ -64,6 +64,7 @@ function statusLabel(status: ItemStatus) {
   switch (status) {
     case "done":         return "✅ Done";
     case "in-progress":  return "🔄 In Progress";
+    case "failed":       return "✗ Failed";
     case "paused":       return "⏸️ Paused";
     default:             return "🔲 Not Started";
   }
@@ -73,6 +74,7 @@ function statusColor(status: ItemStatus) {
   switch (status) {
     case "done":        return "#2D7A3A";
     case "in-progress": return "#3060A0";
+    case "failed":      return "#B83020";
     case "paused":      return "#8A9E8A";
     default:            return "#2A3D30";
   }
@@ -110,6 +112,7 @@ function ItemRow({
   const isMerged = prData?.pr?.merged_at != null;
   // KV override takes precedence over static status; merged PR always wins as "done"
   const effectiveStatus: ItemStatus = isMerged ? "done" : (kvStatus ?? item.status);
+  const isFailed = effectiveStatus === "failed";
   const effectivePr = item.pr ?? kvPr;
   const effectiveIssue = item.issue ?? kvIssue;
 
@@ -148,14 +151,12 @@ function ItemRow({
         )}
 
         <KickoffButton itemId={item.id} disabled={effectiveStatus !== "not-started"} />
-        {effectiveStatus === "in-progress" && prData?.ci.conclusion === "failure" && (
-          <RetryButton itemId={item.id} />
-        )}
+        {isFailed && <RetryButton itemId={item.id} />}
 
         {effectiveIssue && (
           <a href={`https://github.com/${REPO}/issues/${effectiveIssue}`} target="_blank" rel="noopener"
             style={{ fontSize: 11, color: "#8A9E8A", textDecoration: "none", background: "rgba(138,158,138,0.08)", border: "1px solid rgba(138,158,138,0.2)", borderRadius: 6, padding: "2px 8px" }}>
-            #{effectiveIssue}
+            Issue #{effectiveIssue}
           </a>
         )}
         {effectivePr && (
@@ -188,6 +189,7 @@ export default async function RoadmapMonitorPage() {
     .filter((item) => {
       const isMerged = prStatuses[item.id]?.pr?.merged_at != null;
       const effective = isMerged ? "done" : (kvOverrides[item.id]?.status ?? item.status);
+      // "failed" items are terminal — don't poll them for auto-refresh
       return effective === "in-progress";
     })
     .map((item) => item.id);

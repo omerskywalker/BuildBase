@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { ROADMAP, REPO } from "@/lib/roadmap-data";
 import { getRoadmapOverrides, setRoadmapOverride } from "@/lib/storage";
-import { getMainSha, ensureBranchReady, createDraftPr, createIssue } from "@/lib/github-api";
+import { getMainSha, ensureBranchReady, createDraftPr } from "@/lib/github-api";
 import { MONITOR_COOKIE } from "@/lib/constants";
+import { verifySession } from "@/lib/monitor-auth";
 
 export async function POST(request: Request) {
-  // Verify monitor session
-  const cookie = request.headers.get("cookie") ?? "";
-  if (!cookie.includes(`${MONITOR_COOKIE}=1`)) {
+  // Verify the signed session cookie — not just its presence
+  const cookies = Object.fromEntries(
+    (request.headers.get("cookie") ?? "").split(";").map((c) => {
+      const [k, ...v] = c.trim().split("=");
+      return [k, v.join("=")];
+    })
+  );
+  const sessionToken = cookies[MONITOR_COOKIE] ?? "";
+  if (!verifySession(sessionToken, process.env.ROADMAP_PIN ?? "")) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -35,9 +42,9 @@ export async function POST(request: Request) {
   const existingOverrides = await getRoadmapOverrides();
   const existing = existingOverrides[itemId];
 
-  // 1. Issue — reuse if we already have one (static data or KV)
-  const existingIssue = item.issue ?? existing?.issue ?? null;
-  const issueNumber = existingIssue ?? await createIssue(token, REPO, item);
+  // 1. Issue — all items have issue numbers stamped in roadmap-data.ts; creation is disabled.
+  // KV is checked as a fallback for any item whose issue was set at kickoff time before the stamp.
+  const issueNumber = item.issue ?? existing?.issue ?? null;
 
   // 2. Branch + initial commit — ensures PR creation won't fail with "no commits between branches"
   const mainSha = await getMainSha(token, REPO);

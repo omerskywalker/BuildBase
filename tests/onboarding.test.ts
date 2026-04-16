@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { completeOnboarding } from '@/lib/actions/onboarding'
-import type { OnboardingData } from '@/lib/actions/onboarding'
+import { completeOnboarding } from '@/app/onboarding/actions'
+import type { OnboardingData } from '@/app/onboarding/actions'
 
 // Mock Next.js redirect
 vi.mock('next/navigation', () => ({

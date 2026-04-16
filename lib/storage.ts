@@ -13,17 +13,21 @@ const KEY = "bb:roadmap-overrides";
 
 function getRedis(): Redis | null {
   try {
-    return Redis.fromEnv();
+    const url = process.env.UPSTASH_REDIS_REST_KV_REST_API_URL;
+    const token = process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN;
+    if (!url || !token) return null;
+    return new Redis({ url, token });
   } catch {
     return null;
   }
 }
 
 export interface RoadmapOverride {
-  status: "in-progress" | "done" | "paused";
+  status: "in-progress" | "done" | "paused" | "failed";
   pr?: number;
   issue?: number;
   startedAt?: string;
+  failedAt?: string;
 }
 
 export async function getRoadmapOverrides(): Promise<Record<string, RoadmapOverride>> {

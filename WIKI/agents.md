@@ -1,46 +1,78 @@
-# BuildBase — Agent Guide
+---
+type: agent-guide
+tags: [agents, buildbase, github-actions]
+last-updated: 2026-04-16
+---
+
+# Agent Guide — BuildBase
+
+> Read this if you are a Claude Code agent running in GitHub Actions via `claude-feature.yml`.
+
+---
 
 ## Your Environment
 
-- **Repo:** `~/Desktop/projects/BuildBase`
-- **Node:** 20+ (pnpm 9)
-- **Next.js:** 16.2.2 — see gotchas.md for breaking changes
-- **TypeScript:** strict mode
+- **Repo:** checked out at the working directory, on the feature branch specified by `inputs.branch_name`
+- **Node:** 20, pnpm 9 — dependencies already installed by the workflow
+- **Git:** configured as `github-actions[bot]` — do NOT run `git add`, `git commit`, or `git push` yourself. The workflow handles all of that after you finish.
+- **Secrets available:** `ANTHROPIC_API_KEY` (your own key, already in use), `GITHUB_TOKEN` (OIDC-provisioned)
 
-## Setup Before Writing Code
+## Workflow Inputs You Receive
 
-```bash
-cd ~/Desktop/projects/BuildBase
-pnpm install
-cp .env.example .env.local
-# Fill in Supabase vars in .env.local
-```
+| Input | What it is |
+|---|---|
+| `item_id` | Roadmap item ID, e.g. `"2-1"` |
+| `item_title` | Short title of the item |
+| `item_description` | Brief description (may include FILE SCOPE CONTRACT for parallel runs) |
+| `branch_name` | Feature branch, already created and checked out |
+| `issue_number` | GitHub Issue # with the full spec — **read this first** |
+| `pr_number` | Draft PR # already open — push commits to it, do NOT create a new PR |
 
-## Required Completion Steps (before every PR)
+## Your Job — Step by Step
 
-```bash
-pnpm tsc --noEmit   # must be clean — zero errors
-pnpm test           # must pass — all tests green
-```
+1. **Read `CLAUDE.md`** — project conventions, design tokens, architecture
+2. **Read `WIKI/gotchas.md`** — real failures. Do this before writing a single line
+3. **Read GitHub Issue `#<issue_number>`** — full implementation spec, acceptance criteria, FILE SCOPE CONTRACT
+4. **Write code** — follow the file scope contract if present (parallel batch runs only)
+5. **Write tests** in `tests/` — see coverage requirements below
+6. **Run `pnpm tsc --noEmit`** — fix every type error before finishing
+7. **Run `pnpm test`** — fix every failing test before finishing
+8. **Update `lib/roadmap-data.ts`** for your item — set `status: "in-progress"`, `pr: <pr_number>`, confirm `issue: <issue_number>` is set
+   - **EXCEPTION:** If the description contains FILE SCOPE CONTRACT, **skip this step** — the kickoff API manages status for parallel agents
 
-Then update `lib/roadmap-data.ts`:
-- Set `status: "in-progress"` for your item when you start
-- Set `status: "done"` and `tests: true` when the PR is ready
+## Critical Constraints
+
+- **Do NOT run git commands** — no `git add`, `git commit`, `git push`. The workflow commits everything after you return.
+- **Do NOT create a new PR** — Draft PR `#<pr_number>` already exists. Pushing commits is enough.
+- **Do NOT modify `lib/roadmap-data.ts`** if you are in a parallel batch (FILE SCOPE CONTRACT present in your description).
+- **Respect FILE SCOPE CONTRACT** — if the issue lists "Owns" and "Avoid" paths, only touch files under "Owns".
 
 ## Test Requirements
 
-Every batch item needs tests in `tests/` before its PR merges.
+Tests live in `tests/`. Coverage target: `lib/**/*.ts` (excludes external API wrappers).
 
-Minimum coverage per item:
-- **Batch 1 (auth/RBAC):** Test that unauthenticated users are redirected, role checks work
-- **Batch 2 (session tracker):** Test `getDefaultWeight()`, `hoursSince()`, soreness prompt trigger logic
-- **Batch 3 (phase view):** Test session status calculations (complete/current/upcoming)
-- **Batch 4 (coach features):** Test `getFormBadge()` — ensure it NEVER returns raw form status to user
-- **Batch 5 (admin):** Test role validation, override application
-- **Batch 6 (metrics):** Test PR detection logic, streak calculation
-- **Batches 7–8:** Test utility functions and API route response shapes
+Minimum per batch:
 
-Coverage target: `lib/**/*.ts` (excludes external API wrappers)
+| Batch | What to test |
+|---|---|
+| 1 — Auth/RBAC | Unauthenticated redirect, role checks, profile creation logic |
+| 2 — Session Tracker | `getDefaultWeight()`, `hoursSince()`, soreness prompt trigger |
+| 3 — Phase View | Session status calculations (complete/current/upcoming) |
+| 4 — Coach Features | `getFormBadge()` — must never return raw form status to user role |
+| 5 — Admin | Role validation, override application |
+| 6 — Metrics | PR detection logic, streak calculation |
+| 7 — Template Editor | API route response shapes, validation |
+
+## Required Workflow Permissions
+
+The workflow (`claude-feature.yml`) runs with:
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write    # Required for OIDC token used by claude-code-action@beta
+```
 
 ## Key Imports
 
@@ -49,69 +81,53 @@ Coverage target: `lib/**/*.ts` (excludes external API wrappers)
 import type { Profile, SessionLog, SetLog, CoachNote } from "@/lib/types";
 
 // Supabase — pick the right one
-import { createClient } from "@/lib/supabase/server";  // Server Components
-import { createClient } from "@/lib/supabase/client";  // Client Components
+import { createClient } from "@/lib/supabase/server";  // Server Components, Route Handlers
+import { createClient } from "@/lib/supabase/client";  // Client Components only
 
 // Utils
 import { cn, getFormBadge, getDefaultWeight, formatWeight, hoursSince } from "@/lib/utils";
 
 // Constants
 import { EFFORT_LABELS, SORENESS_LABELS, SESSIONS_PER_PAGE, SORENESS_PROMPT_GAP_HOURS } from "@/lib/constants";
+
+// RBAC
+import { hasRole, requireRole } from "@/lib/rbac";
 ```
 
-## Supabase Query Patterns
+## Common Supabase Patterns
 
 ```ts
 // Server Component — get current user
 const supabase = await createClient();
 const { data: { user } } = await supabase.auth.getUser();
+if (!user) redirect("/login");
 
-// Server Component — get profile with coach check
+// Get profile
 const { data: profile } = await supabase
   .from("profiles")
   .select("*")
   .eq("id", user.id)
   .single();
 
-// Never query coach_form_assessments in user-facing components
-// Use getFormBadge() instead — it returns "Solid Form ✅" or null
+// NEVER query coach_form_assessments in user-facing components — use getFormBadge() instead
 ```
 
-## Component Patterns
+## What NOT To Do
 
-```tsx
-// Server Component with auth check
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-
-export default async function ProtectedPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  // ...
-}
-
-// Client Component with optimistic update
-"use client";
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-export function SetRow({ setLog, ... }) {
-  const [completed, setCompleted] = useState(setLog.is_completed);
-  
-  async function toggleSet() {
-    setCompleted(true); // optimistic
-    const supabase = createClient();
-    await supabase.from("set_logs").update({ is_completed: true }).eq("id", setLog.id);
-  }
-  // ...
-}
-```
+- ❌ `git commit` / `git push` / `git add` — workflow handles this
+- ❌ Create a new PR — the draft PR already exists
+- ❌ Modify `lib/roadmap-data.ts` during parallel batch runs
+- ❌ Expose `coach_form_assessments.status` to user-role views
+- ❌ Use `middleware.ts` — it's `proxy.ts` in Next.js 16
+- ❌ Access `params.id` synchronously — always `await params` in Next.js 16
+- ❌ Call `cookies()` synchronously — always `await cookies()`
+- ❌ Create `tailwind.config.ts` — Tailwind v4 is CSS-first, tokens live in `globals.css`
+- ❌ Use `runtime` key in `proxy.ts` config — causes build error
 
 ## Adding shadcn Components
 
 ```bash
-npx shadcn@latest add button card input label dialog sheet badge tabs
+npx shadcn@latest add button card input label dialog sheet badge tabs separator
 ```
 
 Components go to `components/ui/`. Check what's already there before adding.

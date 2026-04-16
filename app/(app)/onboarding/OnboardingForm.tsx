@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
-import { completeOnboarding } from "@/lib/actions/onboarding"
+import { completeOnboarding } from "@/app/onboarding/actions"
 import type { Gender, TemplateTier } from "@/lib/types"
 
 export default function OnboardingForm() {
