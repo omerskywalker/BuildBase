@@ -3,11 +3,18 @@ import { ROADMAP, REPO } from "@/lib/roadmap-data";
 import { getRoadmapOverrides, setRoadmapOverride } from "@/lib/storage";
 import { getMainSha, ensureBranchReady, createDraftPr, createIssue } from "@/lib/github-api";
 import { MONITOR_COOKIE } from "@/lib/constants";
+import { verifySession } from "@/lib/monitor-auth";
 
 export async function POST(request: Request) {
-  // Verify monitor session
-  const cookie = request.headers.get("cookie") ?? "";
-  if (!cookie.includes(`${MONITOR_COOKIE}=1`)) {
+  // Verify the signed session cookie — not just its presence
+  const cookies = Object.fromEntries(
+    (request.headers.get("cookie") ?? "").split(";").map((c) => {
+      const [k, ...v] = c.trim().split("=");
+      return [k, v.join("=")];
+    })
+  );
+  const sessionToken = cookies[MONITOR_COOKIE] ?? "";
+  if (!verifySession(sessionToken, process.env.ROADMAP_PIN ?? "")) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
