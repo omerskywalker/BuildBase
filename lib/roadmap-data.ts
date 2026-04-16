@@ -46,6 +46,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "in-progress",
         tests: true,
         branch: "feat/batch-1-auth",
+        issue: 18,
         pr: 7,
         scope: {
           owns: ["app/(auth)/", "app/auth/callback/", "components/AuthForm.tsx"],
@@ -59,6 +60,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "in-progress",
         tests: true,
         branch: "feat/batch-1-rbac",
+        issue: 19,
         pr: 8,
         scope: {
           owns: ["proxy.ts"],
@@ -72,6 +74,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "in-progress",
         tests: true,
         branch: "feat/batch-1-profiles",
+        issue: 20,
         pr: 9,
         scope: {
           owns: ["app/auth/callback/"],
@@ -85,6 +88,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "in-progress",
         tests: true,
         branch: "feat/batch-1-seed",
+        issue: 21,
         pr: 10,
         scope: {
           owns: ["scripts/seed.ts", "supabase/seed.sql"],
@@ -107,6 +111,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-onboarding",
+        issue: 17,
         scope: {
           owns: ["app/(app)/onboarding/"],
           avoid: ["app/(app)/sessions/"],
@@ -119,6 +124,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-tracker",
+        issue: 22,
         scope: {
           owns: ["app/(app)/sessions/page.tsx", "app/(app)/sessions/SessionCard.tsx"],
           avoid: ["app/(app)/onboarding/"],
@@ -131,6 +137,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-set-logging",
+        issue: 23,
         scope: {
           owns: ["app/(app)/sessions/SetRow.tsx", "app/(app)/sessions/WeightControl.tsx", "app/api/sessions/"],
           avoid: ["app/(app)/onboarding/"],
@@ -143,6 +150,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-2-prompts",
+        issue: 24,
         scope: {
           owns: ["app/(app)/sessions/EffortPrompt.tsx", "app/(app)/sessions/SorenessPrompt.tsx"],
           avoid: ["app/(app)/onboarding/"],
@@ -163,6 +171,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-3-phase-view",
+        issue: 25,
         scope: {
           owns: ["app/(app)/progress/"],
           avoid: ["app/(app)/sessions/SessionDetailModal.tsx", "app/(app)/sessions/SessionPreview.tsx"],
@@ -175,6 +184,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-3-session-detail",
+        issue: 26,
         scope: {
           owns: ["app/(app)/sessions/SessionDetailModal.tsx"],
           avoid: ["app/(app)/progress/", "app/(app)/sessions/SessionPreview.tsx"],
@@ -187,6 +197,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-3-session-preview",
+        issue: 27,
         scope: {
           owns: ["app/(app)/sessions/SessionPreview.tsx"],
           avoid: ["app/(app)/progress/", "app/(app)/sessions/SessionDetailModal.tsx"],
@@ -207,6 +218,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-playbook",
+        issue: 28,
         scope: {
           owns: ["app/(coach)/playbook/"],
           avoid: ["app/(coach)/clients/", "app/(app)/coach-notes/", "components/CoachNotesBanner.tsx"],
@@ -219,6 +231,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-clients",
+        issue: 29,
         scope: {
           owns: ["app/(coach)/clients/page.tsx", "app/(coach)/clients/[id]/page.tsx"],
           avoid: ["app/(coach)/playbook/", "app/(app)/coach-notes/", "components/CoachNotesBanner.tsx", "app/(coach)/clients/[id]/FormAssessmentPanel.tsx"],
@@ -231,6 +244,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-form-assessment",
+        issue: 30,
         scope: {
           owns: ["app/(coach)/clients/[id]/FormAssessmentPanel.tsx", "app/api/coach/form-assessment/"],
           avoid: ["app/(coach)/playbook/", "app/(app)/coach-notes/", "components/CoachNotesBanner.tsx"],
@@ -243,6 +257,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-4-coach-notes",
+        issue: 31,
         scope: {
           owns: ["app/(app)/coach-notes/", "components/CoachNotesBanner.tsx", "app/api/coach/notes/"],
           avoid: ["app/(coach)/playbook/", "app/(coach)/clients/"],
@@ -263,6 +278,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-5-admin-users",
+        issue: 32,
         scope: {
           owns: ["app/(admin)/users/page.tsx", "app/api/admin/users/"],
           avoid: ["app/(admin)/users/create/", "app/(admin)/overrides/"],
@@ -275,6 +291,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-5-create-user",
+        issue: 33,
         scope: {
           owns: ["app/(admin)/users/create/", "app/api/admin/users/create/"],
           avoid: ["app/(admin)/users/page.tsx", "app/(admin)/overrides/"],
@@ -287,6 +304,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-5-overrides",
+        issue: 34,
         scope: {
           owns: ["app/(admin)/overrides/", "app/api/admin/overrides/"],
           avoid: ["app/(admin)/users/"],
@@ -307,6 +325,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-6-charts",
+        issue: 35,
         scope: {
           owns: ["app/(app)/progress/charts/", "components/LiftChart.tsx"],
           avoid: ["app/(app)/progress/milestones/", "app/(app)/progress/trends/"],
@@ -319,6 +338,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-6-milestones",
+        issue: 36,
         scope: {
           owns: ["app/(app)/progress/milestones/", "components/MilestoneCard.tsx", "components/StreakBadge.tsx"],
           avoid: ["app/(app)/progress/charts/", "app/(app)/progress/trends/"],
@@ -331,6 +351,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-6-insights",
+        issue: 37,
         scope: {
           owns: ["app/(app)/progress/trends/", "components/TrendChart.tsx"],
           avoid: ["app/(app)/progress/charts/", "app/(app)/progress/milestones/"],
@@ -351,6 +372,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-7-program-editor",
+        issue: 38,
         scope: {
           owns: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/page.tsx", "app/api/admin/programs/"],
           avoid: ["app/(admin)/programs/[id]/session-editor/", "app/(admin)/programs/[id]/exercises/"],
@@ -363,6 +385,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-7-session-editor",
+        issue: 39,
         scope: {
           owns: ["app/(admin)/programs/[id]/session-editor/"],
           avoid: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/exercises/"],
@@ -375,6 +398,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "not-started",
         tests: false,
         branch: "feat/batch-7-exercise-library",
+        issue: 40,
         scope: {
           owns: ["app/(admin)/programs/[id]/exercises/", "app/api/admin/exercises/"],
           avoid: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/session-editor/"],
