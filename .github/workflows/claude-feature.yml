@@ -72,7 +72,8 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
+          mode: agent
+          direct_prompt: |
             You are implementing roadmap item ${{ inputs.item_id }} for BuildBase.
 
             **Item:** ${{ inputs.item_title }}
