@@ -156,7 +156,7 @@ function ItemRow({
         {effectiveIssue && (
           <a href={`https://github.com/${REPO}/issues/${effectiveIssue}`} target="_blank" rel="noopener"
             style={{ fontSize: 11, color: "#8A9E8A", textDecoration: "none", background: "rgba(138,158,138,0.08)", border: "1px solid rgba(138,158,138,0.2)", borderRadius: 6, padding: "2px 8px" }}>
-            #{effectiveIssue}
+            Issue #{effectiveIssue}
           </a>
         )}
         {effectivePr && (

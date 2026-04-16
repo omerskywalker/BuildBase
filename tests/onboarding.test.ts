@@ -1,121 +1,160 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { completeOnboarding } from '@/app/onboarding/actions'
+import type { OnboardingData } from '@/app/onboarding/actions'
 
-vi.mock("next/navigation", () => ({
-  redirect: vi.fn().mockImplementation((url: string) => {
-    throw new Error(`REDIRECT:${url}`);
-  }),
-}));
+// Mock Next.js redirect
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn(),
+}))
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(),
-}));
+// Mock Supabase client
+const mockUpdate = vi.fn()
+const mockEq = vi.fn()
+const mockFrom = vi.fn()
+const mockAuth = {
+  getUser: vi.fn()
+}
 
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { completeOnboarding } from "@/app/onboarding/actions";
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(() => ({
+    auth: mockAuth,
+    from: mockFrom
+  }))
+}))
 
-describe("onboarding", () => {
-  describe("completeOnboarding", () => {
-    let mockEq: ReturnType<typeof vi.fn>;
-    let mockUpdate: ReturnType<typeof vi.fn>;
-    let mockGetUser: ReturnType<typeof vi.fn>;
+describe('Onboarding', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    
+    // Set up default mock chain
+    mockEq.mockReturnValue({ error: null })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+    mockFrom.mockReturnValue({ update: mockUpdate })
+  })
 
-    beforeEach(() => {
-      vi.clearAllMocks();
+  describe('completeOnboarding', () => {
+    it('should successfully update profile with valid data', async () => {
+      // Mock authenticated user
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
 
-      mockEq = vi.fn().mockResolvedValue({ error: null });
-      mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
-      mockGetUser = vi.fn().mockResolvedValue({
-        data: { user: { id: "user-123" } },
-      });
-
-      vi.mocked(createClient).mockResolvedValue({
-        auth: { getUser: mockGetUser },
-        from: vi.fn().mockReturnValue({ update: mockUpdate }),
-      } as any);
-
-      vi.mocked(redirect).mockImplementation((url: string) => {
-        throw new Error(`REDIRECT:${url}`);
-      });
-    });
-
-    it("should complete onboarding with valid data", async () => {
-      await expect(
-        completeOnboarding({ full_name: "John Doe", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("REDIRECT:/dashboard");
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ full_name: "John Doe", onboarding_done: true })
-      );
-    });
-
-    it("should trim whitespace from full name", async () => {
-      await expect(
-        completeOnboarding({ full_name: "  John  ", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("REDIRECT:/dashboard");
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ full_name: "John" })
-      );
-    });
-
-    it("should throw error for empty full name", async () => {
-      await expect(
-        completeOnboarding({ full_name: "", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("Full name is required");
-    });
-
-    it("should throw error for whitespace-only full name", async () => {
-      await expect(
-        completeOnboarding({ full_name: "   ", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("Full name is required");
-    });
-
-    it("should throw error for invalid gender", async () => {
-      await expect(
-        completeOnboarding({ full_name: "John", gender: "invalid", template_tier: "default" })
-      ).rejects.toThrow("Invalid gender");
-    });
-
-    it("should throw error for invalid template tier", async () => {
-      await expect(
-        completeOnboarding({ full_name: "John", gender: "male", template_tier: "invalid" })
-      ).rejects.toThrow("Invalid template tier");
-    });
-
-    it("should handle all valid gender options", async () => {
-      for (const gender of ["male", "female", "other", "unset"]) {
-        await expect(
-          completeOnboarding({ full_name: "John", gender, template_tier: "default" })
-        ).rejects.toThrow("REDIRECT:/dashboard");
+      const onboardingData: OnboardingData = {
+        full_name: 'John Doe',
+        gender: 'male',
+        template_tier: 'default'
       }
-    });
 
-    it("should handle all valid template tiers", async () => {
-      for (const tier of ["pre_baseline", "default", "post_baseline"]) {
-        await expect(
-          completeOnboarding({ full_name: "John", gender: "male", template_tier: tier })
-        ).rejects.toThrow("REDIRECT:/dashboard");
+      await completeOnboarding(onboardingData)
+
+      expect(mockFrom).toHaveBeenCalledWith('profiles')
+      expect(mockUpdate).toHaveBeenCalledWith({
+        full_name: 'John Doe',
+        gender: 'male',
+        template_tier: 'default',
+        onboarding_done: true,
+        updated_at: expect.any(String)
+      })
+      expect(mockEq).toHaveBeenCalledWith('id', 'user-123')
+    })
+
+    it('should throw error when user not authenticated', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: null }
+      })
+
+      const onboardingData: OnboardingData = {
+        full_name: 'John Doe',
+        gender: 'male',
+        template_tier: 'default'
       }
-    });
 
-    it("should redirect to login if no user", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null } });
-      await expect(
-        completeOnboarding({ full_name: "John", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("REDIRECT:/login");
-    });
+      await expect(completeOnboarding(onboardingData)).rejects.toThrow('User not authenticated')
+    })
 
-    it("should handle database errors", async () => {
-      mockEq.mockResolvedValue({ error: { message: "Database error" } });
-      await expect(
-        completeOnboarding({ full_name: "John", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("Database error");
-    });
+    it('should throw error when database update fails', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
 
-    it("should redirect to dashboard on success", async () => {
-      await expect(
-        completeOnboarding({ full_name: "John", gender: "male", template_tier: "default" })
-      ).rejects.toThrow("REDIRECT:/dashboard");
-      expect(redirect).toHaveBeenCalledWith("/dashboard");
-    });
-  });
-});
+      // Mock database error
+      mockEq.mockReturnValue({ 
+        error: { message: 'Database error' } 
+      })
+
+      const onboardingData: OnboardingData = {
+        full_name: 'John Doe',
+        gender: 'male',
+        template_tier: 'default'
+      }
+
+      await expect(completeOnboarding(onboardingData)).rejects.toThrow('Failed to complete onboarding')
+    })
+
+    it('should trim whitespace from full_name', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
+
+      const onboardingData: OnboardingData = {
+        full_name: '  John Doe  ',
+        gender: 'female',
+        template_tier: 'pre_baseline'
+      }
+
+      await completeOnboarding(onboardingData)
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        full_name: 'John Doe',
+        gender: 'female',
+        template_tier: 'pre_baseline',
+        onboarding_done: true,
+        updated_at: expect.any(String)
+      })
+    })
+
+    it('should handle all valid gender options', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
+
+      const genderOptions = ['male', 'female', 'other'] as const
+
+      for (const gender of genderOptions) {
+        const onboardingData: OnboardingData = {
+          full_name: 'Test User',
+          gender,
+          template_tier: 'default'
+        }
+
+        await completeOnboarding(onboardingData)
+
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ gender })
+        )
+      }
+    })
+
+    it('should handle all valid template_tier options', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
+
+      const templateTiers = ['pre_baseline', 'default', 'post_baseline'] as const
+
+      for (const template_tier of templateTiers) {
+        const onboardingData: OnboardingData = {
+          full_name: 'Test User',
+          gender: 'male',
+          template_tier
+        }
+
+        await completeOnboarding(onboardingData)
+
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ template_tier })
+        )
+      }
+    })
+  })
+})

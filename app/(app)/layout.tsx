@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq("id", user.id)
     .single();
 
-  // Redirect to onboarding if first login (Batch 2 implements the wizard)
+  // Redirect to onboarding if first login
   if (profile && !profile.onboarding_done) {
     redirect("/onboarding");
   }
