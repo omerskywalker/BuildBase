@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { MONITOR_COOKIE, MONITOR_LOGIN_PATH } from "@/lib/constants";
+import { verifySession } from "@/lib/monitor-auth";
 import { isRouteAllowed } from "@/lib/rbac";
 import type { UserRole } from "@/lib/types";
 
@@ -9,8 +10,11 @@ export async function proxy(request: NextRequest) {
 
   // ── Monitor PIN guard ──────────────────────────────────────────────────────
   if (pathname.startsWith("/monitor") && pathname !== MONITOR_LOGIN_PATH) {
-    const session = request.cookies.get(MONITOR_COOKIE);
-    if (!session?.value) {
+    const token = request.cookies.get(MONITOR_COOKIE)?.value ?? "";
+    const pin = process.env.ROADMAP_PIN ?? "";
+    // Verify the HMAC-signed session token — a bare cookie value or forged
+    // token won't pass because it can't be derived without the PIN.
+    if (!token || !verifySession(token, pin)) {
       const loginUrl = new URL(MONITOR_LOGIN_PATH, request.url);
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);
