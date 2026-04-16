@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ROADMAP, REPO } from "@/lib/roadmap-data";
 import { getRoadmapOverrides, setRoadmapOverride } from "@/lib/storage";
-import { getMainSha, ensureBranchReady, createDraftPr, createIssue } from "@/lib/github-api";
+import { getMainSha, ensureBranchReady, createDraftPr } from "@/lib/github-api";
 import { MONITOR_COOKIE } from "@/lib/constants";
 import { verifySession } from "@/lib/monitor-auth";
 
@@ -68,8 +68,8 @@ export async function POST(request: Request) {
         : `CRITICAL: Do NOT modify lib/roadmap-data.ts — the kickoff system manages status.`;
 
       // Issue — reuse if already exists
-      const existingIssue = item.issue ?? existing?.issue ?? null;
-      const issueNumber = existingIssue ?? await createIssue(token, REPO, item);
+      // Issue — all items have issue numbers stamped in roadmap-data.ts; creation is disabled.
+      const issueNumber = item.issue ?? existing?.issue ?? null;
 
       // Branch + initial commit
       if (mainSha) {
