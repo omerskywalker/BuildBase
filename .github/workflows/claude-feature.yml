@@ -76,28 +76,27 @@ jobs:
             You are implementing roadmap item ${{ inputs.item_id }} for BuildBase.
 
             **Item:** ${{ inputs.item_title }}
-            **Description:** ${{ inputs.item_description }}
             **Branch:** ${{ inputs.branch_name }}
-            ${{ inputs.issue_number != '' && format('**GitHub Issue:** #{0} — read it for full context and implementation notes.', inputs.issue_number) || '' }}
-            ${{ inputs.pr_number != '' && format('**Draft PR:** #{0} — this PR already exists, push commits to it.', inputs.pr_number) || '' }}
+            ${{ inputs.issue_number != '' && format('**GitHub Issue:** #{0}', inputs.issue_number) || '' }}
+            ${{ inputs.pr_number != '' && format('**Draft PR:** #{0} — already open, push commits to it. Do NOT create a new PR.', inputs.pr_number) || '' }}
 
-            Read CLAUDE.md first for full project context, conventions, and architecture.
-            Read WIKI/index.md for current project status.
-            Read WIKI/gotchas.md for known pitfalls.
+            ## Instructions
 
-            Implement this roadmap item completely:
-            1. Write all necessary code changes
-            2. Write tests (see CLAUDE.md for test requirements)
-            3. Run `pnpm tsc --noEmit` and fix all type errors
-            4. Run `pnpm test` and fix all failing tests
-            5. If the description above contains a FILE SCOPE CONTRACT section, you are running in
-               parallel with other agents. In that case, do NOT modify lib/roadmap-data.ts —
-               the kickoff system manages status. Otherwise, set status to "in-progress" and
-               pr to the PR number for item ${{ inputs.item_id }} in lib/roadmap-data.ts.
-               ${{ inputs.issue_number != '' && format('Also set issue to {0} in lib/roadmap-data.ts for this item.', inputs.issue_number) || '' }}
-               ${{ inputs.pr_number != '' && format('Set pr to {0} in lib/roadmap-data.ts for this item.', inputs.pr_number) || '' }}
+            1. Read `CLAUDE.md` for project conventions, architecture, and design tokens.
+            2. Read `WIKI/index.md` for current project status and file map.
+            3. Read `WIKI/gotchas.md` for known pitfalls — do this before writing any code.
+            ${{ inputs.issue_number != '' && format('4. Read GitHub Issue #{0} for the full implementation spec, acceptance criteria, and file scope contract.', inputs.issue_number) || '4. Implement the item described above.' }}
+            5. Write all necessary code changes. If the issue contains a FILE SCOPE CONTRACT, only touch the files listed under "Owns" — do NOT modify files under "Avoid".
+            6. Write tests for every new module (see CLAUDE.md for test conventions). Tests live in `tests/`.
+            7. Run `pnpm tsc --noEmit` and fix every type error before finishing.
+            8. Run `pnpm test` and fix every failing test before finishing.
+            ${{ inputs.issue_number != '' && format('9. Update `lib/roadmap-data.ts` for item {0}: set `status: "in-progress"`, `pr: {1}`, `issue: {2}`. SKIP this step if the issue contains a FILE SCOPE CONTRACT — the kickoff system manages status for parallel agents.', inputs.item_id, inputs.pr_number, inputs.issue_number) || format('9. Update `lib/roadmap-data.ts` for item {0}: set `status: "in-progress"`, `pr: {1}`.', inputs.item_id, inputs.pr_number) }}
 
-            Do NOT create a new PR — a draft PR already exists (#${{ inputs.pr_number }}). Just push your commits.
+            ## Critical constraints
+            - Do NOT run `git add`, `git commit`, or `git push` — the workflow handles committing after you finish.
+            - Do NOT create a new PR — draft PR #${{ inputs.pr_number }} already exists.
+            - The project uses Next.js 16 with `proxy.ts` (not `middleware.ts`) and async `params`/`cookies`/`headers`.
+            - Tailwind v4: CSS-first config in `globals.css`, no `tailwind.config.ts`.
 
       - name: Type check
         run: pnpm tsc --noEmit
@@ -105,12 +104,24 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Commit and push
+      - name: Verify changes exist
         run: |
           git add -A
-          git commit -m "feat: implement ${{ inputs.item_id }} — ${{ inputs.item_title }}
+          if git diff --cached --quiet; then
+            echo "::error::Claude Code produced no file changes. Check the Run Claude Code step logs."
+            exit 1
+          fi
+          echo "Changes staged:"
+          git diff --cached --stat
 
-          Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>" || echo "Nothing to commit"
+      - name: Commit and push
+        run: |
+          git commit -m "feat(${{ inputs.item_id }}): ${{ inputs.item_title }}
+
+          Implements roadmap item ${{ inputs.item_id }}.
+          ${{ inputs.issue_number != '' && format('Closes #{0}', inputs.issue_number) || '' }}
+
+          Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
           git push origin "${{ inputs.branch_name }}"
 
       - name: Mark PR ready for review
