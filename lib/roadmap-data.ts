@@ -122,9 +122,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "2-2",
         title: "Session tracker page",
         description: "Weekly view with 3 sessions per page, next incomplete session auto-opens, completed auto-collapse.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-2-tracker",
+        pr: 68,
         issue: 22,
         scope: {
           owns: ["app/(app)/sessions/page.tsx", "app/(app)/sessions/SessionCard.tsx"],
