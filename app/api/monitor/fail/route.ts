@@ -1,22 +1,32 @@
 import { NextResponse } from "next/server";
 import { ROADMAP } from "@/lib/roadmap-data";
 import { getRoadmapOverrides, setRoadmapOverride } from "@/lib/storage";
+import { safeEqual } from "@/lib/monitor-auth";
 
 /**
  * Called by claude-feature.yml on workflow failure to flip the item from
  * "in-progress" to "failed" in KV so the monitor shows the correct state.
  *
- * Auth: Bearer token must match ROADMAP_PIN env var.
- * Body: { itemId: string }
+ * Auth: Bearer <MONITOR_API_KEY>
+ *
+ * MONITOR_API_KEY is a separate secret from ROADMAP_PIN — principle of least
+ * privilege: a leaked workflow log exposing the machine key doesn't compromise
+ * the human-facing monitor login, and vice versa.
+ * Falls back to ROADMAP_PIN if MONITOR_API_KEY is not set (backwards compat).
+ *
+ * safeEqual uses crypto.timingSafeEqual — prevents timing attacks on the key.
  */
 export async function POST(request: Request) {
-  const pin = process.env.ROADMAP_PIN;
-  if (!pin) {
-    return NextResponse.json({ success: false, error: "ROADMAP_PIN not configured" }, { status: 500 });
+  // Prefer a dedicated machine secret; fall back to PIN for existing setups
+  const expectedKey = process.env.MONITOR_API_KEY ?? process.env.ROADMAP_PIN ?? "";
+  if (!expectedKey) {
+    return NextResponse.json({ success: false, error: "Auth not configured" }, { status: 500 });
   }
 
   const authHeader = request.headers.get("authorization") ?? "";
-  if (authHeader !== `Bearer ${pin}`) {
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!bearer || !safeEqual(bearer, expectedKey)) {
+    console.warn(`[monitor/fail] unauthorized attempt ip=${request.headers.get("x-forwarded-for") ?? "unknown"}`);
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
