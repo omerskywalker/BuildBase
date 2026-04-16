@@ -21,7 +21,7 @@ export async function completeOnboarding(data: OnboardingData): Promise<void> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    throw new Error("User not authenticated");
   }
 
   const full_name = data.full_name.trim();
@@ -50,7 +50,7 @@ export async function completeOnboarding(data: OnboardingData): Promise<void> {
     .eq("id", user.id);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`Failed to complete onboarding: ${error.message}`);
   }
 
   redirect("/dashboard");
