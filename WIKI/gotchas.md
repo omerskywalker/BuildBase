@@ -11,6 +11,26 @@ last-updated: 2026-04-16
 
 ---
 
+## 2026-04-16 — TypeScript strict mode: never initialize array/object state with null
+
+**Symptom:** `pnpm tsc --noEmit` fails with `Type 'null' is not assignable to type 'OptimisticSet'` (or similar). Commit step is blocked, PR ends up with 0 files changed.
+
+**Cause:** `strictNullChecks` is on. `useState<T>(null)` is only valid if the type is `T | null`. Initializing array state with `null` instead of `[]` causes a hard TS error.
+
+**Fix:**
+```ts
+// WRONG — TS2322 in strict mode
+const [sets, setSets] = useState<OptimisticSet[]>(null)
+const [item, setItem] = useState<SetLog>(null)
+
+// CORRECT
+const [sets, setSets] = useState<OptimisticSet[]>([])
+const [item, setItem] = useState<SetLog | null>(null)
+```
+When null IS a valid value, add `| null` to the type. When it's an empty collection, start with `[]`.
+
+---
+
 ## 2026-04-16 — claude-code-action@beta requires `mode: agent` + `direct_prompt`
 
 **Symptom:** Workflow run fails immediately with:
