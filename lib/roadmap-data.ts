@@ -107,8 +107,8 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "in-progress",
         tests: true,
         branch: "feat/batch-2-onboarding",
-        pr: 65,
-        issue: 64,
+        pr: 67,
+        issue: 17,
         scope: {
           owns: ["app/(app)/onboarding/"],
           avoid: ["app/(app)/sessions/"],
