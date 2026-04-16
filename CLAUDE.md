@@ -5,7 +5,9 @@
 ## Wiki (read before starting any task)
 - **Project wiki:** `WIKI/index.md` — architecture, key files, design tokens, current status
 - **Gotchas:** `WIKI/gotchas.md` — real failures that have happened, read this first
-- **Design doc:** `~/Downloads/ClaudeCode/project-design-docs/BuildBase-design-doc.md` — full product spec
+- **Agent guide:** `WIKI/agents.md` — agent-specific context for GitHub Actions runs
+- **Design system:** `WIKI/design-system.md` — full visual spec and component patterns
+- **Global wiki:** `~/.claude/wiki/index.md` — cross-project context
 
 ---
 
