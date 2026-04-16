@@ -104,9 +104,11 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "2-1",
         title: "Onboarding flow (name, gender, template)",
         description: "First-login wizard collecting full_name, gender, confirming template tier. Sets onboarding_done.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-2-onboarding",
+        pr: 65,
+        issue: 64,
         scope: {
           owns: ["app/(app)/onboarding/"],
           avoid: ["app/(app)/sessions/"],
