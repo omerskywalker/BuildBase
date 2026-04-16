@@ -1,4 +1,4 @@
-export type ItemStatus = "not-started" | "in-progress" | "done" | "paused";
+export type ItemStatus = "not-started" | "in-progress" | "done" | "paused" | "failed";
 
 /** Paths this agent owns and should NOT be touched by sibling agents in the same batch. */
 export interface ItemScope {

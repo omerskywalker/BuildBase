@@ -20,10 +20,11 @@ function getRedis(): Redis | null {
 }
 
 export interface RoadmapOverride {
-  status: "in-progress" | "done" | "paused";
+  status: "in-progress" | "done" | "paused" | "failed";
   pr?: number;
   issue?: number;
   startedAt?: string;
+  failedAt?: string;
 }
 
 export async function getRoadmapOverrides(): Promise<Record<string, RoadmapOverride>> {

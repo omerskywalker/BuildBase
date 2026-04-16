@@ -131,3 +131,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr ready ${{ inputs.pr_number }} --repo ${{ github.repository }} || true
+
+      - name: Mark item failed in roadmap monitor
+        if: failure()
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          ROADMAP_PIN: ${{ secrets.ROADMAP_PIN }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$ROADMAP_PIN" ]; then
+            echo "APP_URL or ROADMAP_PIN not set — skipping failure report"
+            exit 0
+          fi
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${APP_URL}/api/monitor/fail" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${ROADMAP_PIN}" \
+            -d "{\"itemId\": \"${{ inputs.item_id }}\"}"
