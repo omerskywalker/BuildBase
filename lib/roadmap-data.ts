@@ -136,9 +136,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "2-3",
         title: "Interactive weight/rep controls + set logging",
         description: "+/- increment buttons, pre-filled defaults, tap to log a set (green confirmation), optimistic updates.",
-        status: "not-started",
-        tests: false,
+        status: "done",
+        tests: true,
         branch: "feat/batch-2-set-logging",
+        pr: 69,
         issue: 23,
         scope: {
           owns: ["app/(app)/sessions/SetRow.tsx", "app/(app)/sessions/WeightControl.tsx", "app/api/sessions/"],
