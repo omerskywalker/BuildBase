@@ -150,9 +150,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "2-4",
         title: "Effort + soreness prompts",
         description: "End-of-session 5-button effort prompt; pre-session soreness prompt when 12h+ gap since last session.",
-        status: "not-started",
-        tests: false,
+        status: "done",
+        tests: true,
         branch: "feat/batch-2-prompts",
+        pr: 71,
         issue: 24,
         scope: {
           owns: ["app/(app)/sessions/EffortPrompt.tsx", "app/(app)/sessions/SorenessPrompt.tsx"],
