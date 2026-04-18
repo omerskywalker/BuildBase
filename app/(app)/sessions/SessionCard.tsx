@@ -7,12 +7,16 @@ import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/typ
 import { timeAgo } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2 } from "lucide-react";
 import SetRow from "./SetRow";
+import EffortPrompt from "./EffortPrompt";
+import SorenessPrompt from "./SorenessPrompt";
 
 interface SessionCardProps {
   session: SessionLog & { template?: WorkoutTemplate };
   autoExpanded?: boolean;
   userTier?: "pre_baseline" | "default" | "post_baseline";
   userGender?: "male" | "female" | "other" | "unset";
+  /** completed_at of the last OTHER completed session — used to gate the soreness prompt */
+  lastCompletedAt?: string | null;
 }
 
 interface ExerciseWithSets {
@@ -25,18 +29,23 @@ export default function SessionCard({
   autoExpanded = false,
   userTier = "default",
   userGender = "unset",
+  lastCompletedAt = null,
 }: SessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(autoExpanded);
   const [isStarting, setIsStarting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [realSessionId, setRealSessionId] = useState<string | null>(
     session.id.startsWith("virtual-") ? null : session.id
   );
   const [exercises, setExercises] = useState<ExerciseWithSets[]>([]);
   const [loadingExercises, setLoadingExercises] = useState(false);
+  const [localIsComplete, setLocalIsComplete] = useState(session.is_complete);
+  const [showEffortPrompt, setShowEffortPrompt] = useState(false);
+  const [sorenessPrompted, setSorenessPrompted] = useState(session.soreness_prompted ?? false);
 
   const isVirtual = session.id.startsWith("virtual-");
   const sessionLogId = realSessionId;
-  const isCompleted = session.is_complete;
+  const isCompleted = localIsComplete;
   const isStarted = session.started_at !== null || realSessionId !== null;
   const sessionTitle = session.template?.title || `Session ${session.session_number}`;
   const dayLabel = session.template?.day_label || "";
@@ -95,13 +104,25 @@ export default function SessionCard({
     }
   };
 
+  const handleCompleteSession = async () => {
+    if (!sessionLogId || isCompleting) return;
+    setIsCompleting(true);
+    try {
+      await fetch(`/api/sessions/${sessionLogId}/complete`, { method: "POST" });
+      setLocalIsComplete(true);
+      setShowEffortPrompt(true);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   const handleToggleExpanded = () => {
     setIsExpanded((v) => !v);
   };
 
   const getStatusInfo = () => {
     if (isCompleted) return { icon: <CheckCircle className="w-4 h-4" />, text: "Completed", color: "text-success bg-success/10" };
-    if (isStarted) return { icon: <Play className="w-4 h-4" />, text: "In Progress", color: "text-blue-400 bg-blue-500/10" };
+    if (isStarted) return { icon: <Loader2 className="w-4 h-4" />, text: "In Progress", color: "text-blue-400 bg-blue-500/10" };
     return { icon: <Play className="w-4 h-4" />, text: "Not Started", color: "text-content-secondary bg-bg-hover" };
   };
 
@@ -143,6 +164,16 @@ export default function SessionCard({
 
       {isExpanded && (
         <CardContent className="pt-0 space-y-4">
+          {/* Soreness prompt — fires when gap since last session exceeds threshold */}
+          {sessionLogId && !isCompleted && (
+            <SorenessPrompt
+              sessionLogId={sessionLogId}
+              lastCompletedAt={lastCompletedAt ?? null}
+              sorenessPrompted={sorenessPrompted}
+              onDismiss={() => setSorenessPrompted(true)}
+            />
+          )}
+
           {!isStarted && !isCompleted && (
             <Button
               onClick={handleStartSession}
@@ -217,10 +248,34 @@ export default function SessionCard({
               {!loadingExercises && exercises.length === 0 && (
                 <p className="text-sm text-content-muted text-center py-4">No exercises found for this session.</p>
               )}
+
+              {/* Finish Session button — shown when exercises are loaded and session not yet complete */}
+              {!loadingExercises && exercises.length > 0 && !isCompleted && (
+                <Button
+                  onClick={handleCompleteSession}
+                  disabled={isCompleting}
+                  variant="outline"
+                  className="w-full border-success text-success hover:bg-success/10"
+                >
+                  {isCompleting ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finishing…</>
+                  ) : (
+                    "Finish Session"
+                  )}
+                </Button>
+              )}
             </div>
           )}
 
-          {isCompleted && (
+          {/* Effort prompt — shown immediately after Finish Session */}
+          {showEffortPrompt && sessionLogId && (
+            <EffortPrompt
+              sessionLogId={sessionLogId}
+              onDismiss={() => setShowEffortPrompt(false)}
+            />
+          )}
+
+          {isCompleted && !showEffortPrompt && (
             <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-sm text-content-secondary">
               {session.completed_at && <span>Completed {timeAgo(session.completed_at)}</span>}
               {session.post_session_effort && <span>Effort: {session.post_session_effort}/5</span>}

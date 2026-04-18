@@ -58,6 +58,16 @@ async function getSessionsData(userId: string, currentWeek: number) {
     .eq("user_id", userId)
     .in("workout_template_id", templates.map(t => t.id));
 
+  // Find the most recently completed session (across all weeks) for the soreness gate
+  const { data: lastCompletedLog } = await supabase
+    .from("session_logs")
+    .select("completed_at")
+    .eq("user_id", userId)
+    .eq("is_complete", true)
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .single();
+
   // Create session objects, merging templates with logs
   const sessions = templates.map(template => {
     const existingLog = sessionLogs?.find(log => log.workout_template_id === template.id);
@@ -96,7 +106,8 @@ async function getSessionsData(userId: string, currentWeek: number) {
     sessions,
     totalWeeks,
     currentWeek,
-    enrollment
+    enrollment,
+    lastCompletedAt: lastCompletedLog?.completed_at ?? null
   };
 }
 
@@ -140,7 +151,7 @@ async function SessionsList({ userId, currentWeek }: { userId: string; currentWe
       .eq("id", userId)
       .single();
 
-    const { sessions, totalWeeks } = await getSessionsData(userId, currentWeek);
+    const { sessions, totalWeeks, lastCompletedAt } = await getSessionsData(userId, currentWeek);
 
     // Find the first incomplete session to auto-expand
     const firstIncompleteIndex = sessions.findIndex(session => !session.is_complete);
@@ -158,6 +169,7 @@ async function SessionsList({ userId, currentWeek }: { userId: string; currentWe
               autoExpanded={shouldExpand}
               userTier={profile?.template_tier ?? "default"}
               userGender={profile?.gender ?? "unset"}
+              lastCompletedAt={lastCompletedAt}
             />
           );
         })}
