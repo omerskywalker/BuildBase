@@ -1,14 +1,32 @@
-// TODO Batch 3 + 6: Phase view + metrics
-// - Phase overview with session status grid
-// - Progress bars per phase and overall
-// - Batch 6: Charts, streaks, PRs, milestones
-export default function ProgressPage() {
+import { Suspense } from "react";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import PhaseOverview from "./PhaseOverview";
+
+export default async function ProgressPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#E8F0E8", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
-        Progress
-      </h1>
-      <p style={{ color: "#8A9E8A", fontSize: 14 }}>Phase view + metrics — coming in Batches 3 & 6.</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-content-primary font-display mb-1">
+            Progress
+          </h1>
+          <p className="text-sm text-content-secondary">
+            Track your journey through your 12-week strength program
+          </p>
+        </div>
+      </div>
+
+      <Suspense fallback={<div className="text-content-secondary">Loading progress...</div>}>
+        <PhaseOverview userId={user.id} />
+      </Suspense>
     </div>
   );
 }
