@@ -27,7 +27,7 @@ async function fetchPrStatus(pr: number): Promise<{ pr: GhPr; ci: CiStatus } | n
 
     const prRes = await fetch(`https://api.github.com/repos/${REPO}/pulls/${pr}`, {
       headers,
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!prRes.ok) return null;
 
@@ -35,7 +35,7 @@ async function fetchPrStatus(pr: number): Promise<{ pr: GhPr; ci: CiStatus } | n
 
     const checksRes = await fetch(
       `https://api.github.com/repos/${REPO}/commits/${prData.head?.ref}/check-runs`,
-      { headers, next: { revalidate: 60 } }
+      { headers, cache: "no-store" }
     );
     let ci: CiStatus = { conclusion: null };
     if (checksRes.ok) {
