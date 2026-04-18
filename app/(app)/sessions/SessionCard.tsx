@@ -1,206 +1,231 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SessionLog, WorkoutTemplate } from "@/lib/types";
+import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Play, CheckCircle } from "lucide-react";
+import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2 } from "lucide-react";
+import SetRow from "./SetRow";
 
 interface SessionCardProps {
   session: SessionLog & { template?: WorkoutTemplate };
   autoExpanded?: boolean;
+  userTier?: "pre_baseline" | "default" | "post_baseline";
+  userGender?: "male" | "female" | "other" | "unset";
 }
 
-export default function SessionCard({ session, autoExpanded = false }: SessionCardProps) {
-  const [isExpanded, setIsExpanded] = useState(autoExpanded);
-  
-  const isCompleted = session.is_complete;
-  const isStarted = session.started_at !== null;
-  const isVirtual = session.id.startsWith("virtual-");
+interface ExerciseWithSets {
+  templateExercise: TemplateExercise;
+  setLogs: SetLog[];
+}
 
-  // Format session title
+export default function SessionCard({
+  session,
+  autoExpanded = false,
+  userTier = "default",
+  userGender = "unset",
+}: SessionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(autoExpanded);
+  const [isStarting, setIsStarting] = useState(false);
+  const [realSessionId, setRealSessionId] = useState<string | null>(
+    session.id.startsWith("virtual-") ? null : session.id
+  );
+  const [exercises, setExercises] = useState<ExerciseWithSets[]>([]);
+  const [loadingExercises, setLoadingExercises] = useState(false);
+
+  const isVirtual = session.id.startsWith("virtual-");
+  const sessionLogId = realSessionId;
+  const isCompleted = session.is_complete;
+  const isStarted = session.started_at !== null || realSessionId !== null;
   const sessionTitle = session.template?.title || `Session ${session.session_number}`;
   const dayLabel = session.template?.day_label || "";
-  
-  // Status indicators
+
+  const fetchExercises = useCallback(async (logId: string) => {
+    setLoadingExercises(true);
+    try {
+      const res = await fetch(`/api/sessions/${logId}/exercises`);
+      if (!res.ok) return;
+      const data = await res.json() as { exercises: TemplateExercise[]; setLogs: SetLog[] };
+      const merged: ExerciseWithSets[] = data.exercises.map((te) => ({
+        templateExercise: te,
+        setLogs: data.setLogs.filter((sl) => sl.template_exercise_id === te.id),
+      }));
+      setExercises(merged);
+    } finally {
+      setLoadingExercises(false);
+    }
+  }, []);
+
+  // Load exercises when expanded and we have a real session ID
+  useEffect(() => {
+    if (isExpanded && sessionLogId && exercises.length === 0) {
+      fetchExercises(sessionLogId);
+    }
+  }, [isExpanded, sessionLogId, exercises.length, fetchExercises]);
+
+  const handleStartSession = async () => {
+    if (isStarting) return;
+    setIsStarting(true);
+    try {
+      if (isVirtual && !realSessionId) {
+        // Create the session_log row first
+        const res = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            workout_template_id: session.workout_template_id,
+            enrollment_id: session.enrollment_id,
+            week_number: session.week_number,
+            session_number: session.session_number,
+          }),
+        });
+        if (!res.ok) return;
+        const newLog = await res.json() as SessionLog;
+        setRealSessionId(newLog.id);
+        setIsExpanded(true);
+        await fetchExercises(newLog.id);
+      } else if (sessionLogId) {
+        await fetch(`/api/sessions/${sessionLogId}/start`, { method: "POST" });
+        setIsExpanded(true);
+        await fetchExercises(sessionLogId);
+      }
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleToggleExpanded = () => {
+    setIsExpanded((v) => !v);
+  };
+
   const getStatusInfo = () => {
-    if (isCompleted) {
-      return {
-        icon: <CheckCircle className="w-4 h-4 text-success" />,
-        text: "Completed",
-        textColor: "text-success",
-        bgColor: "bg-success/10"
-      };
-    }
-    if (isStarted) {
-      return {
-        icon: <Play className="w-4 h-4 text-blue-500" />,
-        text: "In Progress",
-        textColor: "text-blue-500",
-        bgColor: "bg-blue-500/10"
-      };
-    }
-    return {
-      icon: <Play className="w-4 h-4 text-content-secondary" />,
-      text: "Not Started",
-      textColor: "text-content-secondary",
-      bgColor: "bg-bg-hover"
-    };
+    if (isCompleted) return { icon: <CheckCircle className="w-4 h-4" />, text: "Completed", color: "text-success bg-success/10" };
+    if (isStarted) return { icon: <Play className="w-4 h-4" />, text: "In Progress", color: "text-blue-400 bg-blue-500/10" };
+    return { icon: <Play className="w-4 h-4" />, text: "Not Started", color: "text-content-secondary bg-bg-hover" };
   };
 
   const statusInfo = getStatusInfo();
 
-  const handleStartSession = () => {
-    // TODO: Implement session start logic (will be in batch 2-3)
-    console.log("Start session:", session.id);
-  };
-
-  const handleToggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-  };
-
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg">
+    <Card className="transition-all duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-content-muted">
-                Day {dayLabel}
-              </span>
-              <span className="text-content-muted">•</span>
-              <h3 className="text-lg font-semibold text-content-primary">
-                {sessionTitle}
-              </h3>
-            </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-content-muted">Day {dayLabel}</span>
+            <span className="text-content-muted">•</span>
+            <h3 className="text-base font-semibold text-content-primary">{sessionTitle}</h3>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            {/* Status Badge */}
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor} flex items-center space-x-1`}>
+
+          <div className="flex items-center gap-3">
+            <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${statusInfo.color}`}>
               {statusInfo.icon}
               <span>{statusInfo.text}</span>
             </div>
-            
-            {/* Expand/Collapse Button */}
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              type="button"
               onClick={handleToggleExpanded}
-              className="h-8 w-8"
+              className="h-8 w-8 flex items-center justify-center rounded-md text-content-secondary hover:text-content-primary hover:bg-bg-hover transition-colors"
             >
-              {isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </Button>
+              {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </button>
           </div>
         </div>
-        
-        {/* Session metadata when collapsed */}
+
         {!isExpanded && (
-          <div className="flex items-center justify-between text-sm text-content-secondary">
-            <div>
-              {session.template?.description && (
-                <span>{session.template.description}</span>
-              )}
-            </div>
-            <div>
-              {isCompleted && session.completed_at && (
-                <span>Completed {timeAgo(session.completed_at)}</span>
-              )}
-              {isStarted && !isCompleted && session.started_at && (
-                <span>Started {timeAgo(session.started_at)}</span>
-              )}
-            </div>
+          <div className="flex items-center justify-between text-xs text-content-muted mt-1">
+            <span>{session.template?.description}</span>
+            {isCompleted && session.completed_at && <span>Completed {timeAgo(session.completed_at)}</span>}
+            {isStarted && !isCompleted && session.started_at && <span>Started {timeAgo(session.started_at)}</span>}
           </div>
         )}
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="pt-0">
-          <div className="space-y-4">
-            {/* Session Description */}
-            {session.template?.description && (
-              <p className="text-sm text-content-secondary">
-                {session.template.description}
-              </p>
-            )}
-            
-            {/* Session Details */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-content-secondary">Session:</span>
-                <span className="ml-2 text-content-primary">
-                  {session.session_number} of Week {session.week_number}
-                </span>
-              </div>
-              
-              {isCompleted && session.post_session_effort && (
-                <div>
-                  <span className="text-content-secondary">Effort:</span>
-                  <span className="ml-2 text-content-primary">
-                    {session.post_session_effort}/5
-                  </span>
+        <CardContent className="pt-0 space-y-4">
+          {!isStarted && !isCompleted && (
+            <Button
+              onClick={handleStartSession}
+              disabled={isStarting}
+              className="w-full bg-accent hover:bg-accent-dim text-white"
+            >
+              {isStarting ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Starting…</>
+              ) : (
+                "Start Session"
+              )}
+            </Button>
+          )}
+
+          {/* Exercise list */}
+          {sessionLogId && (
+            <div className="space-y-5">
+              {loadingExercises && (
+                <div className="flex items-center justify-center py-6 text-content-secondary text-sm gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Loading exercises…
                 </div>
               )}
-            </div>
 
-            {/* Timestamps */}
-            <div className="space-y-2 text-sm text-content-secondary">
-              {isStarted && session.started_at && (
-                <div>Started: {new Date(session.started_at).toLocaleDateString()}</div>
+              {!loadingExercises && exercises.map(({ templateExercise, setLogs }) => (
+                <div key={templateExercise.id} className="space-y-2">
+                  {/* Exercise header */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-semibold text-content-primary">
+                      {templateExercise.exercise?.name ?? "Exercise"}
+                    </span>
+                    {templateExercise.exercise?.muscle_group && (
+                      <span className="text-xs text-content-muted">{templateExercise.exercise.muscle_group}</span>
+                    )}
+                    {templateExercise.coaching_cues && (
+                      <span className="text-xs text-content-secondary italic ml-auto">{templateExercise.coaching_cues}</span>
+                    )}
+                  </div>
+
+                  {/* Column headers */}
+                  <div className="flex items-center gap-3 px-3 text-xs text-content-muted">
+                    <span className="w-6 text-center">Set</span>
+                    <span className="flex-1">Weight</span>
+                    <span className="min-w-[84px] text-center">Reps</span>
+                    <span className="w-8" />
+                  </div>
+
+                  {/* Set rows */}
+                  <div className="space-y-1">
+                    {Array.from({ length: templateExercise.sets_default }, (_, i) => {
+                      const setNumber = i + 1;
+                      const existing = setLogs.find((sl) => sl.set_number === setNumber);
+                      return (
+                        <SetRow
+                          key={`${templateExercise.id}-set-${setNumber}`}
+                          sessionLogId={sessionLogId}
+                          templateExercise={templateExercise}
+                          setNumber={setNumber}
+                          tier={userTier}
+                          gender={userGender}
+                          existingLog={
+                            existing
+                              ? { setLogId: existing.id, weight: existing.weight_used, reps: existing.reps_completed }
+                              : undefined
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {!loadingExercises && exercises.length === 0 && (
+                <p className="text-sm text-content-muted text-center py-4">No exercises found for this session.</p>
               )}
-              {isCompleted && session.completed_at && (
-                <div>Completed: {new Date(session.completed_at).toLocaleDateString()}</div>
-              )}
             </div>
+          )}
 
-            {/* Session Notes */}
-            {session.notes && (
-              <div className="p-3 bg-bg-surface rounded-lg">
-                <h4 className="text-sm font-medium text-content-primary mb-1">Notes:</h4>
-                <p className="text-sm text-content-secondary">{session.notes}</p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-border-subtle">
-              <div>
-                {/* Exercise count placeholder - will be implemented in batch 2-3 */}
-                <span className="text-sm text-content-secondary">
-                  Exercises: Coming in next batch
-                </span>
-              </div>
-              
-              <div className="flex space-x-2">
-                {!isCompleted && (
-                  <Button
-                    onClick={handleStartSession}
-                    size="sm"
-                    className="bg-accent hover:bg-accent-dim"
-                  >
-                    {isStarted ? "Continue Session" : "Start Session"}
-                  </Button>
-                )}
-                
-                {isCompleted && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // TODO: View session details
-                      console.log("View session details:", session.id);
-                    }}
-                  >
-                    View Details
-                  </Button>
-                )}
-              </div>
+          {isCompleted && (
+            <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-sm text-content-secondary">
+              {session.completed_at && <span>Completed {timeAgo(session.completed_at)}</span>}
+              {session.post_session_effort && <span>Effort: {session.post_session_effort}/5</span>}
             </div>
-          </div>
+          )}
         </CardContent>
       )}
     </Card>

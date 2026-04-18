@@ -133,8 +133,15 @@ export default async function SessionsPage({ searchParams }: SessionsPageProps) 
 
 async function SessionsList({ userId, currentWeek }: { userId: string; currentWeek: number }) {
   try {
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("template_tier, gender")
+      .eq("id", userId)
+      .single();
+
     const { sessions, totalWeeks } = await getSessionsData(userId, currentWeek);
-    
+
     // Find the first incomplete session to auto-expand
     const firstIncompleteIndex = sessions.findIndex(session => !session.is_complete);
 
@@ -143,12 +150,14 @@ async function SessionsList({ userId, currentWeek }: { userId: string; currentWe
         {sessions.map((session, index) => {
           // Auto-expand first incomplete session, collapse completed ones
           const shouldExpand = !session.is_complete && (firstIncompleteIndex === -1 || index === firstIncompleteIndex);
-          
+
           return (
             <SessionCard
               key={session.id}
               session={session}
               autoExpanded={shouldExpand}
+              userTier={profile?.template_tier ?? "default"}
+              userGender={profile?.gender ?? "unset"}
             />
           );
         })}
