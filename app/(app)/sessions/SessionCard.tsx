@@ -10,6 +10,7 @@ import SetRow from "./SetRow";
 import EffortPrompt from "./EffortPrompt";
 import SorenessPrompt from "./SorenessPrompt";
 import SessionDetailModal from "./SessionDetailModal";
+import SessionPreview from "./SessionPreview";
 
 interface SessionCardProps {
   session: SessionLog & { template?: WorkoutTemplate };
@@ -44,6 +45,7 @@ export default function SessionCard({
   const [showEffortPrompt, setShowEffortPrompt] = useState(false);
   const [sorenessPrompted, setSorenessPrompted] = useState(session.soreness_prompted ?? false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const isVirtual = session.id.startsWith("virtual-");
   const sessionLogId = realSessionId;
@@ -160,6 +162,15 @@ export default function SessionCard({
             <span>{session.template?.description}</span>
             {isCompleted && session.completed_at && <span>Completed {timeAgo(session.completed_at)}</span>}
             {isStarted && !isCompleted && session.started_at && <span>Started {timeAgo(session.started_at)}</span>}
+            {!isStarted && !isCompleted && (
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                className="text-accent hover:text-accent-dim transition-colors underline underline-offset-2"
+              >
+                Preview
+              </button>
+            )}
           </div>
         )}
       </CardHeader>
@@ -297,6 +308,14 @@ export default function SessionCard({
             session={session}
             open={showDetailModal}
             onClose={() => setShowDetailModal(false)}
+          />
+
+          <SessionPreview
+            session={session}
+            open={showPreview}
+            onClose={() => setShowPreview(false)}
+            userTier={userTier}
+            userGender={userGender}
           />
         </CardContent>
       )}
