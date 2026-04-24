@@ -185,9 +185,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "3-2",
         title: "Completed session detail modal",
         description: "Click a completed session to see date, weights used, effort score, notes.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-3-session-detail",
+        pr: 73,
         issue: 26,
         scope: {
           owns: ["app/(app)/sessions/SessionDetailModal.tsx"],

@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2 } from "lucide-re
 import SetRow from "./SetRow";
 import EffortPrompt from "./EffortPrompt";
 import SorenessPrompt from "./SorenessPrompt";
+import SessionDetailModal from "./SessionDetailModal";
 
 interface SessionCardProps {
   session: SessionLog & { template?: WorkoutTemplate };
@@ -42,6 +43,7 @@ export default function SessionCard({
   const [localIsComplete, setLocalIsComplete] = useState(session.is_complete);
   const [showEffortPrompt, setShowEffortPrompt] = useState(false);
   const [sorenessPrompted, setSorenessPrompted] = useState(session.soreness_prompted ?? false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const isVirtual = session.id.startsWith("virtual-");
   const sessionLogId = realSessionId;
@@ -278,9 +280,24 @@ export default function SessionCard({
           {isCompleted && !showEffortPrompt && (
             <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-sm text-content-secondary">
               {session.completed_at && <span>Completed {timeAgo(session.completed_at)}</span>}
-              {session.post_session_effort && <span>Effort: {session.post_session_effort}/5</span>}
+              <div className="flex items-center gap-3">
+                {session.post_session_effort && <span>Effort: {session.post_session_effort}/5</span>}
+                <button
+                  type="button"
+                  onClick={() => setShowDetailModal(true)}
+                  className="text-xs text-accent hover:text-accent-dim transition-colors underline underline-offset-2"
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           )}
+
+          <SessionDetailModal
+            session={session}
+            open={showDetailModal}
+            onClose={() => setShowDetailModal(false)}
+          />
         </CardContent>
       )}
     </Card>
