@@ -8,12 +8,12 @@
 @theme {
   /* Backgrounds */
   --color-bg-base:     #0F1A14;
-  --color-bg-surface:  #152019;
-  --color-bg-elevated: #1C2A20;
-  --color-bg-hover:    #22332A;
+  --color-bg-surface:  #1E1A14;
+  --color-bg-elevated: #28241C;
+  --color-bg-hover:    #332E25;
 
   /* Borders */
-  --color-border-subtle: #2A3D30;
+  --color-border-subtle: #3A3228;
   --color-border-strong: #3A5040;
 
   /* Content */
