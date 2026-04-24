@@ -89,7 +89,7 @@ function ciDot(conclusion: CiStatus["conclusion"]) {
 
 function ProgressBar({ pct, color = "#C84B1A" }: { pct: number; color?: string }) {
   return (
-    <div style={{ height: 4, background: "#332E25", borderRadius: 99, overflow: "hidden", width: "100%" }}>
+    <div style={{ height: 4, background: "#3E362C", borderRadius: 99, overflow: "hidden", width: "100%" }}>
       <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.4s" }} />
     </div>
   );
@@ -117,7 +117,7 @@ function ItemRow({
   const effectiveIssue = item.issue ?? kvIssue;
 
   return (
-    <div style={{ padding: "12px 0", borderBottom: "1px solid #332E25", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ padding: "12px 0", borderBottom: "1px solid #3E362C", display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ fontSize: 11, color: "#4A5A4A", minWidth: 32, paddingTop: 2, fontFamily: "var(--font-mono, monospace)" }}>
           {item.id}
@@ -168,7 +168,7 @@ function ItemRow({
         {dot && <span style={{ fontSize: 11, fontWeight: 600, color: dot.color }}>{dot.label}</span>}
         {item.tests && <span style={{ fontSize: 11, color: "#2D7A3A" }}>🧪 Tests</span>}
         {item.branch && (
-          <span style={{ fontSize: 10, color: "#4A5A4A", background: "#1E1A14", border: "1px solid #332E25", borderRadius: 4, padding: "2px 6px", fontFamily: "var(--font-mono, monospace)" }}>
+          <span style={{ fontSize: 10, color: "#4A5A4A", background: "#2A2418", border: "1px solid #3E362C", borderRadius: 4, padding: "2px 6px", fontFamily: "var(--font-mono, monospace)" }}>
             {item.branch}
           </span>
         )}
@@ -205,7 +205,7 @@ export default async function RoadmapMonitorPage() {
     <div style={{ minHeight: "100dvh", background: "#0F1A14", color: "#E8F0E8", fontFamily: "var(--font-inter, sans-serif)", paddingBottom: 48 }}>
       <RoadmapPoller inProgressIds={inProgressIds} doneIds={doneIds} />
 
-      <div style={{ background: "#1E1A14", borderBottom: "1px solid #3A3228", padding: "16px 16px 14px", position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: "#2A2418", borderBottom: "1px solid #483E30", padding: "16px 16px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
@@ -245,8 +245,8 @@ export default async function RoadmapMonitorPage() {
           }).length;
           const allDone = done === total;
           return (
-            <div key={batch.number} style={{ marginTop: 24, background: "#28241C", border: "1px solid #3A3228", borderRadius: 12, overflow: "hidden" }}>
-              <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #3A3228", background: "#211D16" }}>
+            <div key={batch.number} style={{ marginTop: 24, background: "#352D22", border: "1px solid #483E30", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #483E30", background: "#211D16" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "#C84B1A", background: "rgba(200,75,26,0.1)", border: "1px solid rgba(200,75,26,0.2)", borderRadius: 6, padding: "2px 8px" }}>
@@ -286,7 +286,7 @@ export default async function RoadmapMonitorPage() {
           );
         })}
 
-        <div style={{ marginTop: 32, padding: "16px 0", borderTop: "1px solid #332E25" }}>
+        <div style={{ marginTop: 32, padding: "16px 0", borderTop: "1px solid #3E362C" }}>
           <p style={{ fontSize: 11, color: "#2A3D30" }}>Status synced from GitHub · refreshes on each page load</p>
         </div>
       </div>

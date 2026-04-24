@@ -17,8 +17,8 @@ export default async function HomePage() {
       {/* Nav */}
       <nav
         style={{
-          background: "#1E1A14",
-          borderBottom: "1px solid #3A3228",
+          background: "#2A2418",
+          borderBottom: "1px solid #483E30",
           padding: "12px 24px",
           display: "flex",
           alignItems: "center",
@@ -44,7 +44,7 @@ export default async function HomePage() {
               textDecoration: "none",
               padding: "8px 16px",
               borderRadius: 8,
-              border: "1px solid #3A3228",
+              border: "1px solid #483E30",
               transition: "background 0.15s",
             }}
           >
@@ -142,7 +142,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer
         style={{
-          borderTop: "1px solid #3A3228",
+          borderTop: "1px solid #483E30",
           padding: "16px 24px",
           textAlign: "center",
           color: "#4A5A4A",
@@ -169,8 +169,8 @@ function FeatureCard({
   return (
     <div
       style={{
-        background: "#28241C",
-        border: "1px solid #3A3228",
+        background: "#352D22",
+        border: "1px solid #483E30",
         borderRadius: 12,
         padding: "24px 20px",
       }}

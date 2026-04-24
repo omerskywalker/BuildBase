@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
         style={{
           width: "100%",
           maxWidth: 400,
-          background: "#1C2A20",
+          background: "#352D22",
           border: "1px solid #2D7A3A",
           borderRadius: 12,
           padding: 32,
@@ -86,8 +86,8 @@ export default function ForgotPasswordPage() {
       style={{
         width: "100%",
         maxWidth: 400,
-        background: "#1C2A20",
-        border: "1px solid #3A3228",
+        background: "#352D22",
+        border: "1px solid #483E30",
         borderRadius: 12,
         padding: 32,
       }}
@@ -124,7 +124,7 @@ export default function ForgotPasswordPage() {
             required
             style={{
               background: "#0F1A14",
-              border: "1px solid #3A3228",
+              border: "1px solid #483E30",
               borderRadius: 8,
               padding: "10px 12px",
               color: "#E8F0E8",
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
             style={{
               fontSize: 13,
               color: "#B83020",
-              background: "#1C2A20",
+              background: "#352D22",
               border: "1px solid #B83020",
               borderRadius: 6,
               padding: "8px 12px",
