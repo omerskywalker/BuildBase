@@ -11,6 +11,20 @@ last-updated: 2026-04-16
 
 ---
 
+## 2026-04-24 — Test files with JSX must use .tsx extension
+
+**Symptom:** `pnpm tsc --noEmit` fails with dozens of `'>' expected`, `',' expected`, and `Expression expected` errors in test files.
+
+**Cause:** TypeScript cannot parse JSX syntax (`<Component />`) in `.ts` files. The file must have a `.tsx` extension for JSX to be valid. This has burned us on items 3-2 and 3-3 — both times the agent wrote React component render tests in a `.ts` file.
+
+**Rule for test files:**
+- If a test **imports and renders React components** (uses `render()`, JSX, `screen.*`) → name it `*.test.tsx`
+- If a test **only tests pure functions, data transforms, and logic** (no JSX) → name it `*.test.ts`
+
+Most BuildBase tests should be `.test.ts` because coverage targets `lib/**/*.ts` (pure logic). Prefer testing the logic the component uses, not rendering the component itself. Only write `.tsx` tests when you specifically need to test interactive UI behavior.
+
+---
+
 ## 2026-04-16 — TypeScript strict mode: never initialize array/object state with null
 
 **Symptom:** `pnpm tsc --noEmit` fails with `Type 'null' is not assignable to type 'OptimisticSet'` (or similar). Commit step is blocked, PR ends up with 0 files changed.

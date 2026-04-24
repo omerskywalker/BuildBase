@@ -86,12 +86,13 @@ jobs:
             1. Read `CLAUDE.md` for project conventions, architecture, and design tokens.
             2. Read `WIKI/index.md` for current project status and file map.
             3. Read `WIKI/gotchas.md` for known pitfalls — do this before writing any code.
-            ${{ inputs.issue_number != '' && format('4. Read GitHub Issue #{0} for the full implementation spec, acceptance criteria, and file scope contract.', inputs.issue_number) || '4. Implement the item described above.' }}
-            5. Write all necessary code changes. If the issue contains a FILE SCOPE CONTRACT, only touch the files listed under "Owns" — do NOT modify files under "Avoid".
-            6. Write tests for every new module (see CLAUDE.md for test conventions). Tests live in `tests/`.
-            7. Run `pnpm tsc --noEmit` and fix every type error before finishing.
-            8. Run `pnpm test` and fix every failing test before finishing.
-            ${{ inputs.issue_number != '' && format('9. Update `lib/roadmap-data.ts` for item {0}: set `status: "in-progress"`, `pr: {1}`, `issue: {2}`. SKIP this step if the issue contains a FILE SCOPE CONTRACT — the kickoff system manages status for parallel agents.', inputs.item_id, inputs.pr_number, inputs.issue_number) || format('9. Update `lib/roadmap-data.ts` for item {0}: set `status: "in-progress"`, `pr: {1}`.', inputs.item_id, inputs.pr_number) }}
+            4. Read GitHub Issue #75 ("Agent Operating Rules") for mandatory constraints that apply to every agent run.
+            ${{ inputs.issue_number != '' && format('5. Read GitHub Issue #{0} for the full implementation spec, acceptance criteria, and file scope contract.', inputs.issue_number) || '5. Implement the item described above.' }}
+            6. Write all necessary code changes. If the issue contains a FILE SCOPE CONTRACT, only touch the files listed under "Owns" — do NOT modify files under "Avoid".
+            7. Write tests for every new module (see CLAUDE.md for test conventions). Tests live in `tests/`.
+            8. Run `pnpm tsc --noEmit` and fix every type error before finishing.
+            9. Run `pnpm test` and fix every failing test before finishing.
+            ${{ inputs.issue_number != '' && format('10. Update `lib/roadmap-data.ts` for item {0}: set `status: "in-progress"`, `pr: {1}`, `issue: {2}`. SKIP this step if the issue contains a FILE SCOPE CONTRACT — the kickoff system manages status for parallel agents.', inputs.item_id, inputs.pr_number, inputs.issue_number) || format('10. Update `lib/roadmap-data.ts` for item {0}: set `status: "in-progress"`, `pr: {1}`.', inputs.item_id, inputs.pr_number) }}
 
             ## Critical constraints
             - Do NOT run `git add`, `git commit`, or `git push` — the workflow handles committing after you finish.
@@ -99,10 +100,65 @@ jobs:
             - The project uses Next.js 16 with `proxy.ts` (not `middleware.ts`) and async `params`/`cookies`/`headers`.
             - Tailwind v4: CSS-first config in `globals.css`, no `tailwind.config.ts`.
 
+            ## Test file rules (IMPORTANT — this has caused CI failures before)
+            - Test files that contain JSX (render, screen, <Component />) MUST use `.test.tsx` extension.
+            - Test files that only test pure functions and data logic MUST use `.test.ts` extension.
+            - Prefer `.test.ts` (logic-only tests) — our coverage targets `lib/**/*.ts`.
+            - TypeScript CANNOT parse JSX in `.ts` files. This will fail the type check and block the entire workflow.
+
       - name: Type check
-        run: pnpm tsc --noEmit
+        id: typecheck
+        run: |
+          if ! pnpm tsc --noEmit 2>&1 | tee /tmp/ci-typecheck.txt; then
+            cp /tmp/ci-typecheck.txt .ci-typecheck-errors.txt
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
 
       - name: Test
+        id: test
+        run: |
+          if ! pnpm test 2>&1 | tee /tmp/ci-test.txt; then
+            cp /tmp/ci-test.txt .ci-test-errors.txt
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Self-heal — fix type check or test failures
+        if: steps.typecheck.outputs.failed == 'true' || steps.test.outputs.failed == 'true'
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          mode: agent
+          direct_prompt: |
+            The implementation for roadmap item ${{ inputs.item_id }} has CI failures that need fixing.
+
+            ## What to read first
+            1. Read `WIKI/gotchas.md` — the fix may already be documented there.
+            2. Read GitHub Issue #75 ("Agent Operating Rules") for mandatory constraints.
+            3. Read `.ci-typecheck-errors.txt` if it exists — contains the full type check error output.
+            4. Read `.ci-test-errors.txt` if it exists — contains the full test error output.
+
+            ## Common fixes (check these first)
+            - **JSX in a `.ts` file** → rename the file to `.tsx` (e.g. `git mv tests/foo.test.ts tests/foo.test.tsx`)
+            - **Strict null checks** → use `T | null` or initialize arrays with `[]` not `null`
+            - **Missing imports** → add the import
+
+            Fix all errors, then run `pnpm tsc --noEmit` and `pnpm test` to confirm they pass.
+
+            Do NOT run `git add`, `git commit`, or `git push`.
+            Do NOT delete the `.ci-*-errors.txt` files — the workflow cleans those up.
+
+      - name: Clean up error files
+        if: always()
+        run: rm -f .ci-typecheck-errors.txt .ci-test-errors.txt
+
+      - name: Type check (final)
+        if: steps.typecheck.outputs.failed == 'true' || steps.test.outputs.failed == 'true'
+        run: pnpm tsc --noEmit
+
+      - name: Test (final)
+        if: steps.typecheck.outputs.failed == 'true' || steps.test.outputs.failed == 'true'
         run: pnpm test
 
       - name: Verify changes exist
