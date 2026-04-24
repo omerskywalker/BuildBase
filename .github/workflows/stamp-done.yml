@@ -1,0 +1,72 @@
+name: Stamp roadmap item done
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  stamp:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Extract item ID from PR title
+        id: parse
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          # Match feat(3-2), fix(1-1), test(2-4), etc.
+          ITEM_ID=$(echo "$TITLE" | grep -oP '(?<=\()\d+-\d+(?=\))' || true)
+          if [ -z "$ITEM_ID" ]; then
+            echo "No roadmap item ID found in PR title: $TITLE"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "item_id=$ITEM_ID" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Found item ID: $ITEM_ID"
+          fi
+
+      - name: Checkout main
+        if: steps.parse.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update roadmap-data.ts
+        if: steps.parse.outputs.skip != 'true'
+        run: |
+          ITEM_ID="${{ steps.parse.outputs.item_id }}"
+          FILE="lib/roadmap-data.ts"
+
+          if ! grep -q "id: \"$ITEM_ID\"" "$FILE"; then
+            echo "Item $ITEM_ID not found in $FILE — skipping"
+            exit 0
+          fi
+
+          node --input-type=module -e "
+            import { readFileSync, writeFileSync } from 'node:fs';
+            const file = readFileSync('$FILE', 'utf8');
+            const id = '$ITEM_ID';
+            const pattern = new RegExp(
+              '(id:\\\\s*\"' + id.replace('-', '\\\\-') + '\"[\\\\s\\\\S]*?status:\\\\s*)\"[^\"]+\"'
+            );
+            const updated = file.replace(pattern, '\$1\"done\"');
+            if (updated === file) { console.log('No change needed for ' + id); process.exit(0); }
+            writeFileSync('$FILE', updated);
+            console.log('Stamped ' + id + ' as done');
+          "
+
+      - name: Commit and push
+        if: steps.parse.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lib/roadmap-data.ts
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: stamp ${{ steps.parse.outputs.item_id }} as done (PR #${{ github.event.pull_request.number }} merged)"
+          git push origin main

@@ -168,7 +168,7 @@ export default async function OgImage() {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "24px 88px",
-            borderTop: "1px solid #2A3D30",
+            borderTop: "1px solid #3A3228",
           }}
         >
           <div
