@@ -200,7 +200,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "3-3",
         title: "Future session preview (read-only)",
         description: "Tap any upcoming session to see the exercise list with default weights — read-only preview.",
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/batch-3-session-preview",
         pr: 74,
