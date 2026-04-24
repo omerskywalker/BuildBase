@@ -81,11 +81,11 @@ Full schema in `supabase/migrations/001_initial_schema.sql`. Key tables:
 
 ```
 bg-base:       #0F1A14   body background
-bg-surface:    #152019   sidebar, sticky headers
-bg-elevated:   #1C2A20   cards, panels
-bg-hover:      #22332A   hover states
+bg-surface:    #2A2418   sidebar, sticky headers (warm sepia)
+bg-elevated:   #352D22   cards, panels (warm sepia)
+bg-hover:      #3E362C   hover states (warm sepia)
 
-border-subtle: #2A3D30
+border-subtle: #483E30   (warm sepia)
 border-strong: #3A5040
 
 content-primary:   #E8F0E8

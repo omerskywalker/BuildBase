@@ -84,7 +84,7 @@ function LoginForm() {
 export default function MonitorLoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center" style={{ background: "#0F1A14" }}>
-      <div style={{ width: "100%", maxWidth: 320, background: "#1C2A20", border: "1px solid #2A3D30", borderRadius: 12, padding: 28 }}>
+      <div style={{ width: "100%", maxWidth: 320, background: "#352D22", border: "1px solid #483E30", borderRadius: 12, padding: 28 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#E8F0E8", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
           <span style={{ color: "#1C3A2A" }}>Build</span><span style={{ color: "#C84B1A" }}>Base</span>
           <span style={{ color: "#4A5A4A", fontWeight: 400, fontSize: 14 }}> Monitor</span>
