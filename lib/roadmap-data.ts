@@ -222,9 +222,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "4-1",
         title: "Coach's Playbook page",
         description: "Formatted, collapsible, searchable reference guide for the coach at /playbook.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-4-playbook",
+        pr: 78,
         issue: 28,
         scope: {
           owns: ["app/(coach)/playbook/"],
