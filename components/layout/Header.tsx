@@ -14,8 +14,8 @@ export function Header({ fullName }: HeaderProps) {
         position: "sticky",
         top: 0,
         zIndex: 10,
-        background: "#2A2418",
-        borderBottom: "1px solid #483E30",
+        background: "#E5DAC8",
+        borderBottom: "1px solid #C8B99D",
         padding: "0 16px",
         height: 56,
         display: "flex",
@@ -44,7 +44,7 @@ export function Header({ fullName }: HeaderProps) {
         <span
           style={{
             fontSize: 13,
-            color: "#8A9E8A",
+            color: "#6B5A48",
             maxWidth: 160,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -66,8 +66,8 @@ export function Header({ fullName }: HeaderProps) {
               height: 32,
               borderRadius: 8,
               background: "transparent",
-              border: "1px solid #483E30",
-              color: "#8A9E8A",
+              border: "1px solid #C8B99D",
+              color: "#6B5A48",
               cursor: "pointer",
               transition: "border-color 0.15s, color 0.15s",
             }}

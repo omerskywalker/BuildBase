@@ -47,10 +47,10 @@ function LoginForm() {
           style={{
             width: "100%",
             padding: "10px 14px",
-            background: "#0F1A14",
-            border: `1px solid ${error ? "#B83020" : "#2A3D30"}`,
+            background: "#EDE4D3",
+            border: `1px solid ${error ? "#B83020" : "#C8B99D"}`,
             borderRadius: 8,
-            color: "#E8F0E8",
+            color: "#2C1A10",
             fontSize: 16,
             outline: "none",
             boxSizing: "border-box",
@@ -66,7 +66,7 @@ function LoginForm() {
           width: "100%",
           padding: "10px 0",
           background: "#C84B1A",
-          color: "#E8F0E8",
+          color: "#FEFCF8",
           border: "none",
           borderRadius: 8,
           fontSize: 15,
@@ -83,13 +83,13 @@ function LoginForm() {
 
 export default function MonitorLoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center" style={{ background: "#0F1A14" }}>
-      <div style={{ width: "100%", maxWidth: 320, background: "#352D22", border: "1px solid #483E30", borderRadius: 12, padding: 28 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, color: "#E8F0E8", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
+    <main className="flex min-h-screen items-center justify-center" style={{ background: "#EDE4D3" }}>
+      <div style={{ width: "100%", maxWidth: 320, background: "#E8DECE", border: "1px solid #C8B99D", borderRadius: 12, padding: 28 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
           <span style={{ color: "#1C3A2A" }}>Build</span><span style={{ color: "#C84B1A" }}>Base</span>
-          <span style={{ color: "#4A5A4A", fontWeight: 400, fontSize: 14 }}> Monitor</span>
+          <span style={{ color: "#988A78", fontWeight: 400, fontSize: 14 }}> Monitor</span>
         </h1>
-        <p style={{ color: "#4A5A4A", fontSize: 13, marginBottom: 20 }}>Enter PIN to access roadmap.</p>
+        <p style={{ color: "#988A78", fontSize: 13, marginBottom: 20 }}>Enter PIN to access roadmap.</p>
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>

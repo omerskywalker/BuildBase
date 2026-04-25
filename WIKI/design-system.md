@@ -6,7 +6,7 @@ This document is the visual and interaction contract for every agent and develop
 
 ## 1. Visual Identity
 
-BuildBase is a **dark, industrial, athletic** application. The visual language should feel like a well-lit gym at midnight — purposeful, high-contrast, built for performance, not for decoration. No pastels. No gradients on everything. No heavy drop-shadows. No glassmorphism.
+BuildBase is a **warm, parchment-toned, athletic** application. The visual language should feel like a sunlit training journal — purposeful, high-contrast brown-on-cream, built for performance, not for decoration. No dark mode. No heavy drop-shadows. No glassmorphism. Forest green and burnt orange are accent colors only, not primary surfaces.
 
 The brand is the combination of two distinct elements:
 - **Build** — deep forest green `#1C3A2A`. Steady. Structural.
@@ -26,10 +26,10 @@ The brand is the combination of two distinct elements:
 
 | Token | Hex | Use when |
 |-------|-----|---------|
-| `--color-bg-base` | `#0F1A14` | Page backgrounds, the "floor" |
-| `--color-bg-surface` | `#152019` | Sidebar, sticky headers, nav |
-| `--color-bg-elevated` | `#1C2A20` | Cards, panels, inputs |
-| `--color-bg-hover` | `#22332A` | Hover states on clickable surfaces |
+| `--color-bg-base` | `#EDE4D3` | Page backgrounds, the "floor" (warm parchment) |
+| `--color-bg-surface` | `#E5DAC8` | Sidebar, sticky headers, nav |
+| `--color-bg-elevated` | `#E8DECE` | Cards, panels, inputs |
+| `--color-bg-hover` | `#DDD2BF` | Hover states on clickable surfaces |
 
 ⛔ Never go more than one level of elevation in a single card stack. A card inside a card inside a card creates visual mud.
 
@@ -37,16 +37,16 @@ The brand is the combination of two distinct elements:
 
 | Token | Hex | Use when |
 |-------|-----|---------|
-| `--color-content-primary` | `#E8F0E8` | Headings, primary body text |
-| `--color-content-secondary` | `#8A9E8A` | Supporting copy, labels, subtitles |
-| `--color-content-muted` | `#4A5A4A` | Timestamps, metadata, disabled text |
+| `--color-content-primary` | `#2C1A10` | Headings, primary body text (deep brown) |
+| `--color-content-secondary` | `#6B5A48` | Supporting copy, labels, subtitles (warm brown) |
+| `--color-content-muted` | `#988A78` | Timestamps, metadata, disabled text (soft brown) |
 
 ### Borders
 
 | Token | Hex | Use when |
 |-------|-----|---------|
-| `--color-border-subtle` | `#2A3D30` | Default card borders, dividers |
-| `--color-border-strong` | `#3A5040` | Focus rings, active states |
+| `--color-border-subtle` | `#C8B99D` | Default card borders, dividers |
+| `--color-border-strong` | `#B5A68C` | Focus rings, active states |
 
 ### Accent and Brand
 
@@ -142,16 +142,16 @@ The primary container for all content. Three variants:
 
 ```
 Default:
-  background: #152019
-  border: 1px solid #2A3D30
+  background: #E8DECE
+  border: 1px solid #C8B99D
   border-radius: 12px
   padding: 20px
 
 Elevated (floating dialog, etc.):
-  background: #1C2A20
-  border: 1px solid #3A5040
+  background: #E5DAC8
+  border: 1px solid #B5A68C
   border-radius: 12px
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4)
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06)
 
 Accent-edge (current session, CTA focus):
   same as Default but with:
@@ -165,7 +165,7 @@ Accent-edge (current session, CTA focus):
 ```
 Primary (CTA):
   background: #C84B1A
-  color: #E8F0E8
+  color: #FEFCF8
   font-weight: 600
   border-radius: 8px
   padding: 11px 20px
@@ -176,15 +176,15 @@ Primary (CTA):
 
 Secondary:
   background: transparent
-  border: 1px solid #3A5040
-  color: #8A9E8A
-  hover: background #22332A, border-color #C84B1A, color #E8F0E8
+  border: 1px solid #B5A68C
+  color: #6B5A48
+  hover: background #DDD2BF, border-color #C84B1A, color #2C1A10
 
 Ghost:
   background: transparent
-  color: #8A9E8A
+  color: #6B5A48
   no border
-  hover: color #E8F0E8, background rgba(255,255,255,0.04)
+  hover: color #2C1A10, background rgba(0,0,0,0.04)
 
 Destructive:
   background: rgba(184,48,32,0.12)
@@ -196,13 +196,13 @@ Destructive:
 ### Inputs
 
 ```
-background: #1C2A20
-border: 1px solid #2A3D30
+background: #EDE4D3
+border: 1px solid #C8B99D
 border-radius: 8px
 padding: 11px 14px
 font-size: 15px
-color: #E8F0E8
-placeholder: #4A5A4A
+color: #2C1A10
+placeholder: #988A78
 transition: border-color 0.15s
 
 :focus → border-color: #C84B1A, outline: none
@@ -231,14 +231,14 @@ Status colors follow semantic tokens:
 Active item:
   background: rgba(200,75,26,0.1)
   border-left: 3px solid #C84B1A
-  color: #E8F0E8
+  color: #2C1A10
   icon: accent color
 
 Inactive item:
   background: transparent
-  color: #8A9E8A
+  color: #6B5A48
   icon: muted color
-  hover: background #22332A, color #E8F0E8
+  hover: background #DDD2BF, color #2C1A10
 ```
 
 ---
@@ -253,7 +253,7 @@ Series 1: #C84B1A  (accent/primary)
 Series 2: #2D7A3A  (success/green)
 Series 3: #3060A0  (info/blue)
 Series 4: #C08030  (warning/amber)
-Series 5: #8A9E8A  (secondary/muted)
+Series 5: #6B5A48  (secondary/muted)
 ```
 
 ### Line charts (progress per lift)
@@ -261,27 +261,27 @@ Series 5: #8A9E8A  (secondary/muted)
 ```tsx
 // Recharts config — use these exact values
 <LineChart>
-  <CartesianGrid strokeDasharray="3 3" stroke="#2A3D30" vertical={false} />
+  <CartesianGrid strokeDasharray="3 3" stroke="#C8B99D" vertical={false} />
   <XAxis
-    tick={{ fill: "#4A5A4A", fontSize: 11 }}
-    axisLine={{ stroke: "#2A3D30" }}
+    tick={{ fill: "#988A78", fontSize: 11 }}
+    axisLine={{ stroke: "#C8B99D" }}
     tickLine={false}
   />
   <YAxis
-    tick={{ fill: "#4A5A4A", fontSize: 11 }}
+    tick={{ fill: "#988A78", fontSize: 11 }}
     axisLine={false}
     tickLine={false}
     width={40}
   />
   <Tooltip
     contentStyle={{
-      background: "#1C2A20",
-      border: "1px solid #2A3D30",
+      background: "#E8DECE",
+      border: "1px solid #C8B99D",
       borderRadius: 8,
-      color: "#E8F0E8",
+      color: "#2C1A10",
       fontSize: 13,
     }}
-    cursor={{ stroke: "#3A5040", strokeDasharray: "4 4" }}
+    cursor={{ stroke: "#B5A68C", strokeDasharray: "4 4" }}
   />
   <Line
     type="monotone"
@@ -394,7 +394,7 @@ Progress bars should always show a track (even at 0%) so the user understands wh
 // Skeleton lines — match the shape of the real content
 <div style={{
   height: 16, borderRadius: 4,
-  background: "linear-gradient(90deg, #1C2A20 25%, #22332A 50%, #1C2A20 75%)",
+  background: "linear-gradient(90deg, #DDD2BF 25%, #D3C8B5 50%, #DDD2BF 75%)",
   backgroundSize: "200% 100%",
   animation: "shimmer 1.5s infinite",
   width: "60%",
@@ -408,7 +408,7 @@ Add the shimmer keyframe to globals.css once and reuse everywhere.
 // Structure: icon + heading + subtext + optional CTA
 <div style={{ textAlign: "center", padding: "48px 24px" }}>
   <div style={{ /* icon circle */ }}>
-    <DumbbellIcon size={24} color="#4A5A4A" />
+    <DumbbellIcon size={24} color="#988A78" />
   </div>
   <h3>No sessions logged yet</h3>
   <p>Complete your first session to see it here.</p>
@@ -425,7 +425,7 @@ Empty states should be encouraging, not diagnostic. Write copy that tells the us
   background: "rgba(184,48,32,0.08)",
   border: "1px solid rgba(184,48,32,0.3)",
   borderRadius: 8, padding: "12px 16px",
-  color: "#E8F0E8", fontSize: 14,
+  color: "#2C1A10", fontSize: 14,
 }}>
   <span style={{ color: "#B83020", fontWeight: 600 }}>
     Something went wrong.

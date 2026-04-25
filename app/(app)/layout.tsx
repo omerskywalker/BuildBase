@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const hasCoach = profile?.coach_id != null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0F1A14" }}>
+    <div style={{ minHeight: "100vh", background: "#EDE4D3" }}>
       <Sidebar role={role} hasCoach={hasCoach} />
       <div className="lg:ml-[220px] flex flex-col min-h-screen">
         <Header fullName={fullName} />

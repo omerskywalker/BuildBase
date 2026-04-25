@@ -12,14 +12,14 @@ function fireConfetti() {
     particleCount: 80,
     spread: 70,
     origin: { x: 0.25, y: 0.6 },
-    colors: ["#C84B1A", "#2D7A3A", "#3060A0", "#E8F0E8", "#C08030"],
+    colors: ["#C84B1A", "#2D7A3A", "#3060A0", "#2C1A10", "#C08030"],
     zIndex: 9999,
   });
   void confetti({
     particleCount: 80,
     spread: 70,
     origin: { x: 0.75, y: 0.6 },
-    colors: ["#C84B1A", "#2D7A3A", "#3060A0", "#E8F0E8", "#C08030"],
+    colors: ["#C84B1A", "#2D7A3A", "#3060A0", "#2C1A10", "#C08030"],
     zIndex: 9999,
   });
 }

@@ -7,19 +7,19 @@
 /* ─── Design tokens ─────────────────────────────────────── */
 @theme {
   /* Backgrounds */
-  --color-bg-base:     #0F1A14;
-  --color-bg-surface:  #2A2418;
-  --color-bg-elevated: #352D22;
-  --color-bg-hover:    #3E362C;
+  --color-bg-base:     #EDE4D3;
+  --color-bg-surface:  #E5DAC8;
+  --color-bg-elevated: #E8DECE;
+  --color-bg-hover:    #DDD2BF;
 
   /* Borders */
-  --color-border-subtle: #483E30;
-  --color-border-strong: #3A5040;
+  --color-border-subtle: #C8B99D;
+  --color-border-strong: #B5A68C;
 
   /* Content */
-  --color-content-primary:   #E8F0E8;
-  --color-content-secondary: #8A9E8A;
-  --color-content-muted:     #4A5A4A;
+  --color-content-primary:   #2C1A10;
+  --color-content-secondary: #6B5A48;
+  --color-content-muted:     #988A78;
 
   /* Brand */
   --color-brand:       #1C3A2A;
