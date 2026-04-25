@@ -1,6 +1,21 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import OnboardingForm from "./OnboardingForm"
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_done")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.onboarding_done) redirect("/dashboard");
+
   return (
     <main className="flex min-h-screen items-center justify-center px-4 bg-bg-base">
       <div className="w-full max-w-md bg-bg-elevated border border-border-subtle rounded-xl p-8">
