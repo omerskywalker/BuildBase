@@ -73,15 +73,15 @@ describe("PlaybookPage", () => {
   it("displays category and phase badges", () => {
     render(<PlaybookPage />);
     
-    // Check for category badges
+    // Check for category badges (some appear on multiple sections)
     expect(screen.getByText("Assessment")).toBeInTheDocument();
-    expect(screen.getByText("Movement Patterns")).toBeInTheDocument();
+    expect(screen.getAllByText("Movement Patterns").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Programming")).toBeInTheDocument();
     expect(screen.getByText("Coaching")).toBeInTheDocument();
     expect(screen.getByText("Problem Solving")).toBeInTheDocument();
-    
-    // Check for phase badges
-    expect(screen.getByText("All Phases")).toBeInTheDocument();
+
+    // Check for phase badges (some appear on multiple sections)
+    expect(screen.getAllByText("All Phases").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Phase 2-3")).toBeInTheDocument();
   });
 
@@ -93,9 +93,9 @@ describe("PlaybookPage", () => {
     // Expand the section
     fireEvent.click(formSection.closest("[data-testid]") || formSection.closest("div")!);
     
-    // Check for content type labels
-    expect(screen.getByText("PRINCIPLE")).toBeInTheDocument();
-    expect(screen.getByText("CUE")).toBeInTheDocument();
+    // Check for content type labels (rendered lowercase, CSS uppercases them)
+    expect(screen.getByText("principle")).toBeInTheDocument();
+    expect(screen.getByText("cue")).toBeInTheDocument();
     
     // Check for tags
     expect(screen.getByText("#form")).toBeInTheDocument();
