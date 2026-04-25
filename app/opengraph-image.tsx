@@ -38,7 +38,7 @@ export default async function OgImage() {
           height: "630px",
           display: "flex",
           flexDirection: "column",
-          background: "#0F1A14",
+          background: "#EDE4D3",
           overflow: "hidden",
           position: "relative",
         }}
@@ -89,7 +89,7 @@ export default async function OgImage() {
               display: "flex",
               fontSize: 13,
               fontWeight: 600,
-              color: "#4A5A4A",
+              color: "#988A78",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               fontFamily: font,
@@ -112,7 +112,7 @@ export default async function OgImage() {
               style={{
                 fontSize: 104,
                 fontWeight: 700,
-                color: "#E8F0E8",
+                color: "#2C1A10",
                 fontFamily: font,
                 lineHeight: 1,
                 display: "flex",
@@ -150,7 +150,7 @@ export default async function OgImage() {
           <div
             style={{
               fontSize: 34,
-              color: "#8A9E8A",
+              color: "#6B5A48",
               fontFamily: font,
               lineHeight: 1.5,
               maxWidth: 580,
@@ -168,14 +168,14 @@ export default async function OgImage() {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "24px 88px",
-            borderTop: "1px solid #483E30",
+            borderTop: "1px solid #C8B99D",
           }}
         >
           <div
             style={{
               display: "flex",
               fontSize: 18,
-              color: "#4A5A4A",
+              color: "#988A78",
               fontFamily: font,
             }}
           >

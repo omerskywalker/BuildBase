@@ -82,7 +82,7 @@ export function BatchKickoffButton({ batchNumber, itemCount, parallelizable, all
       title={`Start all ${itemCount} not-started items in parallel`}
       style={{
         fontSize: 11, fontWeight: 700,
-        color: state === "error" ? "#B83020" : "#E8F0E8",
+        color: state === "error" ? "#B83020" : "#2C1A10",
         background: state === "error" ? "rgba(184,48,32,0.12)" : "rgba(200,75,26,0.15)",
         border: `1px solid ${state === "error" ? "rgba(184,48,32,0.4)" : "rgba(200,75,26,0.4)"}`,
         borderRadius: 6, padding: "4px 12px",

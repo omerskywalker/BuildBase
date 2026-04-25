@@ -80,21 +80,22 @@ Full schema in `supabase/migrations/001_initial_schema.sql`. Key tables:
 ## Design tokens (globals.css)
 
 ```
-bg-base:       #0F1A14   body background
-bg-surface:    #2A2418   sidebar, sticky headers (warm sepia)
-bg-elevated:   #352D22   cards, panels (warm sepia)
-bg-hover:      #3E362C   hover states (warm sepia)
+bg-base:       #EDE4D3   page background (warm parchment)
+bg-surface:    #E5DAC8   sidebar, sticky headers
+bg-elevated:   #E8DECE   cards, panels
+bg-hover:      #DDD2BF   hover states
 
-border-subtle: #483E30   (warm sepia)
-border-strong: #3A5040
+border-subtle: #C8B99D
+border-strong: #B5A68C
 
-content-primary:   #E8F0E8
-content-secondary: #8A9E8A
-content-muted:     #4A5A4A
+content-primary:   #2C1A10   (deep brown)
+content-secondary: #6B5A48   (warm brown)
+content-muted:     #988A78   (soft brown)
 
-brand:       #1C3A2A   (forest green)
+brand:       #1C3A2A   (forest green — accent only)
 accent:      #C84B1A   (burnt orange — CTAs, highlights)
 accent-dim:  #8C3410
+button-text: #FEFCF8   (warm white — on accent buttons)
 
 success:     #2D7A3A
 warning:     #C08030

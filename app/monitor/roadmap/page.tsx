@@ -75,8 +75,8 @@ function statusColor(status: ItemStatus) {
     case "done":        return "#2D7A3A";
     case "in-progress": return "#3060A0";
     case "failed":      return "#B83020";
-    case "paused":      return "#8A9E8A";
-    default:            return "#2A3D30";
+    case "paused":      return "#6B5A48";
+    default:            return "#C8B99D";
   }
 }
 
@@ -89,7 +89,7 @@ function ciDot(conclusion: CiStatus["conclusion"]) {
 
 function ProgressBar({ pct, color = "#C84B1A" }: { pct: number; color?: string }) {
   return (
-    <div style={{ height: 4, background: "#3E362C", borderRadius: 99, overflow: "hidden", width: "100%" }}>
+    <div style={{ height: 4, background: "#DDD2BF", borderRadius: 99, overflow: "hidden", width: "100%" }}>
       <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.4s" }} />
     </div>
   );
@@ -117,21 +117,21 @@ function ItemRow({
   const effectiveIssue = item.issue ?? kvIssue;
 
   return (
-    <div style={{ padding: "12px 0", borderBottom: "1px solid #3E362C", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ padding: "12px 0", borderBottom: "1px solid #DDD2BF", display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <span style={{ fontSize: 11, color: "#4A5A4A", minWidth: 32, paddingTop: 2, fontFamily: "var(--font-mono, monospace)" }}>
+        <span style={{ fontSize: 11, color: "#988A78", minWidth: 32, paddingTop: 2, fontFamily: "var(--font-mono, monospace)" }}>
           {item.id}
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <span style={{
             fontSize: 14, fontWeight: 600,
-            color: effectiveStatus === "done" ? "#4A5A4A" : "#E8F0E8",
+            color: effectiveStatus === "done" ? "#988A78" : "#2C1A10",
             textDecoration: effectiveStatus === "done" ? "line-through" : "none",
             lineHeight: 1.4,
           }}>
             {item.title}
           </span>
-          <p style={{ fontSize: 11, color: "#4A5A4A", marginTop: 3, lineHeight: 1.5 }}>{item.description}</p>
+          <p style={{ fontSize: 11, color: "#988A78", marginTop: 3, lineHeight: 1.5 }}>{item.description}</p>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ function ItemRow({
 
         {effectiveIssue && (
           <a href={`https://github.com/${REPO}/issues/${effectiveIssue}`} target="_blank" rel="noopener"
-            style={{ fontSize: 11, color: "#8A9E8A", textDecoration: "none", background: "rgba(138,158,138,0.08)", border: "1px solid rgba(138,158,138,0.2)", borderRadius: 6, padding: "2px 8px" }}>
+            style={{ fontSize: 11, color: "#6B5A48", textDecoration: "none", background: "rgba(138,158,138,0.08)", border: "1px solid rgba(138,158,138,0.2)", borderRadius: 6, padding: "2px 8px" }}>
             Issue #{effectiveIssue}
           </a>
         )}
@@ -168,7 +168,7 @@ function ItemRow({
         {dot && <span style={{ fontSize: 11, fontWeight: 600, color: dot.color }}>{dot.label}</span>}
         {item.tests && <span style={{ fontSize: 11, color: "#2D7A3A" }}>🧪 Tests</span>}
         {item.branch && (
-          <span style={{ fontSize: 10, color: "#4A5A4A", background: "#2A2418", border: "1px solid #3E362C", borderRadius: 4, padding: "2px 6px", fontFamily: "var(--font-mono, monospace)" }}>
+          <span style={{ fontSize: 10, color: "#988A78", background: "#E5DAC8", border: "1px solid #DDD2BF", borderRadius: 4, padding: "2px 6px", fontFamily: "var(--font-mono, monospace)" }}>
             {item.branch}
           </span>
         )}
@@ -202,18 +202,18 @@ export default async function RoadmapMonitorPage() {
     .map((item) => item.id);
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#0F1A14", color: "#E8F0E8", fontFamily: "var(--font-inter, sans-serif)", paddingBottom: 48 }}>
+    <div style={{ minHeight: "100dvh", background: "#EDE4D3", color: "#2C1A10", fontFamily: "var(--font-inter, sans-serif)", paddingBottom: 48 }}>
       <RoadmapPoller inProgressIds={inProgressIds} doneIds={doneIds} />
 
-      <div style={{ background: "#2A2418", borderBottom: "1px solid #483E30", padding: "16px 16px 14px", position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: "#E5DAC8", borderBottom: "1px solid #C8B99D", padding: "16px 16px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
-              <h1 style={{ fontSize: 17, fontWeight: 700, color: "#E8F0E8", fontFamily: "var(--font-space-grotesk, sans-serif)", marginBottom: 2 }}>
+              <h1 style={{ fontSize: 17, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk, sans-serif)", marginBottom: 2 }}>
                 <span style={{ color: "#1C3A2A" }}>Build</span><span style={{ color: "#C84B1A" }}>Base</span>
-                <span style={{ color: "#4A5A4A", fontWeight: 400, fontSize: 13 }}> — Roadmap</span>
+                <span style={{ color: "#988A78", fontWeight: 400, fontSize: 13 }}> — Roadmap</span>
               </h1>
-              <p style={{ fontSize: 12, color: "#4A5A4A" }}>
+              <p style={{ fontSize: 12, color: "#988A78" }}>
                 {overall.done} / {overall.total} items complete · {overall.pct}%
               </p>
             </div>
@@ -245,14 +245,14 @@ export default async function RoadmapMonitorPage() {
           }).length;
           const allDone = done === total;
           return (
-            <div key={batch.number} style={{ marginTop: 24, background: "#352D22", border: "1px solid #483E30", borderRadius: 12, overflow: "hidden" }}>
-              <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #483E30", background: "#211D16" }}>
+            <div key={batch.number} style={{ marginTop: 24, background: "#E8DECE", border: "1px solid #C8B99D", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #C8B99D", background: "#211D16" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "#C84B1A", background: "rgba(200,75,26,0.1)", border: "1px solid rgba(200,75,26,0.2)", borderRadius: 6, padding: "2px 8px" }}>
                       Batch {batch.number}
                     </span>
-                    <h2 style={{ fontSize: 15, fontWeight: 700, color: "#E8F0E8", fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
+                    <h2 style={{ fontSize: 15, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
                       {batch.title}
                     </h2>
                     <BatchKickoffButton
@@ -262,13 +262,13 @@ export default async function RoadmapMonitorPage() {
                       allDone={allDone}
                     />
                   </div>
-                  <span style={{ fontSize: 12, color: "#4A5A4A", whiteSpace: "nowrap" }}>
+                  <span style={{ fontSize: 12, color: "#988A78", whiteSpace: "nowrap" }}>
                     {done}/{total}
                     {inProgress > 0 && <span style={{ color: "#3060A0" }}> · {inProgress} active</span>}
                   </span>
                 </div>
                 <ProgressBar pct={batchPct} color={done === total ? "#2D7A3A" : "#C84B1A"} />
-                <p style={{ fontSize: 12, color: "#4A5A4A", marginTop: 8, lineHeight: 1.5 }}>{batch.summary}</p>
+                <p style={{ fontSize: 12, color: "#988A78", marginTop: 8, lineHeight: 1.5 }}>{batch.summary}</p>
               </div>
               <div style={{ padding: "0 16px" }}>
                 {batch.items.map((item) => (
@@ -286,8 +286,8 @@ export default async function RoadmapMonitorPage() {
           );
         })}
 
-        <div style={{ marginTop: 32, padding: "16px 0", borderTop: "1px solid #3E362C" }}>
-          <p style={{ fontSize: 11, color: "#2A3D30" }}>Status synced from GitHub · refreshes on each page load</p>
+        <div style={{ marginTop: 32, padding: "16px 0", borderTop: "1px solid #DDD2BF" }}>
+          <p style={{ fontSize: 11, color: "#C8B99D" }}>Status synced from GitHub · refreshes on each page load</p>
         </div>
       </div>
     </div>

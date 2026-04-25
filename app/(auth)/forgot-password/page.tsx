@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
         style={{
           width: "100%",
           maxWidth: 400,
-          background: "#352D22",
+          background: "#E8DECE",
           border: "1px solid #2D7A3A",
           borderRadius: 12,
           padding: 32,
@@ -54,15 +54,15 @@ export default function ForgotPasswordPage() {
           style={{
             fontSize: 20,
             fontWeight: 700,
-            color: "#E8F0E8",
+            color: "#2C1A10",
             marginBottom: 8,
             fontFamily: "var(--font-display, sans-serif)",
           }}
         >
           Check your email
         </h2>
-        <p style={{ color: "#8A9E8A", fontSize: 14, lineHeight: 1.6 }}>
-          If <strong style={{ color: "#E8F0E8" }}>{email}</strong> is registered, you&apos;ll
+        <p style={{ color: "#6B5A48", fontSize: 14, lineHeight: 1.6 }}>
+          If <strong style={{ color: "#2C1A10" }}>{email}</strong> is registered, you&apos;ll
           receive a password reset link shortly.
         </p>
         <Link
@@ -86,8 +86,8 @@ export default function ForgotPasswordPage() {
       style={{
         width: "100%",
         maxWidth: 400,
-        background: "#352D22",
-        border: "1px solid #483E30",
+        background: "#E8DECE",
+        border: "1px solid #C8B99D",
         borderRadius: 12,
         padding: 32,
       }}
@@ -97,21 +97,21 @@ export default function ForgotPasswordPage() {
           style={{
             fontSize: 24,
             fontWeight: 700,
-            color: "#E8F0E8",
+            color: "#2C1A10",
             fontFamily: "var(--font-display, sans-serif)",
             marginBottom: 4,
           }}
         >
           Reset your password
         </h1>
-        <p style={{ color: "#8A9E8A", fontSize: 14 }}>
+        <p style={{ color: "#6B5A48", fontSize: 14 }}>
           Enter your email and we&apos;ll send you a reset link.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label htmlFor="email" style={{ fontSize: 13, fontWeight: 500, color: "#8A9E8A" }}>
+          <label htmlFor="email" style={{ fontSize: 13, fontWeight: 500, color: "#6B5A48" }}>
             Email
           </label>
           <input
@@ -123,11 +123,11 @@ export default function ForgotPasswordPage() {
             placeholder="you@example.com"
             required
             style={{
-              background: "#0F1A14",
-              border: "1px solid #483E30",
+              background: "#EDE4D3",
+              border: "1px solid #C8B99D",
               borderRadius: 8,
               padding: "10px 12px",
-              color: "#E8F0E8",
+              color: "#2C1A10",
               fontSize: 14,
               outline: "none",
               width: "100%",
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
             style={{
               fontSize: 13,
               color: "#B83020",
-              background: "#352D22",
+              background: "#E8DECE",
               border: "1px solid #B83020",
               borderRadius: 6,
               padding: "8px 12px",
@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
           disabled={loading}
           style={{
             background: loading ? "#8C3410" : "#C84B1A",
-            color: "#E8F0E8",
+            color: "#FEFCF8",
             border: "none",
             borderRadius: 8,
             padding: "11px 0",
@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
           style={{
             textAlign: "center",
             fontSize: 13,
-            color: "#8A9E8A",
+            color: "#6B5A48",
             textDecoration: "none",
             marginTop: 4,
           }}

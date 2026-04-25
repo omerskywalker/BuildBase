@@ -43,8 +43,8 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
         left: 0,
         width: 220,
         height: "100vh",
-        background: "#2A2418",
-        borderRight: "1px solid #483E30",
+        background: "#E5DAC8",
+        borderRight: "1px solid #C8B99D",
         display: "flex",
         flexDirection: "column",
         padding: "20px 0",
@@ -56,7 +56,7 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
       <div
         style={{
           padding: "0 20px 20px",
-          borderBottom: "1px solid #483E30",
+          borderBottom: "1px solid #C8B99D",
           marginBottom: 12,
         }}
       >
@@ -93,8 +93,8 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
                 gap: 10,
                 padding: "8px 12px",
                 borderRadius: 8,
-                color: isActive ? "#E8F0E8" : "#8A9E8A",
-                background: isActive ? "#22332A" : "transparent",
+                color: isActive ? "#2C1A10" : "#6B5A48",
+                background: isActive ? "#DDD2BF" : "transparent",
                 textDecoration: "none",
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 500,
@@ -110,14 +110,14 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
       </nav>
 
       {/* Role badge */}
-      <div style={{ padding: "12px 20px", borderTop: "1px solid #483E30" }}>
+      <div style={{ padding: "12px 20px", borderTop: "1px solid #C8B99D" }}>
         <span
           style={{
             fontSize: 11,
             fontWeight: 600,
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            color: "#4A5A4A",
+            color: "#988A78",
           }}
         >
           {role}

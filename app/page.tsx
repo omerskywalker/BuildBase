@@ -12,13 +12,13 @@ export default async function HomePage() {
   return (
     <main
       className="min-h-screen flex flex-col"
-      style={{ background: "#0F1A14" }}
+      style={{ background: "#EDE4D3" }}
     >
       {/* Nav */}
       <nav
         style={{
-          background: "#2A2418",
-          borderBottom: "1px solid #483E30",
+          background: "#E5DAC8",
+          borderBottom: "1px solid #C8B99D",
           padding: "12px 24px",
           display: "flex",
           alignItems: "center",
@@ -40,11 +40,11 @@ export default async function HomePage() {
             href="/login"
             style={{
               fontSize: 14,
-              color: "#E8F0E8",
+              color: "#2C1A10",
               textDecoration: "none",
               padding: "8px 16px",
               borderRadius: 8,
-              border: "1px solid #483E30",
+              border: "1px solid #C8B99D",
               transition: "background 0.15s",
             }}
           >
@@ -82,14 +82,14 @@ export default async function HomePage() {
         </h1>
         <p
           className="text-xl sm:text-2xl max-w-lg mb-4"
-          style={{ color: "#E8F0E8", lineHeight: 1.5 }}
+          style={{ color: "#2C1A10", lineHeight: 1.5 }}
         >
           Structured fitness coaching,{" "}
           <span style={{ color: "#C84B1A", fontWeight: 600 }}>simplified</span>.
         </p>
         <p
           className="text-base max-w-md mb-10"
-          style={{ color: "#8A9E8A", lineHeight: 1.6 }}
+          style={{ color: "#6B5A48", lineHeight: 1.6 }}
         >
           12-week strength programs with guided sessions, real-time set logging,
           and coach-driven form assessments — all in one place.
@@ -142,10 +142,10 @@ export default async function HomePage() {
       {/* Footer */}
       <footer
         style={{
-          borderTop: "1px solid #483E30",
+          borderTop: "1px solid #C8B99D",
           padding: "16px 24px",
           textAlign: "center",
-          color: "#4A5A4A",
+          color: "#988A78",
           fontSize: 12,
         }}
       >
@@ -169,8 +169,8 @@ function FeatureCard({
   return (
     <div
       style={{
-        background: "#352D22",
-        border: "1px solid #483E30",
+        background: "#E8DECE",
+        border: "1px solid #C8B99D",
         borderRadius: 12,
         padding: "24px 20px",
       }}
@@ -180,14 +180,14 @@ function FeatureCard({
         style={{
           fontSize: 16,
           fontWeight: 700,
-          color: "#E8F0E8",
+          color: "#2C1A10",
           marginBottom: 8,
           fontFamily: "var(--font-space-grotesk, sans-serif)",
         }}
       >
         {title}
       </h3>
-      <p style={{ fontSize: 13, color: "#8A9E8A", lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: "#6B5A48", lineHeight: 1.5 }}>
         {description}
       </p>
     </div>

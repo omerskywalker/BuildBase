@@ -54,8 +54,8 @@ export default function RootLayout({
       <body
         className="min-h-full antialiased"
         style={{
-          background: "#0F1A14",
-          color: "#E8F0E8",
+          background: "#EDE4D3",
+          color: "#2C1A10",
           fontFamily: "var(--font-inter, Inter, sans-serif)",
         }}
       >
@@ -66,9 +66,9 @@ export default function RootLayout({
           position="bottom-right"
           toastOptions={{
             style: {
-              background: "#352D22",
-              border: "1px solid #483E30",
-              color: "#E8F0E8",
+              background: "#E8DECE",
+              border: "1px solid #C8B99D",
+              color: "#2C1A10",
               fontFamily: "var(--font-inter, Inter, sans-serif)",
             },
           }}
