@@ -236,7 +236,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "4-2",
         title: "Client list + detail view",
         description: "Coach sees their clients, clicks in to see session log history, current week, stats.",
-        status: "not-started",
+        status: "done",
         tests: false,
         branch: "feat/batch-4-clients",
         issue: 29,
