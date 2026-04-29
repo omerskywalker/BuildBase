@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, TrendingUp, Activity } from "lucide-react";
+import FormAssessmentPanel from "./FormAssessmentPanel";
 
 interface ClientDetails {
   id: string;
@@ -476,6 +477,8 @@ export default async function ClientDetailPage({
         <SessionHistory sessions={sessionHistory} />
         <EffortTrends data={effortData} />
       </div>
+      
+      <FormAssessmentPanel clientId={client.id} />
     </div>
   );
 }

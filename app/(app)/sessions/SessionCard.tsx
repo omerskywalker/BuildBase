@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, getFormBadge } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2 } from "lucide-react";
 import SetRow from "./SetRow";
 import EffortPrompt from "./EffortPrompt";
@@ -219,6 +219,18 @@ export default function SessionCard({
                     </span>
                     {templateExercise.exercise?.muscle_group && (
                       <span className="text-xs text-content-muted">{templateExercise.exercise.muscle_group}</span>
+                    )}
+                    {getFormBadge(templateExercise.form_assessment_status) && (
+                      <span 
+                        className="text-xs font-medium px-2 py-1 rounded"
+                        style={{ 
+                          backgroundColor: "#F0FDF4", 
+                          color: "#2D7A3A",
+                          border: "1px solid #2D7A3A20"
+                        }}
+                      >
+                        {getFormBadge(templateExercise.form_assessment_status)}
+                      </span>
                     )}
                     {templateExercise.coaching_cues && (
                       <span className="text-xs text-content-secondary italic ml-auto">{templateExercise.coaching_cues}</span>

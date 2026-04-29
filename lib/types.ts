@@ -90,6 +90,8 @@ export interface TemplateExercise {
   notes: string | null;
   // Joined
   exercise?: Exercise;
+  // Form assessment status (only for user sessions, from coach's assessment)
+  form_assessment_status?: FormAssessmentStatus | null;
 }
 
 // ─── Session Logs ─────────────────────────────────────────────────────────────

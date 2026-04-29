@@ -62,5 +62,35 @@ export async function GET(
     .eq("session_log_id", sessionLogId)
     .order("set_number");
 
-  return NextResponse.json({ exercises: exercises ?? [], setLogs: setLogs ?? [] });
+  // Get form assessments for these exercises (for the current user only)
+  // We need to get the coach_id from the user's profile to query assessments
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("coach_id")
+    .eq("id", user.id)
+    .single();
+
+  let formAssessments: any[] = [];
+  if (userProfile?.coach_id) {
+    const exerciseIds = (exercises ?? []).map(ex => ex.exercise_id).filter(Boolean);
+    const { data: assessments } = await supabase
+      .from("coach_form_assessments")
+      .select("exercise_id, status")
+      .eq("coach_id", userProfile.coach_id)
+      .eq("user_id", user.id)
+      .in("exercise_id", exerciseIds);
+    
+    formAssessments = assessments ?? [];
+  }
+
+  // Add form assessment status to exercises
+  const exercisesWithAssessments = (exercises ?? []).map(ex => ({
+    ...ex,
+    form_assessment_status: formAssessments.find(fa => fa.exercise_id === ex.exercise_id)?.status || null
+  }));
+
+  return NextResponse.json({ 
+    exercises: exercisesWithAssessments, 
+    setLogs: setLogs ?? [] 
+  });
 }
