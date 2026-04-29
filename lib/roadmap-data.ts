@@ -249,9 +249,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "4-3",
         title: "Form assessment panel + Solid Form badge",
         description: "Coach marks needs_cues / getting_there / locked_in per exercise. User sees 'Solid Form ✅' badge only on locked_in. Auto-suppressed from future check-ins.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-4-form-assessment",
+        pr: 82,
         issue: 30,
         scope: {
           owns: ["app/(coach)/clients/[id]/FormAssessmentPanel.tsx", "app/api/coach/form-assessment/"],
