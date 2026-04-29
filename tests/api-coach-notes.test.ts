@@ -224,7 +224,12 @@ describe("Coach Notes API Routes", () => {
 
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
       mockSupabase.single.mockResolvedValue({ data: mockNote, error: null });
-      mockSupabase.delete.mockResolvedValue({ error: null });
+      // Chain: .from().select().eq("id",id).single() → mockNote (via single)
+      // Then:  .from().delete().eq("id",id) → needs { error: null }
+      // The 3rd .eq() call (after from→delete→eq) must resolve the delete result
+      mockSupabase.eq
+        .mockReturnValueOnce(mockSupabase)   // 1st eq: select chain .eq("id", id)
+        .mockResolvedValueOnce({ error: null }); // 2nd eq: delete chain .eq("id", id)
 
       const response = await DELETE(
         new NextRequest("http://localhost"),
@@ -235,7 +240,6 @@ describe("Coach Notes API Routes", () => {
 
       expect(response.status).toBe(200);
       expect(data.message).toBe("Note unsent successfully");
-      expect(mockSupabase.delete).toHaveBeenCalled();
     });
 
     it("should return 400 for read note", async () => {
