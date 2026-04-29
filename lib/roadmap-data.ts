@@ -263,9 +263,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "4-4",
         title: "Coach notes system",
         description: "Coach sends notes via + button → dialog. User sees banner on dashboard until dismissed. Unsend while unread. Full history in Coach's Notes tab.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-4-coach-notes",
+        pr: 83,
         issue: 31,
         scope: {
           owns: ["app/(app)/coach-notes/", "components/CoachNotesBanner.tsx", "app/api/coach/notes/"],
