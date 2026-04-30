@@ -102,7 +102,7 @@ export async function PATCH(
     // Get the note and verify permissions
     const { data: note } = await supabase
       .from("coach_notes")
-      .select("id, coach_id, user_id")
+      .select("id, coach_id, user_id, read_at")
       .eq("id", id)
       .single();
 

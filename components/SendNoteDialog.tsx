@@ -81,7 +81,7 @@ export default function SendNoteDialog({
         handleClose();
       }
     }}>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button
           style={{
             backgroundColor: "#C84B1A",
