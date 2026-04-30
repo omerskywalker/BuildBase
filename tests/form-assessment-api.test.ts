@@ -87,12 +87,28 @@ describe('Form Assessment API', () => {
         return mockSupabase;
       });
       mockSupabase.select.mockImplementation((fields?: string) => {
+        if (lastTable === 'phases') {
+          return {
+            eq: vi.fn().mockResolvedValue({
+              data: [{ id: 'phase-1' }, { id: 'phase-2' }],
+              error: null,
+            }),
+          };
+        }
+        if (lastTable === 'workout_templates') {
+          return {
+            in: vi.fn().mockResolvedValue({
+              data: [{ id: 'wt-1' }, { id: 'wt-2' }],
+              error: null,
+            }),
+          };
+        }
         if (lastTable === 'template_exercises') {
           return {
             in: () => ({
               data: [
-                { exercise_id: 'ex-1', exercises: { id: 'ex-1', name: 'Squat', muscle_group: 'Legs' } },
-                { exercise_id: 'ex-2', exercises: { id: 'ex-2', name: 'Bench Press', muscle_group: 'Chest' } },
+                { exercise_id: 'ex-1', exercises: { id: 'ex-1', name: 'Squat', muscle_group: 'Legs', equipment: 'Barbell' } },
+                { exercise_id: 'ex-2', exercises: { id: 'ex-2', name: 'Bench Press', muscle_group: 'Chest', equipment: 'Barbell' } },
               ],
               error: null,
             }),

@@ -55,7 +55,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ exercises: [] });
     }
 
-    // Get unique exercises from this program
+    // Get phases for this program
+    const { data: phases } = await supabase
+      .from("phases")
+      .select("id")
+      .eq("program_id", enrollment.program_id);
+
+    if (!phases || phases.length === 0) {
+      return NextResponse.json({ exercises: [] });
+    }
+
+    // Get workout templates for those phases
+    const { data: templates } = await supabase
+      .from("workout_templates")
+      .select("id")
+      .in("phase_id", phases.map(p => p.id));
+
+    if (!templates || templates.length === 0) {
+      return NextResponse.json({ exercises: [] });
+    }
+
+    // Get exercises from those templates
     const { data: exercisesData } = await supabase
       .from("template_exercises")
       .select(`
@@ -67,25 +87,21 @@ export async function GET(request: NextRequest) {
           equipment
         )
       `)
-      .in('workout_template_id', 
-        supabase
-          .from('workout_templates')
-          .select('id')
-          .in('phase_id',
-            supabase
-              .from('phases')
-              .select('id')
-              .eq('program_id', enrollment.program_id)
-          )
-      );
+      .in("workout_template_id", templates.map(t => t.id));
 
     if (!exercisesData) {
       return NextResponse.json({ exercises: [] });
     }
 
     // Get unique exercises (remove duplicates)
+    type ExerciseInfo = { id: string; name: string; muscle_group: string; equipment: string };
     const uniqueExercises = Array.from(
-      new Map(exercisesData.map(item => [item.exercise_id, item.exercises])).values()
+      new Map(
+        exercisesData.map(item => {
+          const ex = Array.isArray(item.exercises) ? item.exercises[0] : item.exercises;
+          return [item.exercise_id, ex as ExerciseInfo];
+        })
+      ).values()
     );
 
     // Get existing assessments for these exercises
@@ -100,7 +116,7 @@ export async function GET(request: NextRequest) {
     // Merge exercises with their assessments
     const exercisesWithAssessments = uniqueExercises.map(exercise => ({
       ...exercise,
-      assessment: assessments?.find(a => a.exercise_id === exercise.id) || null
+      assessment: assessments?.find(a => a.exercise_id === exercise.id) || null,
     }));
 
     // Sort by exercise name

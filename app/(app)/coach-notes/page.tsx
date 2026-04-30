@@ -44,7 +44,10 @@ async function getCoachNotes(userId: string): Promise<CoachNote[]> {
     return [];
   }
 
-  return notes || [];
+  return (notes ?? []).map((n: any) => ({
+    ...n,
+    profiles: Array.isArray(n.profiles) ? n.profiles[0] ?? null : n.profiles ?? null,
+  }));
 }
 
 function formatDate(dateString: string): string {
