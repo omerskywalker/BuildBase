@@ -66,7 +66,7 @@ async function getClients(coachId: string): Promise<ClientSummary[]> {
         last_session_date: lastSessionDate,
         completion_rate: Math.round(completionRate),
         total_sessions: totalSessions,
-        completed_sessions,
+        completed_sessions: completedSessions,
       };
     })
   );

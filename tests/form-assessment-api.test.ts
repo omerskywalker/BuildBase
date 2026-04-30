@@ -1,33 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
+import { GET, POST } from '@/app/api/coach/form-assessment/route';
 
-// Mock Next.js
-vi.mock('next/request', () => ({
-  NextRequest: class MockNextRequest {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-    json = vi.fn();
-  }
-}));
-
-vi.mock('next/response', () => ({
-  NextResponse: {
-    json: vi.fn((data, init) => ({ data, init })),
-  }
-}));
-
-// Mock Supabase
 const mockSupabase = {
   auth: {
     getUser: vi.fn(),
   },
-  from: vi.fn(() => mockSupabase),
-  select: vi.fn(() => mockSupabase),
-  eq: vi.fn(() => mockSupabase),
+  from: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
   single: vi.fn(),
-  in: vi.fn(() => mockSupabase),
-  upsert: vi.fn(() => mockSupabase),
+  in: vi.fn().mockReturnThis(),
+  upsert: vi.fn().mockReturnThis(),
 };
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -37,20 +21,21 @@ vi.mock('@/lib/supabase/server', () => ({
 describe('Form Assessment API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.from.mockReturnThis();
+    mockSupabase.select.mockReturnThis();
+    mockSupabase.eq.mockReturnThis();
+    mockSupabase.in.mockReturnThis();
+    mockSupabase.upsert.mockReturnThis();
   });
 
   describe('GET /api/coach/form-assessment', () => {
     it('should return 400 if clientId is missing', async () => {
-      const { GET } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        url: 'http://localhost/api/coach/form-assessment',
-      } as any;
-
+      const request = new NextRequest('http://localhost/api/coach/form-assessment');
       const response = await GET(request);
-      
-      expect(response.init.status).toBe(400);
-      expect(response.data.error).toBe('clientId is required');
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('clientId is required');
     });
 
     it('should return 401 if user is not authenticated', async () => {
@@ -59,16 +44,12 @@ describe('Form Assessment API', () => {
         error: null,
       });
 
-      const { GET } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        url: 'http://localhost/api/coach/form-assessment?clientId=123',
-      } as any;
-
+      const request = new NextRequest('http://localhost/api/coach/form-assessment?clientId=123');
       const response = await GET(request);
-      
-      expect(response.init.status).toBe(401);
-      expect(response.data.error).toBe('Unauthorized');
+
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.error).toBe('Unauthorized');
     });
 
     it('should return 403 if user is not a coach or admin', async () => {
@@ -76,22 +57,17 @@ describe('Form Assessment API', () => {
         data: { user: { id: 'coach-123' } },
         error: null,
       });
-      
       mockSupabase.single.mockResolvedValueOnce({
         data: { role: 'user' },
         error: null,
       });
 
-      const { GET } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        url: 'http://localhost/api/coach/form-assessment?clientId=client-123',
-      } as any;
-
+      const request = new NextRequest('http://localhost/api/coach/form-assessment?clientId=client-123');
       const response = await GET(request);
-      
-      expect(response.init.status).toBe(403);
-      expect(response.data.error).toBe('Unauthorized');
+
+      expect(response.status).toBe(403);
+      const data = await response.json();
+      expect(data.error).toBe('Unauthorized');
     });
 
     it('should return exercises with assessments for valid coach', async () => {
@@ -99,84 +75,109 @@ describe('Form Assessment API', () => {
         data: { user: { id: 'coach-123' } },
         error: null,
       });
-      
-      // Mock profile check
+
       mockSupabase.single
         .mockResolvedValueOnce({ data: { role: 'coach' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'client-123' }, error: null })
         .mockResolvedValueOnce({ data: { program_id: 'program-1' }, error: null });
 
-      // Mock exercises data
-      mockSupabase.select.mockImplementation((fields) => {
-        if (fields.includes('exercise_id')) {
+      let lastTable = '';
+      mockSupabase.from.mockImplementation((table: string) => {
+        lastTable = table;
+        return mockSupabase;
+      });
+      mockSupabase.select.mockImplementation((fields?: string) => {
+        if (lastTable === 'phases') {
+          return {
+            eq: vi.fn().mockResolvedValue({
+              data: [{ id: 'phase-1' }, { id: 'phase-2' }],
+              error: null,
+            }),
+          };
+        }
+        if (lastTable === 'workout_templates') {
+          return {
+            in: vi.fn().mockResolvedValue({
+              data: [{ id: 'wt-1' }, { id: 'wt-2' }],
+              error: null,
+            }),
+          };
+        }
+        if (lastTable === 'template_exercises') {
           return {
             in: () => ({
               data: [
-                { exercise_id: 'ex-1', exercises: { id: 'ex-1', name: 'Squat', muscle_group: 'Legs' } },
-                { exercise_id: 'ex-2', exercises: { id: 'ex-2', name: 'Bench Press', muscle_group: 'Chest' } }
+                { exercise_id: 'ex-1', exercises: { id: 'ex-1', name: 'Squat', muscle_group: 'Legs', equipment: 'Barbell' } },
+                { exercise_id: 'ex-2', exercises: { id: 'ex-2', name: 'Bench Press', muscle_group: 'Chest', equipment: 'Barbell' } },
               ],
-              error: null
-            })
+              error: null,
+            }),
+          };
+        }
+        if (lastTable === 'coach_form_assessments') {
+          return {
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({
+                  data: [
+                    { exercise_id: 'ex-1', status: 'locked_in', private_notes: 'Good form' },
+                  ],
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         return mockSupabase;
       });
 
-      // Mock assessments
-      mockSupabase.in.mockResolvedValueOnce({
-        data: [
-          { exercise_id: 'ex-1', status: 'locked_in', private_notes: 'Good form' }
-        ],
-        error: null
-      });
-
-      const { GET } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        url: 'http://localhost/api/coach/form-assessment?clientId=client-123',
-      } as any;
-
+      const request = new NextRequest('http://localhost/api/coach/form-assessment?clientId=client-123');
       const response = await GET(request);
-      
-      expect(response.data.exercises).toBeDefined();
-      expect(response.data.exercises).toHaveLength(2);
-      expect(response.data.exercises[0].assessment).toEqual({
-        exercise_id: 'ex-1', 
-        status: 'locked_in', 
-        private_notes: 'Good form'
+      const data = await response.json();
+
+      expect(data.exercises).toBeDefined();
+      expect(data.exercises).toHaveLength(2);
+      const squat = data.exercises.find((e: any) => e.name === 'Squat');
+      expect(squat).toBeDefined();
+      expect(squat.assessment).toEqual({
+        exercise_id: 'ex-1',
+        status: 'locked_in',
+        private_notes: 'Good form',
       });
     });
   });
 
   describe('POST /api/coach/form-assessment', () => {
     it('should return 400 if required fields are missing', async () => {
-      const { POST } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        json: vi.fn().mockResolvedValue({ clientId: 'client-123' }),
-      } as any;
+      const request = new NextRequest('http://localhost/api/coach/form-assessment', {
+        method: 'POST',
+        body: JSON.stringify({ clientId: 'client-123' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       const response = await POST(request);
-      
-      expect(response.init.status).toBe(400);
-      expect(response.data.error).toBe('Missing required fields');
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('Missing required fields');
     });
 
     it('should return 400 for invalid status', async () => {
-      const { POST } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        json: vi.fn().mockResolvedValue({
+      const request = new NextRequest('http://localhost/api/coach/form-assessment', {
+        method: 'POST',
+        body: JSON.stringify({
           clientId: 'client-123',
           exerciseId: 'ex-1',
           status: 'invalid_status',
         }),
-      } as any;
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       const response = await POST(request);
-      
-      expect(response.init.status).toBe(400);
-      expect(response.data.error).toBe('Invalid status');
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('Invalid status');
     });
 
     it('should successfully create assessment for valid data', async () => {
@@ -184,7 +185,7 @@ describe('Form Assessment API', () => {
         data: { user: { id: 'coach-123' } },
         error: null,
       });
-      
+
       mockSupabase.single
         .mockResolvedValueOnce({ data: { role: 'coach' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'client-123' }, error: null })
@@ -201,22 +202,23 @@ describe('Form Assessment API', () => {
           error: null,
         });
 
-      const { POST } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        json: vi.fn().mockResolvedValue({
+      const request = new NextRequest('http://localhost/api/coach/form-assessment', {
+        method: 'POST',
+        body: JSON.stringify({
           clientId: 'client-123',
           exerciseId: 'ex-1',
           status: 'locked_in',
           privateNotes: 'Great progress!',
         }),
-      } as any;
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       const response = await POST(request);
-      
-      expect(response.data.assessment).toBeDefined();
-      expect(response.data.assessment.status).toBe('locked_in');
-      expect(response.data.assessment.private_notes).toBe('Great progress!');
+      const data = await response.json();
+
+      expect(data.assessment).toBeDefined();
+      expect(data.assessment.status).toBe('locked_in');
+      expect(data.assessment.private_notes).toBe('Great progress!');
     });
 
     it('should validate that exercise exists', async () => {
@@ -224,26 +226,27 @@ describe('Form Assessment API', () => {
         data: { user: { id: 'coach-123' } },
         error: null,
       });
-      
+
       mockSupabase.single
         .mockResolvedValueOnce({ data: { role: 'coach' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'client-123' }, error: null })
-        .mockResolvedValueOnce({ data: null, error: null }); // Exercise not found
+        .mockResolvedValueOnce({ data: null, error: null });
 
-      const { POST } = await import('@/app/api/coach/form-assessment/route');
-      
-      const request = {
-        json: vi.fn().mockResolvedValue({
+      const request = new NextRequest('http://localhost/api/coach/form-assessment', {
+        method: 'POST',
+        body: JSON.stringify({
           clientId: 'client-123',
           exerciseId: 'nonexistent',
           status: 'locked_in',
         }),
-      } as any;
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       const response = await POST(request);
-      
-      expect(response.init.status).toBe(404);
-      expect(response.data.error).toBe('Exercise not found');
+
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data.error).toBe('Exercise not found');
     });
   });
 });

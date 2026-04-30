@@ -6,6 +6,8 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, TrendingUp, Activity } from "lucide-react";
 import FormAssessmentPanel from "./FormAssessmentPanel";
+import SendNoteDialog from "@/components/SendNoteDialog";
+import CoachNotesPanel from "@/components/CoachNotesPanel";
 
 interface ClientDetails {
   id: string;
@@ -34,7 +36,7 @@ interface SessionLogWithTemplate {
   template: {
     title: string;
     day_label: string;
-  };
+  } | null;
   set_count: number;
 }
 
@@ -90,7 +92,7 @@ async function getClientDetails(clientId: string, coachId: string): Promise<Clie
     enrollment_started: enrollment.started_at,
     completion_rate: Math.round(completionRate),
     total_sessions: totalSessions,
-    completed_sessions,
+    completed_sessions: completedSessions,
   };
 }
 
@@ -128,9 +130,12 @@ async function getSessionHistory(clientId: string): Promise<SessionLogWithTempla
         .select("id")
         .eq("session_log_id", session.id);
         
+      const tmpl = Array.isArray(session.workout_templates)
+        ? session.workout_templates[0] ?? null
+        : session.workout_templates ?? null;
       return {
         ...session,
-        template: session.workout_templates,
+        template: tmpl,
         set_count: sets?.length || 0,
       };
     })
@@ -438,37 +443,44 @@ export default async function ClientDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/clients">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2"
-            style={{
-              borderColor: "#B5A68C",
-              color: "#6B5A48",
-              backgroundColor: "transparent"
-            }}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Clients
-          </Button>
-        </Link>
-        
-        <div>
-          <h1 style={{ 
-            fontSize: 28, 
-            fontWeight: 700, 
-            color: "#2C1A10", 
-            fontFamily: "var(--font-display)", 
-            marginBottom: 4 
-          }}>
-            {client.full_name || "Unnamed User"}
-          </h1>
-          <p style={{ color: "#6B5A48", fontSize: 16 }}>
-            {client.email} • {client.template_tier.replace('_', ' ')} tier • {client.gender}
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/clients">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+              style={{
+                borderColor: "#B5A68C",
+                color: "#6B5A48",
+                backgroundColor: "transparent"
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Clients
+            </Button>
+          </Link>
+          
+          <div>
+            <h1 style={{ 
+              fontSize: 28, 
+              fontWeight: 700, 
+              color: "#2C1A10", 
+              fontFamily: "var(--font-display)", 
+              marginBottom: 4 
+            }}>
+              {client.full_name || "Unnamed User"}
+            </h1>
+            <p style={{ color: "#6B5A48", fontSize: 16 }}>
+              {client.email} • {client.template_tier.replace('_', ' ')} tier • {client.gender}
+            </p>
+          </div>
         </div>
+        
+        <SendNoteDialog 
+          clientId={client.id}
+          clientName={client.full_name || "Unnamed User"}
+        />
       </div>
       
       <ClientStats client={client} />
@@ -479,6 +491,10 @@ export default async function ClientDetailPage({
       </div>
       
       <FormAssessmentPanel clientId={client.id} />
+      <CoachNotesPanel
+        clientId={client.id}
+        clientName={client.full_name || "Unnamed User"}
+      />
     </div>
   );
 }
