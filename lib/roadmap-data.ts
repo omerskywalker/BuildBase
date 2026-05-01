@@ -285,7 +285,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "5-1",
         title: "User + coach management",
         description: "Admin table with full CRUD. Assign roles, pair coaches to users, activate/deactivate.",
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/batch-5-admin-users",
         pr: 84,
