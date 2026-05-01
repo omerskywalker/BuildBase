@@ -285,9 +285,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "5-1",
         title: "User + coach management",
         description: "Admin table with full CRUD. Assign roles, pair coaches to users, activate/deactivate.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-5-admin-users",
+        pr: 84,
         issue: 32,
         scope: {
           owns: ["app/(admin)/users/page.tsx", "app/api/admin/users/"],
