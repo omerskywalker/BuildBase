@@ -237,8 +237,9 @@ export const ROADMAP: RoadmapBatch[] = [
         title: "Client list + detail view",
         description: "Coach sees their clients, clicks in to see session log history, current week, stats.",
         status: "done",
-        tests: false,
+        tests: true,
         branch: "feat/batch-4-clients",
+        pr: 81,
         issue: 29,
         scope: {
           owns: ["app/(coach)/clients/page.tsx", "app/(coach)/clients/[id]/page.tsx"],
@@ -299,8 +300,8 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "5-2",
         title: "Create user form",
         description: "Admin creates users directly: name, email, gender, role, coach assignment, template tier.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-5-create-user",
         issue: 33,
         scope: {

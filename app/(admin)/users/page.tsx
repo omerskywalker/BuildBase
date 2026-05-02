@@ -21,7 +21,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Edit, Save, X, Trash2 } from "lucide-react";
+import { Edit, Save, X, Trash2, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 interface ProfileWithCoach extends Profile {
   coach?: { id: string; full_name: string; email: string } | null;
@@ -148,13 +149,21 @@ export default function AdminUsersPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
-          Users
-        </h1>
-        <p style={{ color: "#6B5A48", fontSize: 14 }}>
-          Manage user accounts, roles, and coach assignments
-        </p>
+      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
+            Users
+          </h1>
+          <p style={{ color: "#6B5A48", fontSize: 14 }}>
+            Manage user accounts, roles, and coach assignments
+          </p>
+        </div>
+        <Link href="/admin/users/create">
+          <Button className="flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            Create User
+          </Button>
+        </Link>
       </div>
 
       <Card>
