@@ -190,6 +190,24 @@ export interface UserEnrollment {
   is_active: boolean;
 }
 
+// ─── User Exercise Overrides ──────────────────────────────────────────────────
+
+export interface UserExerciseOverride {
+  id: string;
+  user_id: string;
+  template_exercise_id: string;
+  sets_override: number | null;
+  reps_override: number | null;
+  weight_override: number | null;
+  notes: string | null;
+  set_by: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  template_exercise?: TemplateExercise;
+  set_by_profile?: { id: string; full_name: string | null; email: string };
+}
+
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
 export interface SessionWeekGroup {
