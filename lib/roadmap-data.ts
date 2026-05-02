@@ -300,7 +300,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "5-2",
         title: "Create user form",
         description: "Admin creates users directly: name, email, gender, role, coach assignment, template tier.",
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/batch-5-create-user",
         pr: 85,
