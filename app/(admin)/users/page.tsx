@@ -11,13 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -209,16 +203,12 @@ export default function AdminUsersPage() {
                     {editingUser === user.id ? (
                       <Select
                         value={editForm.role || user.role}
-                        onValueChange={(value) => setEditForm({ ...editForm, role: value as UserRole })}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm({ ...editForm, role: e.target.value as UserRole })}
+                        className="w-24"
                       >
-                        <SelectTrigger className="w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="coach">Coach</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
+                        <option value="user">User</option>
+                        <option value="coach">Coach</option>
+                        <option value="admin">Admin</option>
                       </Select>
                     ) : (
                       <Badge variant={getRoleBadgeVariant(user.role)}>
@@ -230,17 +220,13 @@ export default function AdminUsersPage() {
                     {editingUser === user.id ? (
                       <Select
                         value={editForm.gender || user.gender}
-                        onValueChange={(value) => setEditForm({ ...editForm, gender: value as Gender })}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm({ ...editForm, gender: e.target.value as Gender })}
+                        className="w-20"
                       >
-                        <SelectTrigger className="w-20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unset">Unset</SelectItem>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
+                        <option value="unset">Unset</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
                       </Select>
                     ) : (
                       <span style={{ fontSize: 14, color: user.gender === "unset" ? "#988A78" : "#2C1A10" }}>
@@ -252,19 +238,15 @@ export default function AdminUsersPage() {
                     {editingUser === user.id ? (
                       <Select
                         value={editForm.coach_id || user.coach_id || "none"}
-                        onValueChange={(value) => setEditForm({ ...editForm, coach_id: value === "none" ? null : value })}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm({ ...editForm, coach_id: e.target.value === "none" ? null : e.target.value })}
+                        className="w-32"
                       >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No coach</SelectItem>
-                          {coaches.map((coach) => (
-                            <SelectItem key={coach.id} value={coach.id}>
-                              {coach.full_name || coach.email}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
+                        <option value="none">No coach</option>
+                        {coaches.map((coach) => (
+                          <option key={coach.id} value={coach.id}>
+                            {coach.full_name || coach.email}
+                          </option>
+                        ))}
                       </Select>
                     ) : user.coach ? (
                       <span style={{ fontSize: 14 }}>{user.coach.full_name || user.coach.email}</span>
@@ -276,16 +258,12 @@ export default function AdminUsersPage() {
                     {editingUser === user.id ? (
                       <Select
                         value={editForm.template_tier || user.template_tier}
-                        onValueChange={(value) => setEditForm({ ...editForm, template_tier: value as TemplateTier })}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm({ ...editForm, template_tier: e.target.value as TemplateTier })}
+                        className="w-28"
                       >
-                        <SelectTrigger className="w-28">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pre_baseline">Pre baseline</SelectItem>
-                          <SelectItem value="default">Default</SelectItem>
-                          <SelectItem value="post_baseline">Post baseline</SelectItem>
-                        </SelectContent>
+                        <option value="pre_baseline">Pre baseline</option>
+                        <option value="default">Default</option>
+                        <option value="post_baseline">Post baseline</option>
                       </Select>
                     ) : (
                       <Badge variant={getTierBadgeVariant(user.template_tier)}>
