@@ -314,7 +314,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "5-3",
         title: "Per-user workout override editor",
         description: "Admin (or coach) can override sets/reps/weight for any exercise for a specific user.",
-        status: "not-started",
+        status: "done",
         tests: false,
         branch: "feat/batch-5-overrides",
         issue: 34,
