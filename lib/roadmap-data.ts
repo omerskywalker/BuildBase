@@ -363,7 +363,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "6-3",
         title: "Effort + soreness trend charts + insights",
         description: "Line charts for effort/soreness over sessions. Auto-generated insight text (e.g. 'High effort → next-day soreness correlation').",
-        status: "not-started",
+        status: "done",
         tests: false,
         branch: "feat/batch-6-insights",
         issue: 37,
