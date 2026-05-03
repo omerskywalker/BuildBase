@@ -2,9 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { calculatePhaseProgress, calculateProgressPercentage, type OverallProgress, type PhaseProgress } from "@/lib/progress-utils";
+import { calculateCurrentStreak } from "@/lib/milestone-utils";
+import StreakBadge from "@/components/StreakBadge";
 import type { Phase, WorkoutTemplate, SessionLog, UserEnrollment } from "@/lib/types";
 
-async function getProgressData(userId: string): Promise<OverallProgress> {
+async function getProgressData(userId: string): Promise<OverallProgress & { sessionLogs: SessionLog[] }> {
   const supabase = await createClient();
 
   // Get user enrollment
@@ -41,14 +43,21 @@ async function getProgressData(userId: string): Promise<OverallProgress> {
   const { data: sessionLogs } = await supabase
     .from("session_logs")
     .select("*")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .order("week_number", { ascending: true })
+    .order("session_number", { ascending: true });
 
-  return calculatePhaseProgress(
+  const progressData = calculatePhaseProgress(
     phases, 
     templates || [],
     sessionLogs || [],
     enrollment
   );
+
+  return {
+    ...progressData,
+    sessionLogs: sessionLogs || []
+  };
 }
 
 function SessionStatusIndicator({ 
@@ -155,6 +164,7 @@ export default async function PhaseOverview({ userId }: { userId: string }) {
   try {
     const progressData = await getProgressData(userId);
     const overallPercentage = calculateProgressPercentage(progressData.overallCompleted, progressData.overallTotal);
+    const currentStreak = calculateCurrentStreak(progressData.sessionLogs);
 
     return (
       <div className="space-y-6">
@@ -175,12 +185,16 @@ export default async function PhaseOverview({ userId }: { userId: string }) {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <ProgressBar 
               completed={progressData.overallCompleted} 
               total={progressData.overallTotal}
               className="h-3"
             />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-content-secondary">Current streak:</span>
+              <StreakBadge streak={currentStreak} />
+            </div>
           </CardContent>
         </Card>
 
