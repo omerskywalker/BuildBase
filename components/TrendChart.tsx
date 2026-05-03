@@ -19,24 +19,26 @@ interface TrendChartProps {
 }
 
 export default function TrendChart({ data, type, className = "" }: TrendChartProps) {
-  const formatTooltipValue = (value: number, name: string) => {
-    if (name === "effort" && value) {
-      const label = EFFORT_LABELS[value as keyof typeof EFFORT_LABELS];
-      return [`${value} - ${label.emoji} ${label.label}`, "Effort"];
+  const formatTooltipValue = (value: any, name: any) => {
+    const v = Number(value);
+    const n = String(name);
+    if (n === "effort" && v) {
+      const label = EFFORT_LABELS[v as keyof typeof EFFORT_LABELS];
+      return [`${v} - ${label.emoji} ${label.label}`, "Effort"];
     }
-    if (name === "soreness" && value) {
-      const label = SORENESS_LABELS[value as keyof typeof SORENESS_LABELS];
-      return [`${value} - ${label.emoji} ${label.label}`, "Soreness"];
+    if (n === "soreness" && v) {
+      const label = SORENESS_LABELS[v as keyof typeof SORENESS_LABELS];
+      return [`${v} - ${label.emoji} ${label.label}`, "Soreness"];
     }
     return [value, name];
   };
 
-  const formatTooltipLabel = (label: string, payload: any[]) => {
+  const formatTooltipLabel = (label: any, payload: any) => {
     if (payload && payload[0] && payload[0].payload) {
       const data = payload[0].payload;
       return `W${data.week} Session ${data.sessionNumber} (${data.date})`;
     }
-    return label;
+    return String(label);
   };
 
   return (
