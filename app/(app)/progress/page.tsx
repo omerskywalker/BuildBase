@@ -39,6 +39,13 @@ export default async function ProgressPage() {
               Milestones
             </Button>
           </Link>
+          <Link
+            href="/progress/trends"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-dim transition-colors"
+          >
+            <TrendingUp className="w-4 h-4" />
+            View Trends
+          </Link>
         </div>
       </div>
 
