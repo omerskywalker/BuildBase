@@ -335,9 +335,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "6-1",
         title: "Progress charts per lift",
         description: "Recharts line charts showing weight over time per exercise. Coach sees these for their clients.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-6-charts",
+        pr: 88,
         issue: 35,
         scope: {
           owns: ["app/(app)/progress/charts/", "components/LiftChart.tsx"],
