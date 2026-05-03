@@ -195,9 +195,10 @@ describe("Overrides Users API Route", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      expect(response.json.user).toEqual(mockUserProfile);
-      expect(response.json.enrollment).toEqual(mockEnrollment);
-      expect(response.json.overrides).toEqual(expect.any(Object));
+      const json = response.json as any;
+      expect(json.user).toEqual(mockUserProfile);
+      expect(json.enrollment).toEqual(mockEnrollment);
+      expect(json.overrides).toEqual(expect.any(Object));
     });
 
     it("should allow coaches to access user data", async () => {
