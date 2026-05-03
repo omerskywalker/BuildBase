@@ -10,13 +10,12 @@ describe('LiftChart', () => {
   ];
 
   test('renders chart with data', () => {
-    render(
+    const { container } = render(
       <LiftChart data={mockData} exerciseName="Bench Press" height={300} />
     );
 
-    // Chart should be rendered (Recharts creates SVG elements)
-    const chart = document.querySelector('svg');
-    expect(chart).toBeInTheDocument();
+    const chartContainer = container.querySelector('.recharts-responsive-container');
+    expect(chartContainer).toBeInTheDocument();
   });
 
   test('shows empty state when no data provided', () => {

@@ -55,12 +55,12 @@ export default function LiftChart({ data, exerciseName, height = 300 }: LiftChar
             fontSize: 13,
           }}
           cursor={{ stroke: "#B5A68C", strokeDasharray: "4 4" }}
-          formatter={(value: number, name: string) => [`${value} lbs`, 'Weight']}
-          labelFormatter={(label: string, payload: any[]) => {
+          formatter={(value: any, _name: any) => [`${value} lbs`, 'Weight']}
+          labelFormatter={(label: any, payload: any) => {
             if (payload && payload[0] && payload[0].payload) {
               return `${payload[0].payload.sessionName} - ${label}`;
             }
-            return label;
+            return String(label);
           }}
         />
         <Line

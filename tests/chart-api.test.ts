@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 // Mock the supabase client
-const mockSupabaseClient = {
+const mockSupabaseClient: any = {
   auth: {
     getUser: vi.fn()
   },
