@@ -349,7 +349,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "6-2",
         title: "Streaks, completion rate, PRs, milestones",
         description: "Streak counter, overall completion %, auto-detected personal records board, milestone checklist with achievement animations.",
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/batch-6-milestones",
         pr: 87,
