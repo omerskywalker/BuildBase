@@ -335,7 +335,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "6-1",
         title: "Progress charts per lift",
         description: "Recharts line charts showing weight over time per exercise. Coach sees these for their clients.",
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/batch-6-charts",
         pr: 88,
