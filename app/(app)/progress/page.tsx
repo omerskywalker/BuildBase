@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, TrendingUp } from "lucide-react";
 import PhaseOverview from "./PhaseOverview";
 
 export default async function ProgressPage() {
@@ -24,13 +25,21 @@ export default async function ProgressPage() {
             Track your journey through your 12-week strength program
           </p>
         </div>
-        <Link
-          href="/progress/charts"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-dim transition-colors"
-        >
-          <TrendingUp size={16} />
-          View Charts
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/progress/charts"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-dim transition-colors"
+          >
+            <TrendingUp size={16} />
+            View Charts
+          </Link>
+          <Link href="/progress/milestones">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Trophy className="h-4 w-4" />
+              Milestones
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Suspense fallback={<div className="text-content-secondary">Loading progress...</div>}>

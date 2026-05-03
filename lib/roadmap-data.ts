@@ -349,9 +349,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "6-2",
         title: "Streaks, completion rate, PRs, milestones",
         description: "Streak counter, overall completion %, auto-detected personal records board, milestone checklist with achievement animations.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-6-milestones",
+        pr: 87,
         issue: 36,
         scope: {
           owns: ["app/(app)/progress/milestones/", "components/MilestoneCard.tsx", "components/StreakBadge.tsx"],
