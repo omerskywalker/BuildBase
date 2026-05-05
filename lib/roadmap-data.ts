@@ -411,7 +411,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "7-3",
         title: "Exercise library + weight editor",
         description: "Full CRUD for exercises. Edit all 6 weight defaults (3 tiers × 2 genders) per template exercise. Program versioning — snapshot before destructive changes.",
-        status: "not-started",
+        status: "done",
         tests: false,
         branch: "feat/batch-7-exercise-library",
         issue: 40,
