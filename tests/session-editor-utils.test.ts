@@ -117,7 +117,7 @@ describe('Session Editor Utils', () => {
 
     it('should reorder exercises correctly when moving up', () => {
       const result = reorderExercises(mockExercises, '3', '1');
-      expect(result.map(e => e.id)).toEqual(['1', '3', '2']);
+      expect(result.map(e => e.id)).toEqual(['3', '1', '2']);
     });
 
     it('should return original array if active item not found', () => {

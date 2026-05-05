@@ -40,7 +40,7 @@ export function ExerciseLibraryDialog({
   const muscleGroups = Array.from(new Set(
     availableExercises
       .map(ex => ex.muscle_group)
-      .filter(Boolean)
+      .filter((g): g is string => Boolean(g))
   )).sort();
 
   const handleAddExercise = (exerciseId: string) => {

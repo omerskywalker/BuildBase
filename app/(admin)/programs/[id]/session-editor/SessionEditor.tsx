@@ -43,7 +43,7 @@ export function SessionEditor({ template, templateExercises, allExercises, progr
     
     if (oldIndex === -1 || newIndex === -1) return;
     
-    const newExercises = arrayMove(exercises, oldIndex, newIndex).map((ex, index) => ({
+    const newExercises = arrayMove(exercises, oldIndex, newIndex).map((ex: (typeof exercises)[number], index: number) => ({
       ...ex,
       order_index: index
     }));

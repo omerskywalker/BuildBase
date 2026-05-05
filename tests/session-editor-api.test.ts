@@ -8,21 +8,30 @@ import { POST as addExercisePOST } from '@/app/api/admin/programs/[programId]/se
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => ({
     from: vi.fn(() => ({
-      update: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: null })) })),
-      insert: vi.fn(() => ({ 
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
+              data: mockTemplateExercise,
+              error: null
+            }))
+          }))
+        }))
+      })),
+      insert: vi.fn(() => ({
         select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ 
-            data: mockTemplateExercise, 
-            error: null 
+          single: vi.fn(() => Promise.resolve({
+            data: mockTemplateExercise,
+            error: null
           }))
         }))
       })),
       delete: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: null })) })),
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ 
-            data: mockExercise, 
-            error: null 
+          single: vi.fn(() => Promise.resolve({
+            data: mockExercise,
+            error: null
           }))
         }))
       }))
