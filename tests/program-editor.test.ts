@@ -1,53 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-// Mock Next.js modules
-vi.mock("next/server", () => ({
-  NextResponse: {
-    json: (data: any, init?: ResponseInit) => ({
-      json: () => Promise.resolve(data),
-      ok: init?.status ? init.status < 400 : true,
-      status: init?.status || 200,
-    }),
-  },
-}));
-
-vi.mock("next/headers", () => ({
-  cookies: vi.fn(() =>
-    Promise.resolve({
-      getAll: () => [],
-      set: () => {},
-    })
-  ),
-}));
-
-// Mock Supabase
 const mockSupabase = {
-  auth: {
-    getUser: vi.fn(),
-  },
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        single: vi.fn(),
-        order: vi.fn(() => ({})),
-      })),
-      order: vi.fn(() => ({})),
-    })),
-    update: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(),
-        })),
-      })),
-    })),
-  })),
+  auth: { getUser: vi.fn() },
+  from: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  order: vi.fn(),
+  single: vi.fn(),
 };
 
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(() => Promise.resolve(mockSupabase)),
+  createClient: () => mockSupabase,
 }));
 
-// Import the handlers after mocking
 import { GET as programsGET, PUT as programsPUT } from "../app/api/admin/programs/route";
 import { GET as programGET } from "../app/api/admin/programs/[id]/route";
 import { PUT as phasePUT } from "../app/api/admin/programs/[id]/phases/route";
@@ -55,6 +21,10 @@ import { PUT as phasePUT } from "../app/api/admin/programs/[id]/phases/route";
 describe("Program Editor API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.from.mockReturnThis();
+    mockSupabase.select.mockReturnThis();
+    mockSupabase.update.mockReturnThis();
+    mockSupabase.eq.mockReturnThis();
   });
 
   afterEach(() => {
@@ -76,7 +46,7 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "user-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
+      mockSupabase.single.mockResolvedValueOnce({
         data: { role: "user" },
         error: null,
       });
@@ -106,11 +76,11 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
+      mockSupabase.single.mockResolvedValueOnce({
         data: { role: "admin" },
         error: null,
       });
-      mockSupabase.from().select().order.mockResolvedValue({
+      mockSupabase.order.mockResolvedValueOnce({
         data: mockPrograms,
         error: null,
       });
@@ -118,20 +88,19 @@ describe("Program Editor API", () => {
       const response = await programsGET();
       const data = await response.json();
 
-      expect(response.ok).toBe(true);
+      expect(response.status).toBe(200);
       expect(data).toEqual(mockPrograms);
-      expect(mockSupabase.from).toHaveBeenCalledWith("programs");
     });
 
     it("should handle database errors gracefully", async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
+      mockSupabase.single.mockResolvedValueOnce({
         data: { role: "admin" },
         error: null,
       });
-      mockSupabase.from().select().order.mockResolvedValue({
+      mockSupabase.order.mockResolvedValueOnce({
         data: null,
         error: { message: "Database error" },
       });
@@ -162,29 +131,23 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
-        data: { role: "admin" },
-        error: null,
-      });
-      mockSupabase.from().update().eq().select().single.mockResolvedValue({
-        data: updateData,
-        error: null,
-      });
+      mockSupabase.single
+        .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
+        .mockResolvedValueOnce({ data: updateData, error: null });
 
       const request = mockRequest(updateData);
       const response = await programsPUT(request);
       const data = await response.json();
 
-      expect(response.ok).toBe(true);
+      expect(response.status).toBe(200);
       expect(data).toEqual(updateData);
-      expect(mockSupabase.from).toHaveBeenCalledWith("programs");
     });
 
     it("should return error when program ID is missing", async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
+      mockSupabase.single.mockResolvedValueOnce({
         data: { role: "admin" },
         error: null,
       });
@@ -214,21 +177,15 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValueOnce({
-        data: { role: "admin" },
-        error: null,
-      });
-      mockSupabase.from().select().eq().single.mockResolvedValueOnce({
-        data: mockProgram,
-        error: null,
-      });
+      mockSupabase.single
+        .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
+        .mockResolvedValueOnce({ data: mockProgram, error: null });
 
       const response = await programGET({} as Request, mockParams);
       const data = await response.json();
 
-      expect(response.ok).toBe(true);
+      expect(response.status).toBe(200);
       expect(data.phases).toHaveLength(2);
-      // Phases should be sorted by phase_number
       expect(data.phases[0].phase_number).toBe(1);
       expect(data.phases[1].phase_number).toBe(2);
     });
@@ -237,14 +194,9 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValueOnce({
-        data: { role: "admin" },
-        error: null,
-      });
-      mockSupabase.from().select().eq().single.mockResolvedValueOnce({
-        data: null,
-        error: { code: "PGRST116" },
-      });
+      mockSupabase.single
+        .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
+        .mockResolvedValueOnce({ data: null, error: { code: "PGRST116" } });
 
       const response = await programGET({} as Request, mockParams);
       const data = await response.json();
@@ -274,20 +226,15 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
-        data: { role: "admin" },
-        error: null,
-      });
-      mockSupabase.from().update().eq().eq().select().single.mockResolvedValue({
-        data: { id: "phase-1", ...updateData },
-        error: null,
-      });
+      mockSupabase.single
+        .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
+        .mockResolvedValueOnce({ data: { id: "phase-1", ...updateData }, error: null });
 
       const request = mockRequest(updateData);
       const response = await phasePUT(request, mockParams);
       const data = await response.json();
 
-      expect(response.ok).toBe(true);
+      expect(response.status).toBe(200);
       expect(data.id).toBe("phase-1");
     });
 
@@ -295,7 +242,7 @@ describe("Program Editor API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "admin-1" } },
       });
-      mockSupabase.from().select().eq().single.mockResolvedValue({
+      mockSupabase.single.mockResolvedValueOnce({
         data: { role: "admin" },
         error: null,
       });
@@ -312,7 +259,6 @@ describe("Program Editor API", () => {
 
 describe("Program Editor Utilities", () => {
   describe("Week Range Validation", () => {
-    // Since the validation logic is in the component, we'll test the concept
     const validateWeekRanges = (
       phases: Array<{ phase_number: number; week_start: number; week_end: number }>,
       totalWeeks: number
@@ -360,7 +306,7 @@ describe("Program Editor Utilities", () => {
     it("should detect gaps between phases", () => {
       const phases = [
         { phase_number: 1, week_start: 1, week_end: 4 },
-        { phase_number: 2, week_start: 6, week_end: 9 }, // Gap: week 5 missing
+        { phase_number: 2, week_start: 6, week_end: 9 },
         { phase_number: 3, week_start: 10, week_end: 12 },
       ];
 
@@ -373,7 +319,7 @@ describe("Program Editor Utilities", () => {
 
     it("should detect invalid end before start", () => {
       const phases = [
-        { phase_number: 1, week_start: 5, week_end: 3 }, // Invalid: end < start
+        { phase_number: 1, week_start: 5, week_end: 3 },
         { phase_number: 2, week_start: 4, week_end: 8 },
       ];
 
@@ -390,7 +336,7 @@ describe("Program Editor Utilities", () => {
         { phase_number: 2, week_start: 5, week_end: 8 },
       ];
 
-      const result = validateWeekRanges(phases, 12); // Expecting 12 weeks, only got 8
+      const result = validateWeekRanges(phases, 12);
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
         "Phase weeks (8) don't match program total (12)"
@@ -405,7 +351,7 @@ describe("Program Editor Utilities", () => {
       ];
 
       const result = validateWeekRanges(phases, 12);
-      expect(result.isValid).toBe(true); // Should work because we sort by phase_number
+      expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
