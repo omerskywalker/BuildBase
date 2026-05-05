@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Edit, Settings, ArrowRight } from "lucide-react";
+import { Edit, Settings, Dumbbell } from "lucide-react";
 import Link from "next/link";
 
 interface ProgramWithPhases extends Program {
@@ -63,7 +63,7 @@ export default function AdminProgramsPage() {
           Program Editor
         </h1>
         <p style={{ color: "#6B5A48", fontSize: 14 }}>
-          Manage workout programs and phase structure
+          Manage workout programs, exercises, and weight defaults
         </p>
       </div>
 
@@ -135,6 +135,16 @@ export default function AdminProgramsPage() {
                         >
                           <Edit className="h-3 w-3" />
                           Edit
+                        </Button>
+                      </Link>
+                      <Link href={`/admin/programs/${program.id}/exercises`}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 flex items-center gap-2"
+                        >
+                          <Dumbbell className="h-3 w-3" />
+                          Exercises
                         </Button>
                       </Link>
                     </div>
