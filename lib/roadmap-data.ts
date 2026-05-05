@@ -397,9 +397,10 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "7-2",
         title: "Session editor with drag-and-drop (dnd-kit)",
         description: "Reorder exercises within a session via drag-and-drop. Add/remove exercises. Edit superset groups.",
-        status: "not-started",
-        tests: false,
+        status: "in-progress",
+        tests: true,
         branch: "feat/batch-7-session-editor",
+        pr: 92,
         issue: 39,
         scope: {
           owns: ["app/(admin)/programs/[id]/session-editor/"],
