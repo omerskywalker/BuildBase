@@ -384,7 +384,7 @@ export const ROADMAP: RoadmapBatch[] = [
         id: "7-1",
         title: "Program + phase editor",
         description: "Admin can edit program name, phase names, and week ranges at /admin/programs.",
-        status: "not-started",
+        status: "done",
         tests: false,
         branch: "feat/batch-7-program-editor",
         issue: 38,
