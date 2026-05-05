@@ -83,12 +83,10 @@ describe('/api/admin/exercises', () => {
         })
       };
 
-      // Mock exercises query
+      // Mock exercises query — no filters, so .order() is terminal
       const exercisesQuery = {
         select: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        ilike: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
+        order: vi.fn().mockResolvedValue({
           data: [
             {
               id: 'exercise-1',
@@ -99,7 +97,7 @@ describe('/api/admin/exercises', () => {
             }
           ],
           error: null
-        })
+        }),
       };
 
       let callCount = 0;
@@ -130,15 +128,16 @@ describe('/api/admin/exercises', () => {
         })
       };
 
-      const exercisesQuery = {
+      const exercisesQuery: any = {
         select: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         ilike: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
-          data: [],
-          error: null
-        })
+        eq: vi.fn(),
       };
+      // .eq() is called twice: first for muscle_group (chain continues), then for is_active (terminal)
+      exercisesQuery.eq
+        .mockReturnValueOnce(exercisesQuery)
+        .mockResolvedValueOnce({ data: [], error: null });
 
       let callCount = 0;
       mockSupabaseClient.from.mockImplementation(() => {

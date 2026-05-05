@@ -145,7 +145,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Template exercise not found" }, { status: 404 });
     }
 
-    const programId = templateExerciseData.workout_template?.phase?.program_id;
+    const wt = Array.isArray(templateExerciseData.workout_template)
+      ? templateExerciseData.workout_template[0]
+      : templateExerciseData.workout_template;
+    const ph = wt?.phase
+      ? (Array.isArray(wt.phase) ? wt.phase[0] : wt.phase)
+      : null;
+    const programId = ph?.program_id;
     
     if (programId) {
       // Create program version snapshot

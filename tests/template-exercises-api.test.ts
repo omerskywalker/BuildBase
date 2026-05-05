@@ -82,11 +82,10 @@ describe('/api/admin/exercises/template-exercises', () => {
         })
       };
 
-      // Mock template exercises query
+      // Mock template exercises query — no filters, so .order() is terminal
       const templateExercisesQuery = {
         select: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
+        order: vi.fn().mockResolvedValue({
           data: [
             {
               id: 'template-exercise-1',
@@ -104,7 +103,7 @@ describe('/api/admin/exercises/template-exercises', () => {
             }
           ],
           error: null
-        })
+        }),
       };
 
       let callCount = 0;
