@@ -7,13 +7,27 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }))
 
-// Mock Supabase client
-const mockUpdate = vi.fn()
-const mockEq = vi.fn()
-const mockFrom = vi.fn()
+// Per-table mock chains
+const mockProfileEq = vi.fn()
+const mockProfileUpdate = vi.fn()
+
+const mockProgramSingle = vi.fn()
+const mockProgramLimit = vi.fn()
+const mockProgramEq = vi.fn()
+const mockProgramSelect = vi.fn()
+
+const mockEnrollmentInsert = vi.fn()
+
 const mockAuth = {
   getUser: vi.fn()
 }
+
+const mockFrom = vi.fn((table: string) => {
+  if (table === 'profiles') return { update: mockProfileUpdate }
+  if (table === 'programs') return { select: mockProgramSelect }
+  if (table === 'user_enrollments') return { insert: mockEnrollmentInsert }
+  return {}
+})
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => ({
@@ -25,16 +39,23 @@ vi.mock('@/lib/supabase/server', () => ({
 describe('Onboarding', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    
-    // Set up default mock chain
-    mockEq.mockReturnValue({ error: null })
-    mockUpdate.mockReturnValue({ eq: mockEq })
-    mockFrom.mockReturnValue({ update: mockUpdate })
+
+    // profiles: .update(...).eq(...)
+    mockProfileEq.mockReturnValue({ error: null })
+    mockProfileUpdate.mockReturnValue({ eq: mockProfileEq })
+
+    // programs: .select("id").eq(...).limit(1).single()
+    mockProgramSingle.mockResolvedValue({ data: { id: 'program-abc' } })
+    mockProgramLimit.mockReturnValue({ single: mockProgramSingle })
+    mockProgramEq.mockReturnValue({ limit: mockProgramLimit })
+    mockProgramSelect.mockReturnValue({ eq: mockProgramEq })
+
+    // user_enrollments: .insert(...)
+    mockEnrollmentInsert.mockResolvedValue({ error: null })
   })
 
   describe('completeOnboarding', () => {
-    it('should successfully update profile with valid data', async () => {
-      // Mock authenticated user
+    it('should successfully update profile and create enrollment', async () => {
       mockAuth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } }
       })
@@ -48,14 +69,26 @@ describe('Onboarding', () => {
       await completeOnboarding(onboardingData)
 
       expect(mockFrom).toHaveBeenCalledWith('profiles')
-      expect(mockUpdate).toHaveBeenCalledWith({
+      expect(mockProfileUpdate).toHaveBeenCalledWith({
         full_name: 'John Doe',
         gender: 'male',
         template_tier: 'default',
         onboarding_done: true,
         updated_at: expect.any(String)
       })
-      expect(mockEq).toHaveBeenCalledWith('id', 'user-123')
+      expect(mockProfileEq).toHaveBeenCalledWith('id', 'user-123')
+
+      expect(mockFrom).toHaveBeenCalledWith('programs')
+      expect(mockProgramSelect).toHaveBeenCalledWith('id')
+      expect(mockProgramEq).toHaveBeenCalledWith('is_active', true)
+
+      expect(mockFrom).toHaveBeenCalledWith('user_enrollments')
+      expect(mockEnrollmentInsert).toHaveBeenCalledWith({
+        user_id: 'user-123',
+        program_id: 'program-abc',
+        template_tier: 'default',
+        gender_applied: 'male',
+      })
     })
 
     it('should throw error when user not authenticated', async () => {
@@ -72,14 +105,13 @@ describe('Onboarding', () => {
       await expect(completeOnboarding(onboardingData)).rejects.toThrow('User not authenticated')
     })
 
-    it('should throw error when database update fails', async () => {
+    it('should throw error when profile update fails', async () => {
       mockAuth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } }
       })
 
-      // Mock database error
-      mockEq.mockReturnValue({ 
-        error: { message: 'Database error' } 
+      mockProfileEq.mockReturnValue({
+        error: { message: 'Database error' }
       })
 
       const onboardingData: OnboardingData = {
@@ -89,6 +121,40 @@ describe('Onboarding', () => {
       }
 
       await expect(completeOnboarding(onboardingData)).rejects.toThrow('Failed to complete onboarding')
+    })
+
+    it('should throw error when no active program exists', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
+
+      mockProgramSingle.mockResolvedValue({ data: null })
+
+      const onboardingData: OnboardingData = {
+        full_name: 'John Doe',
+        gender: 'male',
+        template_tier: 'default'
+      }
+
+      await expect(completeOnboarding(onboardingData)).rejects.toThrow('No active program found')
+    })
+
+    it('should throw error when enrollment insert fails', async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } }
+      })
+
+      mockEnrollmentInsert.mockResolvedValue({
+        error: { message: 'Enrollment error' }
+      })
+
+      const onboardingData: OnboardingData = {
+        full_name: 'John Doe',
+        gender: 'male',
+        template_tier: 'default'
+      }
+
+      await expect(completeOnboarding(onboardingData)).rejects.toThrow('Failed to create enrollment')
     })
 
     it('should trim whitespace from full_name', async () => {
@@ -104,7 +170,7 @@ describe('Onboarding', () => {
 
       await completeOnboarding(onboardingData)
 
-      expect(mockUpdate).toHaveBeenCalledWith({
+      expect(mockProfileUpdate).toHaveBeenCalledWith({
         full_name: 'John Doe',
         gender: 'female',
         template_tier: 'pre_baseline',
@@ -129,7 +195,7 @@ describe('Onboarding', () => {
 
         await completeOnboarding(onboardingData)
 
-        expect(mockUpdate).toHaveBeenCalledWith(
+        expect(mockProfileUpdate).toHaveBeenCalledWith(
           expect.objectContaining({ gender })
         )
       }
@@ -151,7 +217,7 @@ describe('Onboarding', () => {
 
         await completeOnboarding(onboardingData)
 
-        expect(mockUpdate).toHaveBeenCalledWith(
+        expect(mockProfileUpdate).toHaveBeenCalledWith(
           expect.objectContaining({ template_tier })
         )
       }
