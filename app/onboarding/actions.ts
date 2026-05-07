@@ -38,7 +38,7 @@ export async function completeOnboarding(data: OnboardingData): Promise<void> {
     throw new Error("Invalid template tier");
   }
 
-  const { error } = await supabase
+  const { error: profileError } = await supabase
     .from("profiles")
     .update({
       full_name,
@@ -49,8 +49,33 @@ export async function completeOnboarding(data: OnboardingData): Promise<void> {
     })
     .eq("id", user.id);
 
-  if (error) {
-    throw new Error(`Failed to complete onboarding: ${error.message}`);
+  if (profileError) {
+    throw new Error(`Failed to complete onboarding: ${profileError.message}`);
+  }
+
+  // Enroll user in the active program so Sessions/Progress pages work
+  const { data: program } = await supabase
+    .from("programs")
+    .select("id")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+
+  if (!program) {
+    throw new Error("No active program found. Please contact support.");
+  }
+
+  const { error: enrollmentError } = await supabase
+    .from("user_enrollments")
+    .insert({
+      user_id: user.id,
+      program_id: program.id,
+      template_tier: data.template_tier,
+      gender_applied: data.gender,
+    });
+
+  if (enrollmentError) {
+    throw new Error(`Failed to create enrollment: ${enrollmentError.message}`);
   }
 
   redirect("/dashboard");
