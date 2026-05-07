@@ -317,6 +317,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "done",
         tests: false,
         branch: "feat/batch-5-overrides",
+        pr: 86,
         issue: 34,
         scope: {
           owns: ["app/(admin)/overrides/", "app/api/admin/overrides/"],
@@ -366,6 +367,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "done",
         tests: false,
         branch: "feat/batch-6-insights",
+        pr: 89,
         issue: 37,
         scope: {
           owns: ["app/(app)/progress/trends/", "components/TrendChart.tsx"],
@@ -387,6 +389,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "done",
         tests: false,
         branch: "feat/batch-7-program-editor",
+        pr: 91,
         issue: 38,
         scope: {
           owns: ["app/(admin)/programs/page.tsx", "app/(admin)/programs/[id]/page.tsx", "app/api/admin/programs/"],
@@ -414,6 +417,7 @@ export const ROADMAP: RoadmapBatch[] = [
         status: "done",
         tests: false,
         branch: "feat/batch-7-exercise-library",
+        pr: 90,
         issue: 40,
         scope: {
           owns: ["app/(admin)/programs/[id]/exercises/", "app/api/admin/exercises/"],
