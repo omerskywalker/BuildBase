@@ -67,6 +67,9 @@ DECLARE
   e_bicycle_crunch    uuid := gen_random_uuid();
   e_hollow_body       uuid := gen_random_uuid();
 
+  -- Loop variable for template exercise insertion
+  t uuid;
+
 BEGIN
 
 -- ─── Program ─────────────────────────────────────────────────────────────────
@@ -172,201 +175,141 @@ INSERT INTO workout_templates (id, phase_id, week_number, session_number, day_la
 -- ─── Template Exercises ──────────────────────────────────────────────────────
 -- Weight columns: (pre_baseline_f, pre_baseline_m, default_f, default_m, post_baseline_f, post_baseline_m)
 -- is_bodyweight exercises use 0 for all weight columns.
---
--- Phase 1 Day A — Legs + Shoulders
--- Smith Machine Squat → Hamstring Curl → Walking Lunge → BW Hip Thrust → DB Shoulder Press → Lateral Raises → Rear Delt Fly → Abs (Crunches + Leg Raises)
 
--- Helper to insert all 12 phase-1 Day A sessions identically
--- (We insert once per template to keep the seed concise but fully populated)
-
--- PHASE 1 — Day A sessions (4 weeks)
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p1w1a, p1w2a, p1w3a, p1w4a];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_smith_squat,       1, 3, 8,   0,    45,   45,   55,   0,    0,    false, false),  -- post_baseline skips smith → 0
-    (t, e_ham_curl,          2, 3, 8,   30,   40,   40,   55,   55,   75,   false, false),
-    (t, e_walking_lunge,     3, 3, 8,   0,    0,    0,    0,    0,    0,    true,  false),   -- bodyweight
-    (t, e_bw_hip_thrust,     4, 3, 8,   0,    0,    0,    0,    0,    0,    true,  false),   -- BW phase 1
-    (t, e_db_shoulder_press, 5, 3, 8,   5,    8,    7.5,  12.5, 12.5, 17.5, false, false),
-    (t, e_lateral_raise,     6, 3, 8,   3,    5,    5,    8,    8,    10,   false, false),
-    (t, e_rear_delt_fly,     7, 3, 8,   3,    5,    5,    8,    8,    10,   false, false),
-    (t, e_crunch,            8, 2, 15,  0,    0,    0,    0,    0,    0,    true,  true),
-    (t, e_leg_raise,         9, 2, 10,  0,    0,    0,    0,    0,    0,    true,  true);
-  END LOOP;
-END $inner$;
+-- PHASE 1 — Day A sessions (4 weeks): Legs + Shoulders
+FOREACH t IN ARRAY ARRAY[p1w1a, p1w2a, p1w3a, p1w4a] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_smith_squat,       1, 3, 8,   0,    45,   45,   55,   0,    0,    false, false),
+  (t, e_ham_curl,          2, 3, 8,   30,   40,   40,   55,   55,   75,   false, false),
+  (t, e_walking_lunge,     3, 3, 8,   0,    0,    0,    0,    0,    0,    true,  false),
+  (t, e_bw_hip_thrust,     4, 3, 8,   0,    0,    0,    0,    0,    0,    true,  false),
+  (t, e_db_shoulder_press, 5, 3, 8,   5,    8,    7.5,  12.5, 12.5, 17.5, false, false),
+  (t, e_lateral_raise,     6, 3, 8,   3,    5,    5,    8,    8,    10,   false, false),
+  (t, e_rear_delt_fly,     7, 3, 8,   3,    5,    5,    8,    8,    10,   false, false),
+  (t, e_crunch,            8, 2, 15,  0,    0,    0,    0,    0,    0,    true,  true),
+  (t, e_leg_raise,         9, 2, 10,  0,    0,    0,    0,    0,    0,    true,  true);
+END LOOP;
 
 -- PHASE 1 — Day B sessions (4 weeks): Arms
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p1w1b, p1w2b, p1w3b, p1w4b];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher, superset_group) VALUES
-    (t, e_bic_curl_sup,  1, 3, 8,  5,  8,  10,  15,  12.5, 17.5, false, false, 'A'),
-    (t, e_skull_crusher, 2, 3, 8,  5,  8,  8,   12.5, 10,  15,   false, false, 'A'),
-    (t, e_hammer_curl,   3, 3, 8,  5,  8,  10,  15,  12.5, 17.5, false, false, 'B'),
-    (t, e_tri_kickback,  4, 3, 8,  3,  5,  5,   8,   8,    10,   false, false, 'B'),
-    (t, e_plank,         5, 2, 0,  0,  0,  0,   0,   0,    0,    true,  true,  null),  -- reps_default=0 → time-based (20–30s)
-    (t, e_dead_bug,      6, 2, 8,  0,  0,  0,   0,   0,    0,    true,  true,  null);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p1w1b, p1w2b, p1w3b, p1w4b] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher, superset_group) VALUES
+  (t, e_bic_curl_sup,  1, 3, 8,  5,  8,  10,  15,  12.5, 17.5, false, false, 'A'),
+  (t, e_skull_crusher, 2, 3, 8,  5,  8,  8,   12.5, 10,  15,   false, false, 'A'),
+  (t, e_hammer_curl,   3, 3, 8,  5,  8,  10,  15,  12.5, 17.5, false, false, 'B'),
+  (t, e_tri_kickback,  4, 3, 8,  3,  5,  5,   8,   8,    10,   false, false, 'B'),
+  (t, e_plank,         5, 2, 0,  0,  0,  0,   0,   0,    0,    true,  true,  null),
+  (t, e_dead_bug,      6, 2, 8,  0,  0,  0,   0,   0,    0,    true,  true,  null);
+END LOOP;
 
 -- PHASE 1 — Day C sessions (4 weeks): Chest + Back + Trap Bar DL
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p1w1c, p1w2c, p1w3c, p1w4c];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_trap_bar_dl,      1, 3, 8,  45,  65,  65,  95,  95,  135, false, false),  -- ALWAYS FIRST
-    (t, e_lat_pulldown,     2, 3, 8,  30,  40,  40,  60,  60,  80,  false, false),
-    (t, e_seated_cable_row, 3, 3, 8,  30,  40,  40,  60,  60,  80,  false, false),
-    (t, e_db_chest_press,   4, 3, 8,  8,   12.5,12.5,20,  17.5,25,  false, false),
-    (t, e_incline_pushup,   5, 3, 8,  0,   0,   0,   0,   0,   0,   true,  false),
-    (t, e_face_pull,        6, 3, 12, 15,  20,  20,  30,  30,  40,  false, false),
-    (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);   -- reps_default=0 → time-based (15–20s)
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p1w1c, p1w2c, p1w3c, p1w4c] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_trap_bar_dl,      1, 3, 8,  45,  65,  65,  95,  95,  135, false, false),
+  (t, e_lat_pulldown,     2, 3, 8,  30,  40,  40,  60,  60,  80,  false, false),
+  (t, e_seated_cable_row, 3, 3, 8,  30,  40,  40,  60,  60,  80,  false, false),
+  (t, e_db_chest_press,   4, 3, 8,  8,   12.5,12.5,20,  17.5,25,  false, false),
+  (t, e_incline_pushup,   5, 3, 8,  0,   0,   0,   0,   0,   0,   true,  false),
+  (t, e_face_pull,        6, 3, 12, 15,  20,  20,  30,  30,  40,  false, false),
+  (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 -- PHASE 2 — Day A sessions (4 weeks): Goblet Squat + Barbell Hip Thrust introduced
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p2w5a, p2w6a, p2w7a, p2w8a];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_goblet_squat,      1, 3, 8,  10,  15,  15,  25,  25,  35,  false, false),
-    (t, e_ham_curl,          2, 3, 8,  30,  40,  40,  55,  55,  75,  false, false),
-    (t, e_walking_lunge,     3, 3, 8,  0,   0,   0,   0,   0,   0,   true,  false),
-    (t, e_bb_hip_thrust,     4, 3, 8,  45,  45,  45,  65,  65,  95,  false, false),
-    (t, e_db_shoulder_press, 5, 3, 10, 5,   8,   7.5, 12.5,12.5,17.5,false, false),
-    (t, e_lateral_raise,     6, 3, 10, 3,   5,   5,   8,   8,   10,  false, false),
-    (t, e_rear_delt_fly,     7, 3, 10, 3,   5,   5,   8,   8,   10,  false, false),
-    (t, e_plank,             8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_dead_bug,          9, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p2w5a, p2w6a, p2w7a, p2w8a] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_goblet_squat,      1, 3, 8,  10,  15,  15,  25,  25,  35,  false, false),
+  (t, e_ham_curl,          2, 3, 8,  30,  40,  40,  55,  55,  75,  false, false),
+  (t, e_walking_lunge,     3, 3, 8,  0,   0,   0,   0,   0,   0,   true,  false),
+  (t, e_bb_hip_thrust,     4, 3, 8,  45,  45,  45,  65,  65,  95,  false, false),
+  (t, e_db_shoulder_press, 5, 3, 10, 5,   8,   7.5, 12.5,12.5,17.5,false, false),
+  (t, e_lateral_raise,     6, 3, 10, 3,   5,   5,   8,   8,   10,  false, false),
+  (t, e_rear_delt_fly,     7, 3, 10, 3,   5,   5,   8,   8,   10,  false, false),
+  (t, e_plank,             8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_dead_bug,          9, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 -- PHASE 2 — Day B sessions (4 weeks): Full Body
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p2w5b, p2w6b, p2w7b, p2w8b];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_goblet_squat,  1, 3, 8,  10,  15,  15,  25,  25,  35,  false, false),
-    (t, e_rdl,           2, 3, 8,  20,  35,  35,  55,  55,  75,  false, false),
-    (t, e_one_arm_row,   3, 3, 10, 10,  15,  15,  25,  25,  35,  false, false),
-    (t, e_db_chest_press,4, 3, 10, 8,   12.5,12.5,20,  17.5,25,  false, false),
-    (t, e_bicep_curl,    5, 3, 10, 5,   8,   10,  15,  12.5,17.5,false, false),
-    (t, e_tri_pushdown,  6, 3, 10, 10,  15,  15,  25,  25,  35,  false, false),
-    (t, e_plank,         7, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_dead_bug,      8, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p2w5b, p2w6b, p2w7b, p2w8b] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_goblet_squat,  1, 3, 8,  10,  15,  15,  25,  25,  35,  false, false),
+  (t, e_rdl,           2, 3, 8,  20,  35,  35,  55,  55,  75,  false, false),
+  (t, e_one_arm_row,   3, 3, 10, 10,  15,  15,  25,  25,  35,  false, false),
+  (t, e_db_chest_press,4, 3, 10, 8,   12.5,12.5,20,  17.5,25,  false, false),
+  (t, e_bicep_curl,    5, 3, 10, 5,   8,   10,  15,  12.5,17.5,false, false),
+  (t, e_tri_pushdown,  6, 3, 10, 10,  15,  15,  25,  25,  35,  false, false),
+  (t, e_plank,         7, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_dead_bug,      8, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 -- PHASE 2 — Day C sessions (4 weeks): Trap Bar DL
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p2w5c, p2w6c, p2w7c, p2w8c];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_trap_bar_dl,      1, 3, 8,  45,  65,  65,  95,  95,  135, false, false),
-    (t, e_lat_pulldown,     2, 3, 10, 30,  40,  40,  60,  60,  80,  false, false),
-    (t, e_seated_cable_row, 3, 3, 10, 30,  40,  40,  60,  60,  80,  false, false),
-    (t, e_db_chest_press,   4, 3, 10, 8,   12.5,12.5,20,  17.5,25,  false, false),
-    (t, e_floor_pushup,     5, 3, 10, 0,   0,   0,   0,   0,   0,   true,  false),
-    (t, e_face_pull,        6, 3, 12, 15,  20,  20,  30,  30,  40,  false, false),
-    (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p2w5c, p2w6c, p2w7c, p2w8c] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_trap_bar_dl,      1, 3, 8,  45,  65,  65,  95,  95,  135, false, false),
+  (t, e_lat_pulldown,     2, 3, 10, 30,  40,  40,  60,  60,  80,  false, false),
+  (t, e_seated_cable_row, 3, 3, 10, 30,  40,  40,  60,  60,  80,  false, false),
+  (t, e_db_chest_press,   4, 3, 10, 8,   12.5,12.5,20,  17.5,25,  false, false),
+  (t, e_floor_pushup,     5, 3, 10, 0,   0,   0,   0,   0,   0,   true,  false),
+  (t, e_face_pull,        6, 3, 12, 15,  20,  20,  30,  30,  40,  false, false),
+  (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 -- PHASE 3 — Day A sessions (4 weeks): Barbell Back Squat
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p3w9a, p3w10a, p3w11a, p3w12a];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_bb_back_squat,     1, 4, 6,  35,  55,  45,  65,  65,  95,  false, false),
-    (t, e_ham_curl,          2, 4, 6,  30,  40,  40,  55,  55,  75,  false, false),
-    (t, e_walking_lunge,     3, 3, 12, 0,   0,   0,   0,   0,   0,   true,  false),
-    (t, e_bb_hip_thrust,     4, 4, 6,  45,  65,  65,  95,  95,  135, false, false),
-    (t, e_db_shoulder_press, 5, 3, 12, 5,   8,   10,  15,  12.5,17.5,false, false),
-    (t, e_lateral_raise,     6, 3, 12, 3,   5,   5,   8,   8,   10,  false, false),
-    (t, e_rear_delt_fly,     7, 3, 12, 3,   5,   5,   8,   8,   10,  false, false),
-    (t, e_plank,             8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_dead_bug,          9, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p3w9a, p3w10a, p3w11a, p3w12a] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_bb_back_squat,     1, 4, 6,  35,  55,  45,  65,  65,  95,  false, false),
+  (t, e_ham_curl,          2, 4, 6,  30,  40,  40,  55,  55,  75,  false, false),
+  (t, e_walking_lunge,     3, 3, 12, 0,   0,   0,   0,   0,   0,   true,  false),
+  (t, e_bb_hip_thrust,     4, 4, 6,  45,  65,  65,  95,  95,  135, false, false),
+  (t, e_db_shoulder_press, 5, 3, 12, 5,   8,   10,  15,  12.5,17.5,false, false),
+  (t, e_lateral_raise,     6, 3, 12, 3,   5,   5,   8,   8,   10,  false, false),
+  (t, e_rear_delt_fly,     7, 3, 12, 3,   5,   5,   8,   8,   10,  false, false),
+  (t, e_plank,             8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_dead_bug,          9, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 -- PHASE 3 — Day B sessions (4 weeks): Full Body
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p3w9b, p3w10b, p3w11b, p3w12b];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_bb_back_squat, 1, 4, 6,  35,  55,  45,  65,  65,  95,  false, false),
-    (t, e_rdl,           2, 4, 6,  20,  35,  45,  65,  65,  95,  false, false),
-    (t, e_one_arm_row,   3, 3, 12, 10,  15,  20,  30,  30,  40,  false, false),
-    (t, e_db_chest_press,4, 3, 12, 8,   12.5,15,  22.5,20,  30,  false, false),
-    (t, e_bicep_curl,    5, 3, 12, 5,   8,   10,  15,  12.5,17.5,false, false),
-    (t, e_tri_pushdown,  6, 3, 12, 10,  15,  20,  30,  30,  40,  false, false),
-    (t, e_plank,         7, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_dead_bug,      8, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p3w9b, p3w10b, p3w11b, p3w12b] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_bb_back_squat, 1, 4, 6,  35,  55,  45,  65,  65,  95,  false, false),
+  (t, e_rdl,           2, 4, 6,  20,  35,  45,  65,  65,  95,  false, false),
+  (t, e_one_arm_row,   3, 3, 12, 10,  15,  20,  30,  30,  40,  false, false),
+  (t, e_db_chest_press,4, 3, 12, 8,   12.5,15,  22.5,20,  30,  false, false),
+  (t, e_bicep_curl,    5, 3, 12, 5,   8,   10,  15,  12.5,17.5,false, false),
+  (t, e_tri_pushdown,  6, 3, 12, 10,  15,  20,  30,  30,  40,  false, false),
+  (t, e_plank,         7, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_dead_bug,      8, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 -- PHASE 3 — Day C sessions (4 weeks): Conventional Deadlift
-DO $inner$
-DECLARE
-  templates uuid[] := ARRAY[p3w9c, p3w10c, p3w11c, p3w12c];
-  t uuid;
-BEGIN
-  FOREACH t IN ARRAY templates LOOP
-    INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
-      weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
-      is_bodyweight, is_abs_finisher) VALUES
-    (t, e_conv_dl,          1, 4, 6,  65,  95,  95,  135, 135, 185, false, false),  -- ALWAYS FIRST
-    (t, e_lat_pulldown,     2, 3, 12, 30,  40,  45,  65,  65,  85,  false, false),
-    (t, e_seated_cable_row, 3, 3, 12, 30,  40,  45,  65,  65,  85,  false, false),
-    (t, e_db_chest_press,   4, 3, 12, 8,   12.5,15,  22.5,20,  30,  false, false),
-    (t, e_floor_pushup,     5, 3, 12, 0,   0,   0,   0,   0,   0,   true,  false),
-    (t, e_face_pull,        6, 3, 15, 15,  20,  20,  30,  30,  40,  false, false),
-    (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
-    (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
-  END LOOP;
-END $inner$;
+FOREACH t IN ARRAY ARRAY[p3w9c, p3w10c, p3w11c, p3w12c] LOOP
+  INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
+    weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
+    is_bodyweight, is_abs_finisher) VALUES
+  (t, e_conv_dl,          1, 4, 6,  65,  95,  95,  135, 135, 185, false, false),
+  (t, e_lat_pulldown,     2, 3, 12, 30,  40,  45,  65,  65,  85,  false, false),
+  (t, e_seated_cable_row, 3, 3, 12, 30,  40,  45,  65,  65,  85,  false, false),
+  (t, e_db_chest_press,   4, 3, 12, 8,   12.5,15,  22.5,20,  30,  false, false),
+  (t, e_floor_pushup,     5, 3, 12, 0,   0,   0,   0,   0,   0,   true,  false),
+  (t, e_face_pull,        6, 3, 15, 15,  20,  20,  30,  30,  40,  false, false),
+  (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
+END LOOP;
 
 END $$;
