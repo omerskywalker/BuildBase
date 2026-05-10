@@ -263,13 +263,24 @@ router.get("/exercises", async (req, res) => {
       .not("weight_used", "is", null);
 
     if (error) {
+      // Fallback: query set_logs joined through session_logs for the specific user
+      const { data: userSessionLogs } = await supabase
+        .from("session_logs")
+        .select("id")
+        .eq("user_id", requestedUserId);
+
+      const sessionLogIds = (userSessionLogs ?? []).map((s: { id: string }) => s.id);
+      if (sessionLogIds.length === 0) return res.json({ exercises: [] });
+
       const { data: setLogsAlt } = await supabase
         .from("set_logs")
         .select("exercise_id")
+        .in("session_log_id", sessionLogIds)
         .eq("is_completed", true)
         .not("weight_used", "is", null);
 
       const exerciseIds = [...new Set((setLogsAlt ?? []).map((s: { exercise_id: string }) => s.exercise_id))];
+      if (exerciseIds.length === 0) return res.json({ exercises: [] });
 
       const { data: exercises } = await supabase
         .from("exercises")

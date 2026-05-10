@@ -59,6 +59,8 @@ A structured fitness coaching platform for coaches and athletes. Supports multip
 - Secrets must be stored as plain values only (no `KEY=value` format) in the Replit Secrets panel
 - Required secrets: `VITE_SUPABASE_URL` (e.g. `https://xxxx.supabase.co`) and `VITE_SUPABASE_ANON_KEY`
 - After adding/changing secrets, restart the `artifacts/buildbase: web` workflow for Vite to pick them up
+- The `buildbase` Vite config hard-requires `PORT` and `BASE_PATH` env vars at startup — these are injected automatically by the Replit workflow runner. Running `vite` directly from the shell without those set will throw. Use the registered workflow (`artifacts/buildbase: web`) to start the dev server, not a manual `pnpm dev`.
+- All frontend API calls go through `src/lib/api.ts` (`apiFetch`) which reads the Supabase session token and forwards it as `Authorization: Bearer <token>`. Never use raw `fetch()` for `/api/...` calls — it will get 401 Unauthorized from the backend.
 
 ## Pointers
 
