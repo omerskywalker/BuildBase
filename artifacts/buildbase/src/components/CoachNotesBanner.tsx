@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, X } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 import { Link } from "wouter";
 
 interface CoachNote {
@@ -20,7 +21,7 @@ export default function CoachNotesBanner() {
   const [isDismissing, setIsDismissing] = useState(false);
 
   useEffect(() => {
-    fetch("/api/coach/notes")
+    apiFetch("/api/coach/notes")
       .then(r => r.json())
       .then((notes: CoachNote[]) => {
         const unread = notes.find(n => !n.read_at && !n.dismissed_at && n.is_sent);
@@ -34,9 +35,8 @@ export default function CoachNotesBanner() {
     if (!latestNote || isDismissing) return;
     setIsDismissing(true);
     try {
-      await fetch(`/api/coach/notes/${latestNote.id}`, {
+      await apiFetch(`/api/coach/notes/${latestNote.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "dismiss" }),
       });
       setLatestNote(null);
@@ -46,9 +46,8 @@ export default function CoachNotesBanner() {
 
   const markAsRead = async () => {
     if (!latestNote || latestNote.read_at) return;
-    fetch(`/api/coach/notes/${latestNote.id}`, {
+    apiFetch(`/api/coach/notes/${latestNote.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "read" }),
     }).catch(() => {});
   };

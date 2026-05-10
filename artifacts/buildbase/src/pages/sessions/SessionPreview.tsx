@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SessionLog, WorkoutTemplate, TemplateExercise } from "@/lib/types";
 import { formatWeight, getDefaultWeight } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import { Eye, Loader2 } from "lucide-react";
 
 interface SessionPreviewProps {
@@ -19,7 +20,7 @@ export default function SessionPreview({ session, open, onClose, userTier, userG
   useEffect(() => {
     if (!open || !session.workout_template_id) return;
     setLoading(true);
-    fetch(`/api/templates/${session.workout_template_id}/exercises`)
+    apiFetch(`/api/templates/${session.workout_template_id}/exercises`)
       .then(r => r.json())
       .then((data: { exercises: TemplateExercise[] }) => setExercises(data.exercises ?? []))
       .catch(() => setExercises([]))

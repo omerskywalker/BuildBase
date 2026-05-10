@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import StreakBadge from "@/components/StreakBadge";
 import MilestoneCard from "@/components/MilestoneCard";
 import { MILESTONE_DEFINITIONS, type MilestoneDefinition } from "@/lib/milestone-utils";
@@ -21,7 +22,7 @@ export default function MilestonesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/progress/milestones").then(r => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
+    apiFetch("/api/progress/milestones").then(r => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div><h1 className="text-2xl font-bold font-display mb-6" style={{ color: "#2C1A10" }}>Milestones & Achievements</h1><div className="text-center py-8" style={{ color: "#6B5A48" }}>Loading achievements...</div></div>;

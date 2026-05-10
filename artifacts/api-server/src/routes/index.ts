@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import dashboardRouter from "./dashboard";
 import sessionsRouter from "./sessions";
 import progressRouter from "./progress";
 import coachRouter from "./coach";
@@ -9,6 +10,7 @@ import templatesRouter from "./templates";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use("/dashboard", dashboardRouter);
 router.use("/sessions", sessionsRouter);
 router.use("/progress", progressRouter);
 router.use("/coach", coachRouter);

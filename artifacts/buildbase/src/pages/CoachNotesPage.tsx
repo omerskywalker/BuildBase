@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare, Check, Eye } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import { Link } from "wouter";
 
 interface CoachNote {
@@ -65,7 +66,7 @@ export default function CoachNotesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/coach/notes").then(r => r.json()).then(setNotes).catch(() => {}).finally(() => setLoading(false));
+    apiFetch("/api/coach/notes").then(r => r.json()).then(setNotes).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (!profile?.coach_id) {

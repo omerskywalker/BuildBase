@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { CoachFormAssessment, Exercise, FormAssessmentStatus } from "@/lib/types";
 import { Loader2, CheckCircle, AlertTriangle, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
 
 interface ExerciseWithAssessment extends Exercise { assessment?: CoachFormAssessment; }
 
@@ -24,7 +25,7 @@ export default function FormAssessmentPanel({ clientId }: { clientId: string }) 
 
   const fetchData = useCallback(async () => {
     try {
-      const r = await fetch(`/api/coach/form-assessment?clientId=${clientId}`);
+      const r = await apiFetch(`/api/coach/form-assessment?clientId=${clientId}`);
       if (!r.ok) throw new Error();
       const data = await r.json();
       setExercises(data.exercises);
@@ -40,8 +41,8 @@ export default function FormAssessmentPanel({ clientId }: { clientId: string }) 
   const handleStatusChange = async (exerciseId: string, status: FormAssessmentStatus) => {
     setSaving(exerciseId);
     try {
-      const r = await fetch("/api/coach/form-assessment", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const r = await apiFetch("/api/coach/form-assessment", {
+        method: "POST",
         body: JSON.stringify({ clientId, exerciseId, status, privateNotes: localNotes[exerciseId] || null }),
       });
       if (!r.ok) throw new Error();
@@ -57,8 +58,8 @@ export default function FormAssessmentPanel({ clientId }: { clientId: string }) 
     if (!ex?.assessment) return;
     setSaving(exerciseId);
     try {
-      const r = await fetch("/api/coach/form-assessment", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const r = await apiFetch("/api/coach/form-assessment", {
+        method: "POST",
         body: JSON.stringify({ clientId, exerciseId, status: ex.assessment.status, privateNotes: localNotes[exerciseId] || null }),
       });
       if (!r.ok) throw new Error();

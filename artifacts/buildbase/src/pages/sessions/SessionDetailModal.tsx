@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { formatWeight, timeAgo } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 const EFFORT_LABELS: Record<number, string> = { 1: "🔴 Easy", 2: "🟠 Light", 3: "🟡 Solid", 4: "🟢 Hard", 5: "💪 Maxed" };
@@ -19,7 +20,7 @@ export default function SessionDetailModal({ session, open, onClose }: SessionDe
   useEffect(() => {
     if (!open || !session.id || session.id.startsWith("virtual-")) return;
     setLoading(true);
-    fetch(`/api/sessions/${session.id}/exercises`)
+    apiFetch(`/api/sessions/${session.id}/exercises`)
       .then(r => r.json())
       .then((data: { exercises: TemplateExercise[]; setLogs: SetLog[] }) => {
         setExercises(data.exercises.map(te => ({ templateExercise: te, setLogs: data.setLogs.filter(sl => sl.template_exercise_id === te.id) })));

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, TrendingUp, TrendingDown, Activity, AlertCircle, CheckCircle } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 import TrendChart, { type TrendDataPoint } from "@/components/TrendChart";
 
 interface Insight { type: "positive" | "negative" | "neutral" | "warning"; title: string; description: string; }
@@ -28,7 +29,7 @@ export default function TrendsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/progress/trends").then(r => r.json()).then(d => setChartData(d.data ?? [])).catch(() => {}).finally(() => setLoading(false));
+    apiFetch("/api/progress/trends").then(r => r.json()).then(d => setChartData(d.data ?? [])).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const effortData = chartData.filter(d => d.effort !== undefined);

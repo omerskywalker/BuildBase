@@ -1,10 +1,17 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getAuthUser } from "../lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const router = Router();
 
-async function requireAdmin(req: any, res: any) {
+interface AdminAuth {
+  user: { id: string };
+  supabase: SupabaseClient;
+  profile: { role: string };
+}
+
+async function requireAdmin(req: Request, res: Response): Promise<AdminAuth | null> {
   const auth = await getAuthUser(req, res);
   if (!auth) return null;
   const { user, supabase } = auth;
@@ -23,7 +30,7 @@ async function requireAdmin(req: any, res: any) {
   return { user, supabase, profile };
 }
 
-async function requireAdminOrCoach(req: any, res: any) {
+async function requireAdminOrCoach(req: Request, res: Response): Promise<AdminAuth | null> {
   const auth = await getAuthUser(req, res);
   if (!auth) return null;
   const { user, supabase } = auth;
@@ -57,10 +64,19 @@ router.get("/users", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to fetch users" });
     return res.json(users);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface UserUpdateBody {
+  id: string;
+  role?: string;
+  coach_id?: string | null;
+  template_tier?: string;
+  full_name?: string | null;
+  gender?: string;
+}
 
 router.put("/users", async (req, res) => {
   try {
@@ -68,10 +84,10 @@ router.put("/users", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { id, role, coach_id, template_tier, full_name, gender } = req.body;
+    const { id, role, coach_id, template_tier, full_name, gender } = req.body as UserUpdateBody;
     if (!id) return res.status(400).json({ error: "User ID is required" });
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (role !== undefined) updateData.role = role;
     if (coach_id !== undefined) updateData.coach_id = coach_id;
     if (template_tier !== undefined) updateData.template_tier = template_tier;
@@ -87,7 +103,7 @@ router.put("/users", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to update user" });
     return res.json(data);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -98,7 +114,7 @@ router.delete("/users", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { id } = req.body;
+    const { id } = req.body as { id: string };
     if (!id) return res.status(400).json({ error: "User ID is required" });
     if (id === user.id) return res.status(400).json({ error: "Cannot delete your own account" });
 
@@ -109,17 +125,28 @@ router.delete("/users", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to deactivate user" });
     return res.json({ success: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface CreateUserBody {
+  email: string;
+  password: string;
+  full_name?: string;
+  gender?: string;
+  role?: string;
+  coach_id?: string;
+  template_tier?: string;
+}
 
 router.post("/users/create", async (req, res) => {
   try {
     const auth = await requireAdmin(req, res);
     if (!auth) return;
 
-    const { email, password, full_name, gender, role, coach_id, template_tier } = req.body;
+    const { email, password, full_name, gender, role, coach_id, template_tier } =
+      req.body as CreateUserBody;
 
     if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
     if (password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
@@ -131,7 +158,9 @@ router.post("/users/create", async (req, res) => {
     if (gender && !validGenders.includes(gender)) return res.status(400).json({ error: "Invalid gender" });
 
     const validTiers = ["pre_baseline", "default", "post_baseline"];
-    if (template_tier && !validTiers.includes(template_tier)) return res.status(400).json({ error: "Invalid template tier" });
+    if (template_tier && !validTiers.includes(template_tier)) {
+      return res.status(400).json({ error: "Invalid template tier" });
+    }
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) return res.status(500).json({ error: "Server configuration error" });
@@ -172,7 +201,7 @@ router.post("/users/create", async (req, res) => {
       .single();
 
     return res.status(201).json({ user: createdProfile || { id: authData.user.id, email } });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -192,7 +221,7 @@ router.get("/programs", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to fetch programs" });
     return res.json(programs);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -215,14 +244,24 @@ router.get("/programs/:id", async (req, res) => {
     }
 
     if (program.phases) {
-      program.phases.sort((a: any, b: any) => a.phase_number - b.phase_number);
+      (program.phases as { phase_number: number }[]).sort(
+        (a, b) => a.phase_number - b.phase_number
+      );
     }
 
     return res.json(program);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface ProgramUpdateBody {
+  id: string;
+  name?: string;
+  description?: string;
+  total_phases?: number;
+  total_weeks?: number;
+}
 
 router.put("/programs", async (req, res) => {
   try {
@@ -230,10 +269,10 @@ router.put("/programs", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { id, name, description, total_phases, total_weeks } = req.body;
+    const { id, name, description, total_phases, total_weeks } = req.body as ProgramUpdateBody;
     if (!id) return res.status(400).json({ error: "Program ID is required" });
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (total_phases !== undefined) updateData.total_phases = total_phases;
@@ -248,10 +287,19 @@ router.put("/programs", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to update program" });
     return res.json(data);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface PhaseUpdateBody {
+  phaseId: string;
+  name?: string;
+  subtitle?: string;
+  week_start?: number;
+  week_end?: number;
+  description?: string;
+}
 
 router.put("/programs/:id/phases", async (req, res) => {
   try {
@@ -259,10 +307,11 @@ router.put("/programs/:id/phases", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { phaseId, name, subtitle, week_start, week_end, description } = req.body;
+    const { phaseId, name, subtitle, week_start, week_end, description } =
+      req.body as PhaseUpdateBody;
     if (!phaseId) return res.status(400).json({ error: "Phase ID is required" });
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (subtitle !== undefined) updateData.subtitle = subtitle;
     if (week_start !== undefined) updateData.week_start = week_start;
@@ -279,19 +328,25 @@ router.put("/programs/:id/phases", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to update phase" });
     return res.json(data);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Session editor
+interface SessionExerciseBody {
+  sessionId: string;
+  exerciseId: string;
+  orderIndex: number;
+}
+
 router.post("/programs/:programId/session-editor/exercises", async (req, res) => {
   try {
     const auth = await requireAdmin(req, res);
     if (!auth) return;
     const { supabase } = auth;
 
-    const { sessionId, exerciseId, orderIndex } = req.body;
+    const { sessionId, exerciseId, orderIndex } = req.body as SessionExerciseBody;
     if (!sessionId || !exerciseId || typeof orderIndex !== "number") {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -326,7 +381,7 @@ router.post("/programs/:programId/session-editor/exercises", async (req, res) =>
 
     if (insertError) return res.status(500).json({ error: "Failed to add exercise" });
     return res.json({ templateExercise });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -339,14 +394,14 @@ router.patch("/programs/:programId/session-editor/exercises/:exerciseId", async 
 
     const { data: templateExercise, error } = await supabase
       .from("template_exercises")
-      .update(req.body)
+      .update(req.body as Record<string, unknown>)
       .eq("id", req.params.exerciseId)
       .select()
       .single();
 
     if (error) return res.status(500).json({ error: "Failed to update exercise" });
     return res.json({ templateExercise });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -364,10 +419,15 @@ router.delete("/programs/:programId/session-editor/exercises/:exerciseId", async
 
     if (error) return res.status(500).json({ error: "Failed to delete exercise" });
     return res.json({ success: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface ReorderBody {
+  sessionId: string;
+  exercises: { id: string; order_index: number }[];
+}
 
 router.post("/programs/:programId/session-editor/reorder", async (req, res) => {
   try {
@@ -375,19 +435,19 @@ router.post("/programs/:programId/session-editor/reorder", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { sessionId, exercises } = req.body;
+    const { sessionId, exercises } = req.body as ReorderBody;
     if (!sessionId || !Array.isArray(exercises)) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     await Promise.all(
-      exercises.map(({ id, order_index }: any) =>
+      exercises.map(({ id, order_index }) =>
         supabase.from("template_exercises").update({ order_index }).eq("id", id)
       )
     );
 
     return res.json({ success: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -400,20 +460,36 @@ router.get("/exercises", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { search, muscle_group, is_active } = req.query as any;
+    const { search, muscle_group, is_active } = req.query as {
+      search?: string;
+      muscle_group?: string;
+      is_active?: string;
+    };
 
     let query = supabase.from("exercises").select("*").order("name", { ascending: true });
     if (search) query = query.ilike("name", `%${search}%`);
     if (muscle_group && muscle_group !== "all") query = query.eq("muscle_group", muscle_group);
-    if (is_active !== undefined && is_active !== null) query = query.eq("is_active", is_active === "true");
+    if (is_active !== undefined && is_active !== null) {
+      query = query.eq("is_active", is_active === "true");
+    }
 
     const { data: exercises, error } = await query;
     if (error) return res.status(500).json({ error: "Failed to fetch exercises" });
     return res.json(exercises);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface ExerciseBody {
+  name: string;
+  muscle_group?: string;
+  equipment?: string;
+  instructions?: string;
+  coaching_cues?: string;
+  video_url?: string;
+  is_active?: boolean;
+}
 
 router.post("/exercises", async (req, res) => {
   try {
@@ -421,7 +497,8 @@ router.post("/exercises", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { name, muscle_group, equipment, instructions, coaching_cues, video_url, is_active = true } = req.body;
+    const { name, muscle_group, equipment, instructions, coaching_cues, video_url, is_active = true } =
+      req.body as ExerciseBody;
 
     if (!name?.trim()) return res.status(400).json({ error: "Exercise name is required" });
 
@@ -450,10 +527,14 @@ router.post("/exercises", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to create exercise" });
     return res.status(201).json(exercise);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface ExerciseUpdateBody extends ExerciseBody {
+  id: string;
+}
 
 router.put("/exercises", async (req, res) => {
   try {
@@ -461,7 +542,8 @@ router.put("/exercises", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { id, name, muscle_group, equipment, instructions, coaching_cues, video_url, is_active } = req.body;
+    const { id, name, muscle_group, equipment, instructions, coaching_cues, video_url, is_active } =
+      req.body as ExerciseUpdateBody;
     if (!id) return res.status(400).json({ error: "Exercise ID is required" });
     if (!name?.trim()) return res.status(400).json({ error: "Exercise name is required" });
 
@@ -472,9 +554,11 @@ router.put("/exercises", async (req, res) => {
       .neq("id", id)
       .single();
 
-    if (existing) return res.status(400).json({ error: "Another exercise with this name already exists" });
+    if (existing) {
+      return res.status(400).json({ error: "Another exercise with this name already exists" });
+    }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       name: name.trim(),
       muscle_group: muscle_group?.trim() || null,
       equipment: equipment?.trim() || null,
@@ -493,7 +577,7 @@ router.put("/exercises", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to update exercise" });
     return res.json(exercise);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -504,7 +588,7 @@ router.delete("/exercises", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { id } = req.body;
+    const { id } = req.body as { id: string };
     if (!id) return res.status(400).json({ error: "Exercise ID is required" });
 
     const { data: usageCount } = await supabase
@@ -521,7 +605,7 @@ router.delete("/exercises", async (req, res) => {
       if (error) return res.status(500).json({ error: "Failed to delete exercise" });
       return res.json({ success: true, message: "Exercise deleted" });
     }
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -539,16 +623,27 @@ router.get("/overrides", async (req, res) => {
 
     const { data: overrides, error } = await supabase
       .from("user_exercise_overrides")
-      .select("*, template_exercise:template_exercise_id(*, exercise:exercise_id(*)), set_by_profile:set_by(id, full_name, email)")
+      .select(
+        "*, template_exercise:template_exercise_id(*, exercise:exercise_id(*)), set_by_profile:set_by(id, full_name, email)"
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) return res.status(500).json({ error: "Failed to fetch overrides" });
     return res.json(overrides);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+interface OverrideBody {
+  user_id: string;
+  template_exercise_id: string;
+  sets_override?: number | null;
+  reps_override?: number | null;
+  weight_override?: number | null;
+  notes?: string | null;
+}
 
 router.post("/overrides", async (req, res) => {
   try {
@@ -556,7 +651,8 @@ router.post("/overrides", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { user_id, template_exercise_id, sets_override, reps_override, weight_override, notes } = req.body;
+    const { user_id, template_exercise_id, sets_override, reps_override, weight_override, notes } =
+      req.body as OverrideBody;
     if (!user_id || !template_exercise_id) {
       return res.status(400).json({ error: "user_id and template_exercise_id are required" });
     }
@@ -579,9 +675,9 @@ router.post("/overrides", async (req, res) => {
       updated_at: new Date().toISOString(),
     };
 
-    const selectQuery = "*, template_exercise:template_exercise_id(*, exercise:exercise_id(*)), set_by_profile:set_by(id, full_name, email)";
+    const selectQuery =
+      "*, template_exercise:template_exercise_id(*, exercise:exercise_id(*)), set_by_profile:set_by(id, full_name, email)";
 
-    let result;
     if (existingOverride) {
       const { data, error } = await supabase
         .from("user_exercise_overrides")
@@ -590,7 +686,7 @@ router.post("/overrides", async (req, res) => {
         .select(selectQuery)
         .single();
       if (error) return res.status(500).json({ error: "Failed to update override" });
-      result = data;
+      return res.json(data);
     } else {
       const { data, error } = await supabase
         .from("user_exercise_overrides")
@@ -598,11 +694,9 @@ router.post("/overrides", async (req, res) => {
         .select(selectQuery)
         .single();
       if (error) return res.status(500).json({ error: "Failed to create override" });
-      result = data;
+      return res.json(data);
     }
-
-    return res.json(result);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -613,13 +707,13 @@ router.delete("/overrides", async (req, res) => {
     if (!auth) return;
     const { supabase } = auth;
 
-    const { id } = req.body;
+    const { id } = req.body as { id: string };
     if (!id) return res.status(400).json({ error: "Override ID is required" });
 
     const { error } = await supabase.from("user_exercise_overrides").delete().eq("id", id);
     if (error) return res.status(500).json({ error: "Failed to delete override" });
     return res.json({ success: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -635,7 +729,9 @@ router.get("/overrides/users", async (req, res) => {
 
     const { data: enrollment, error: enrollmentError } = await supabase
       .from("user_enrollments")
-      .select("*, program:program_id(*, phases(*, workout_templates(*, template_exercises(*, exercise:exercise_id(*)))))")
+      .select(
+        "*, program:program_id(*, phases(*, workout_templates(*, template_exercises(*, exercise:exercise_id(*)))))"
+      )
       .eq("user_id", userId)
       .eq("is_active", true)
       .single();
@@ -655,11 +751,8 @@ router.get("/overrides/users", async (req, res) => {
       .select("*")
       .eq("user_id", userId);
 
-    const overrideMap: Record<string, any> = {};
-    overrides?.forEach((o: any) => { overrideMap[o.template_exercise_id] = o; });
-
-    return res.json({ user: userProfile, enrollment, overrides: overrideMap });
-  } catch (e) {
+    return res.json({ enrollment, userProfile, overrides: overrides ?? [] });
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });

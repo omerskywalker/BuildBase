@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import LiftChart from "@/components/LiftChart";
 
 interface Exercise { id: string; name: string; muscle_group: string | null; }
@@ -12,7 +13,7 @@ function ExerciseSelector({ userId, onSelect, selectedId }: { userId: string; on
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/progress/exercises?userId=${userId}`).then(r => r.json()).then(d => setExercises(d.exercises || [])).catch(() => {}).finally(() => setLoading(false));
+    apiFetch(`/api/progress/exercises?userId=${userId}`).then(r => r.json()).then(d => setExercises(d.exercises || [])).catch(() => {}).finally(() => setLoading(false));
   }, [userId]);
 
   if (loading) return <div className="rounded-lg p-4 border border-border-subtle" style={{ background: "#E8DECE" }}><div className="text-sm" style={{ color: "#6B5A48" }}>Loading exercises...</div></div>;
@@ -46,7 +47,7 @@ export default function ChartsPage() {
   useEffect(() => {
     if (!selectedExerciseId || !userId) { setChartData([]); return; }
     setLoading(true);
-    fetch(`/api/progress/charts?exerciseId=${selectedExerciseId}&userId=${userId}`)
+    apiFetch(`/api/progress/charts?exerciseId=${selectedExerciseId}&userId=${userId}`)
       .then(r => r.json()).then(d => setChartData(d.data || [])).catch(() => setChartData([])).finally(() => setLoading(false));
   }, [selectedExerciseId, userId]);
 

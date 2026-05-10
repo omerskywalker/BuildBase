@@ -3,6 +3,251 @@ import { getAuthUser } from "../lib/supabase";
 
 const router = Router();
 
+interface NoteUpdateBody {
+  action: "read" | "dismiss";
+}
+
+interface NoteCreateBody {
+  message: string;
+  userId: string;
+}
+
+interface FormAssessmentBody {
+  clientId: string;
+  exerciseId: string;
+  status: string;
+  privateNotes: string | null;
+}
+
+// GET /api/coach/clients
+router.get("/clients", async (req, res) => {
+  try {
+    const auth = await getAuthUser(req, res);
+    if (!auth) return;
+    const { user, supabase } = auth;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || (profile.role !== "coach" && profile.role !== "admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { data: clients } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("coach_id", user.id)
+      .eq("role", "user");
+
+    if (!clients || clients.length === 0) return res.json([]);
+
+    const clientIds = (clients as { id: string }[]).map(c => c.id);
+
+    const { data: enrollments } = await supabase
+      .from("user_enrollments")
+      .select("user_id, current_week, current_session, started_at")
+      .in("user_id", clientIds)
+      .eq("is_active", true);
+
+    const { data: sessionLogs } = await supabase
+      .from("session_logs")
+      .select("user_id, is_complete, completed_at")
+      .in("user_id", clientIds);
+
+    const logs = sessionLogs ?? [];
+
+    const result = (clients as { id: string; full_name: string | null; email: string }[]).map(client => {
+      const enrollment = (enrollments ?? []).find(
+        (e: { user_id: string }) => e.user_id === client.id
+      );
+      const clientLogs = logs.filter((l: { user_id: string }) => l.user_id === client.id);
+      const completedLogs = clientLogs.filter((l: { is_complete: boolean }) => l.is_complete);
+      const lastLog = completedLogs
+        .filter((l: { completed_at: string | null }) => l.completed_at)
+        .sort((a: { completed_at: string }, b: { completed_at: string }) =>
+          new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+        )[0];
+
+      const total = clientLogs.length;
+      const completed = completedLogs.length;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        id: client.id,
+        full_name: client.full_name,
+        email: client.email,
+        current_week: enrollment?.current_week ?? 1,
+        current_session: enrollment?.current_session ?? 1,
+        last_session_date: lastLog?.completed_at ?? null,
+        completion_rate: completionRate,
+        total_sessions: total,
+        completed_sessions: completed,
+      };
+    });
+
+    return res.json(result);
+  } catch {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/coach/clients/:id
+router.get("/clients/:id", async (req, res) => {
+  try {
+    const auth = await getAuthUser(req, res);
+    if (!auth) return;
+    const { user, supabase } = auth;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || (profile.role !== "coach" && profile.role !== "admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const clientId = req.params.id;
+
+    const { data: client } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, gender, template_tier, coach_id")
+      .eq("id", clientId)
+      .single();
+
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    if (profile.role === "coach" && client.coach_id !== user.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { data: enrollment } = await supabase
+      .from("user_enrollments")
+      .select("current_week, current_session, started_at")
+      .eq("user_id", clientId)
+      .eq("is_active", true)
+      .single();
+
+    const { data: sessionLogs } = await supabase
+      .from("session_logs")
+      .select("is_complete")
+      .eq("user_id", clientId);
+
+    const logs = sessionLogs ?? [];
+    const total = logs.length;
+    const completed = logs.filter((l: { is_complete: boolean }) => l.is_complete).length;
+
+    return res.json({
+      id: client.id,
+      full_name: client.full_name,
+      email: client.email,
+      gender: client.gender,
+      template_tier: client.template_tier,
+      current_week: enrollment?.current_week ?? 1,
+      current_session: enrollment?.current_session ?? 1,
+      enrollment_started: enrollment?.started_at ?? null,
+      completion_rate: total > 0 ? Math.round((completed / total) * 100) : 0,
+      total_sessions: total,
+      completed_sessions: completed,
+    });
+  } catch {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/coach/clients/:id/sessions
+router.get("/clients/:id/sessions", async (req, res) => {
+  try {
+    const auth = await getAuthUser(req, res);
+    if (!auth) return;
+    const { user, supabase } = auth;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || (profile.role !== "coach" && profile.role !== "admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const clientId = req.params.id;
+
+    if (profile.role === "coach") {
+      const { data: client } = await supabase
+        .from("profiles")
+        .select("coach_id")
+        .eq("id", clientId)
+        .single();
+      if (!client || client.coach_id !== user.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
+    const { data: sessionLogs } = await supabase
+      .from("session_logs")
+      .select(`
+        id, week_number, session_number, started_at, completed_at, is_complete,
+        post_session_effort, pre_session_soreness, notes,
+        workout_templates(title, day_label)
+      `)
+      .eq("user_id", clientId)
+      .order("completed_at", { ascending: false })
+      .limit(20);
+
+    const logList = sessionLogs ?? [];
+    const logIds = logList.map((s: { id: string }) => s.id);
+
+    const { data: setCounts } = await supabase
+      .from("set_logs")
+      .select("session_log_id")
+      .in("session_log_id", logIds)
+      .eq("is_completed", true);
+
+    const setCountMap = new Map<string, number>();
+    for (const s of setCounts ?? []) {
+      const id = (s as { session_log_id: string }).session_log_id;
+      setCountMap.set(id, (setCountMap.get(id) ?? 0) + 1);
+    }
+
+    const result = logList.map((s: {
+      id: string;
+      week_number: number;
+      session_number: number;
+      started_at: string | null;
+      completed_at: string | null;
+      is_complete: boolean;
+      post_session_effort: number | null;
+      pre_session_soreness: number | null;
+      notes: string | null;
+      workout_templates: { title: string; day_label: string } | { title: string; day_label: string }[] | null;
+    }) => {
+      const tmpl = Array.isArray(s.workout_templates) ? s.workout_templates[0] ?? null : s.workout_templates;
+      return {
+        id: s.id,
+        week_number: s.week_number,
+        session_number: s.session_number,
+        started_at: s.started_at,
+        completed_at: s.completed_at,
+        is_complete: s.is_complete,
+        post_session_effort: s.post_session_effort,
+        pre_session_soreness: s.pre_session_soreness,
+        notes: s.notes,
+        template: tmpl,
+        set_count: setCountMap.get(s.id) ?? 0,
+      };
+    });
+
+    return res.json(result);
+  } catch {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/coach/notes
 router.get("/notes", async (req, res) => {
   try {
@@ -14,7 +259,7 @@ router.get("/notes", async (req, res) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, id")
+      .select("role")
       .eq("id", user.id)
       .single();
 
@@ -40,7 +285,7 @@ router.get("/notes", async (req, res) => {
     if (error) return res.status(500).json({ error: "Failed to fetch notes" });
 
     return res.json(notes || []);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -52,14 +297,14 @@ router.post("/notes", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { message, userId } = req.body;
+    const { message, userId } = req.body as NoteCreateBody;
     if (!message || !userId) {
       return res.status(400).json({ error: "Message and user ID are required" });
     }
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, id")
+      .select("role")
       .eq("id", user.id)
       .single();
 
@@ -93,7 +338,7 @@ router.post("/notes", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to create note" });
     return res.json(note);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -107,7 +352,7 @@ router.delete("/notes/:id", async (req, res) => {
 
     const { data: note } = await supabase
       .from("coach_notes")
-      .select("id, coach_id, user_id, read_at")
+      .select("id, coach_id, read_at")
       .eq("id", req.params.id)
       .single();
 
@@ -119,7 +364,7 @@ router.delete("/notes/:id", async (req, res) => {
     if (error) return res.status(500).json({ error: "Failed to unsend note" });
 
     return res.json({ message: "Note unsent successfully" });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -131,14 +376,14 @@ router.patch("/notes/:id", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { action } = req.body;
+    const { action } = req.body as NoteUpdateBody;
     if (!action || !["read", "dismiss"].includes(action)) {
       return res.status(400).json({ error: "Action must be 'read' or 'dismiss'" });
     }
 
     const { data: note } = await supabase
       .from("coach_notes")
-      .select("id, coach_id, user_id, read_at")
+      .select("id, user_id, read_at")
       .eq("id", req.params.id)
       .single();
 
@@ -147,8 +392,8 @@ router.patch("/notes/:id", async (req, res) => {
       return res.status(403).json({ error: "You can only mark your own notes as read or dismissed" });
     }
 
-    const updateData: any = {};
     const now = new Date().toISOString();
+    const updateData: { read_at?: string; dismissed_at?: string } = {};
     if (action === "read") {
       updateData.read_at = now;
     } else {
@@ -165,7 +410,7 @@ router.patch("/notes/:id", async (req, res) => {
 
     if (error) return res.status(500).json({ error: `Failed to mark note as ${action}` });
     return res.json(updatedNote);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -219,26 +464,29 @@ router.get("/form-assessment", async (req, res) => {
     const { data: templates } = await supabase
       .from("workout_templates")
       .select("id")
-      .in("phase_id", phases.map((p: any) => p.id));
+      .in("phase_id", (phases as { id: string }[]).map(p => p.id));
 
     if (!templates?.length) return res.json({ exercises: [] });
 
     const { data: exercisesData } = await supabase
       .from("template_exercises")
       .select("exercise_id, exercises!inner(id, name, muscle_group, equipment)")
-      .in("workout_template_id", templates.map((t: any) => t.id));
+      .in("workout_template_id", (templates as { id: string }[]).map(t => t.id));
 
     if (!exercisesData) return res.json({ exercises: [] });
 
-    type ExInfo = { id: string; name: string; muscle_group: string; equipment: string };
-    const uniqueExercises = Array.from(
-      new Map(exercisesData.map((item: any) => {
-        const ex = Array.isArray(item.exercises) ? item.exercises[0] : item.exercises;
-        return [item.exercise_id, ex as ExInfo];
-      })).values()
-    );
+    interface ExInfo { id: string; name: string; muscle_group: string; equipment: string }
 
-    const exerciseIds = uniqueExercises.map((ex: any) => ex.id);
+    const exerciseMap = new Map<string, ExInfo>();
+    for (const item of exercisesData as { exercise_id: string; exercises: ExInfo | ExInfo[] }[]) {
+      const ex = Array.isArray(item.exercises) ? item.exercises[0] : item.exercises;
+      if (ex && !exerciseMap.has(item.exercise_id)) {
+        exerciseMap.set(item.exercise_id, ex);
+      }
+    }
+    const uniqueExercises = Array.from(exerciseMap.values());
+    const exerciseIds = uniqueExercises.map(ex => ex.id);
+
     const { data: assessments } = await supabase
       .from("coach_form_assessments")
       .select("*")
@@ -247,14 +495,14 @@ router.get("/form-assessment", async (req, res) => {
       .in("exercise_id", exerciseIds);
 
     const exercisesWithAssessments = uniqueExercises
-      .map((exercise: any) => ({
+      .map(exercise => ({
         ...exercise,
-        assessment: assessments?.find((a: any) => a.exercise_id === exercise.id) || null,
+        assessment: (assessments ?? []).find((a: { exercise_id: string }) => a.exercise_id === exercise.id) ?? null,
       }))
-      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     return res.json({ exercises: exercisesWithAssessments });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -266,7 +514,7 @@ router.post("/form-assessment", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { clientId, exerciseId, status, privateNotes } = req.body;
+    const { clientId, exerciseId, status, privateNotes } = req.body as FormAssessmentBody;
 
     if (!clientId || !exerciseId || !status) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -317,7 +565,7 @@ router.post("/form-assessment", async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Failed to save assessment" });
     return res.json({ assessment });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { getFormBadge } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2, Eye } from "lucide-react";
 import SetRow from "./SetRow";
 import EffortPrompt from "./EffortPrompt";
@@ -42,7 +43,7 @@ export default function SessionCard({ session, autoExpanded = false, userTier = 
   const fetchExercises = useCallback(async (logId: string) => {
     setLoadingExercises(true);
     try {
-      const res = await fetch(`/api/sessions/${logId}/exercises`);
+      const res = await apiFetch(`/api/sessions/${logId}/exercises`);
       if (!res.ok) return;
       const data = await res.json() as { exercises: TemplateExercise[]; setLogs: SetLog[] };
       setExercises(data.exercises.map(te => ({ templateExercise: te, setLogs: data.setLogs.filter(sl => sl.template_exercise_id === te.id) })));
@@ -58,8 +59,8 @@ export default function SessionCard({ session, autoExpanded = false, userTier = 
     setIsStarting(true);
     try {
       if (isVirtual && !realSessionId) {
-        const res = await fetch("/api/sessions", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+        const res = await apiFetch("/api/sessions", {
+          method: "POST",
           body: JSON.stringify({ workout_template_id: session.workout_template_id, enrollment_id: session.enrollment_id, week_number: session.week_number, session_number: session.session_number }),
         });
         if (!res.ok) return;
@@ -68,7 +69,7 @@ export default function SessionCard({ session, autoExpanded = false, userTier = 
         setIsExpanded(true);
         await fetchExercises(newLog.id);
       } else if (sessionLogId) {
-        await fetch(`/api/sessions/${sessionLogId}/start`, { method: "POST" });
+        await apiFetch(`/api/sessions/${sessionLogId}/start`, { method: "POST" });
         setIsExpanded(true);
         await fetchExercises(sessionLogId);
       }
@@ -79,7 +80,7 @@ export default function SessionCard({ session, autoExpanded = false, userTier = 
     if (!sessionLogId || isCompleting) return;
     setIsCompleting(true);
     try {
-      await fetch(`/api/sessions/${sessionLogId}/complete`, { method: "POST" });
+      await apiFetch(`/api/sessions/${sessionLogId}/complete`, { method: "POST" });
       setLocalIsComplete(true);
       setShowEffortPrompt(true);
     } finally { setIsCompleting(false); }

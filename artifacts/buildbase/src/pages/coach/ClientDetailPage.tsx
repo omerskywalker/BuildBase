@@ -3,6 +3,7 @@ import { Link, useParams } from "wouter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, TrendingUp, Activity } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 import FormAssessmentPanel from "@/components/FormAssessmentPanel";
 import SendNoteDialog from "@/components/SendNoteDialog";
 import CoachNotesPanel from "@/components/CoachNotesPanel";
@@ -38,8 +39,8 @@ export default function ClientDetailPage() {
     if (!clientId) return;
     setLoading(true);
     Promise.all([
-      fetch(`/api/coach/clients/${clientId}`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/coach/clients/${clientId}/sessions`).then(r => r.ok ? r.json() : []),
+      apiFetch(`/api/coach/clients/${clientId}`).then(r => r.ok ? r.json() : null),
+      apiFetch(`/api/coach/clients/${clientId}/sessions`).then(r => r.ok ? r.json() : []),
     ]).then(([c, s]) => { setClient(c); setSessions(s ?? []); }).catch(() => {}).finally(() => setLoading(false));
   }, [clientId]);
 

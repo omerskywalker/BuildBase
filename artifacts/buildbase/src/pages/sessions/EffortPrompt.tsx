@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { EFFORT_LABELS } from "@/lib/constants";
+import { apiFetch } from "@/lib/api";
 
 interface EffortPromptProps {
   sessionLogId: string;
@@ -23,7 +24,7 @@ export default function EffortPrompt({ sessionLogId, onDismiss }: EffortPromptPr
     if (submitting || selected !== null) return;
     setSubmitting(true);
     try {
-      await fetch(`/api/sessions/${sessionLogId}/effort`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }) });
+      await apiFetch(`/api/sessions/${sessionLogId}/effort`, { method: "POST", body: JSON.stringify({ score }) });
       setSelected(score);
     } finally { setSubmitting(false); }
   };

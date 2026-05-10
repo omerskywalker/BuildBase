@@ -3,6 +3,125 @@ import { getAuthUser } from "../lib/supabase";
 
 const router = Router();
 
+interface SessionBody {
+  workout_template_id: string;
+  enrollment_id: string;
+  week_number: number;
+  session_number: number;
+}
+
+interface SetBody {
+  template_exercise_id: string;
+  exercise_id: string;
+  set_number: number;
+  weight_used: number | null;
+  reps_completed: number;
+}
+
+interface FormAssessmentRow {
+  exercise_id: string;
+  status: string;
+}
+
+interface TemplateExerciseRow {
+  id: string;
+  exercise_id: string;
+  [key: string]: unknown;
+}
+
+// GET /api/sessions?week=N
+router.get("/", async (req, res) => {
+  try {
+    const auth = await getAuthUser(req, res);
+    if (!auth) return;
+    const { user, supabase } = auth;
+
+    const week = parseInt(req.query.week as string, 10) || 1;
+
+    const { data: enrollment } = await supabase
+      .from("user_enrollments")
+      .select("id, program_id")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (!enrollment) return res.json({ sessions: [], totalWeeks: 12, lastCompletedAt: null });
+
+    const { data: phases } = await supabase
+      .from("phases")
+      .select("id")
+      .eq("program_id", enrollment.program_id);
+
+    const phaseIds = (phases ?? []).map((p: { id: string }) => p.id);
+
+    const { data: templates } = await supabase
+      .from("workout_templates")
+      .select("id, week_number, session_number, day_label, title, phase_id")
+      .in("phase_id", phaseIds)
+      .eq("week_number", week)
+      .order("session_number");
+
+    const weekTemplates = templates ?? [];
+
+    const { data: sessionLogs } = await supabase
+      .from("session_logs")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("enrollment_id", enrollment.id)
+      .eq("week_number", week);
+
+    const logs = sessionLogs ?? [];
+
+    const { data: allTemplates } = await supabase
+      .from("workout_templates")
+      .select("week_number")
+      .in("phase_id", phaseIds)
+      .order("week_number", { ascending: false })
+      .limit(1);
+
+    const totalWeeks = allTemplates?.[0]?.week_number ?? 12;
+
+    const { data: lastCompleted } = await supabase
+      .from("session_logs")
+      .select("completed_at")
+      .eq("user_id", user.id)
+      .eq("enrollment_id", enrollment.id)
+      .eq("is_complete", true)
+      .order("completed_at", { ascending: false })
+      .limit(1);
+
+    const lastCompletedAt = lastCompleted?.[0]?.completed_at ?? null;
+
+    const sessions = weekTemplates.map(template => {
+      const log = logs.find(l => l.workout_template_id === template.id);
+      if (log) {
+        return { ...log, template };
+      }
+      return {
+        id: `virtual-${template.id}`,
+        user_id: user.id,
+        workout_template_id: template.id,
+        enrollment_id: enrollment.id,
+        week_number: template.week_number,
+        session_number: template.session_number,
+        started_at: null,
+        completed_at: null,
+        is_complete: false,
+        post_session_effort: null,
+        pre_session_soreness: null,
+        soreness_prompted: false,
+        notes: null,
+        created_at: new Date().toISOString(),
+        template,
+      };
+    });
+
+    return res.json({ sessions, totalWeeks, lastCompletedAt });
+  } catch {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/sessions
 router.post("/", async (req, res) => {
   try {
@@ -10,7 +129,7 @@ router.post("/", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const { workout_template_id, enrollment_id, week_number, session_number } = req.body;
+    const { workout_template_id, enrollment_id, week_number, session_number } = req.body as SessionBody;
 
     const { data, error } = await supabase
       .from("session_logs")
@@ -29,7 +148,7 @@ router.post("/", async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -52,7 +171,7 @@ router.post("/:sessionLogId/start", async (req, res) => {
     if (error) return res.status(500).json({ error: error.message });
     if (!data) return res.status(404).json({ error: "Session not found" });
     return res.json(data);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -72,7 +191,7 @@ router.post("/:sessionLogId/complete", async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ ok: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -123,9 +242,11 @@ router.get("/:sessionLogId/exercises", async (req, res) => {
       .eq("id", user.id)
       .single();
 
-    let formAssessments: any[] = [];
+    let formAssessments: FormAssessmentRow[] = [];
     if (userProfile?.coach_id) {
-      const exerciseIds = (exercises ?? []).map((ex: any) => ex.exercise_id).filter(Boolean);
+      const exerciseIds = (exercises ?? [])
+        .map((ex: TemplateExerciseRow) => ex.exercise_id)
+        .filter(Boolean);
       const { data: assessments } = await supabase
         .from("coach_form_assessments")
         .select("exercise_id, status")
@@ -135,13 +256,14 @@ router.get("/:sessionLogId/exercises", async (req, res) => {
       formAssessments = assessments ?? [];
     }
 
-    const exercisesWithAssessments = (exercises ?? []).map((ex: any) => ({
+    const exercisesWithAssessments = (exercises ?? []).map((ex: TemplateExerciseRow) => ({
       ...ex,
-      form_assessment_status: formAssessments.find((fa: any) => fa.exercise_id === ex.exercise_id)?.status || null,
+      form_assessment_status:
+        formAssessments.find(fa => fa.exercise_id === ex.exercise_id)?.status ?? null,
     }));
 
     return res.json({ exercises: exercisesWithAssessments, setLogs: setLogs ?? [] });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -163,7 +285,8 @@ router.post("/:sessionLogId/sets", async (req, res) => {
 
     if (!sessionLog) return res.status(404).json({ error: "Session not found" });
 
-    const { template_exercise_id, exercise_id, set_number, weight_used, reps_completed } = req.body;
+    const { template_exercise_id, exercise_id, set_number, weight_used, reps_completed } =
+      req.body as SetBody;
 
     const { data, error } = await supabase
       .from("set_logs")
@@ -182,7 +305,7 @@ router.post("/:sessionLogId/sets", async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -194,7 +317,7 @@ router.post("/:sessionLogId/effort", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const score = req.body.score;
+    const score = req.body.score as number;
     if (!Number.isInteger(score) || score < 1 || score > 5) {
       return res.status(400).json({ error: "Score must be 1–5" });
     }
@@ -207,7 +330,7 @@ router.post("/:sessionLogId/effort", async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ ok: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -219,7 +342,7 @@ router.post("/:sessionLogId/soreness", async (req, res) => {
     if (!auth) return;
     const { user, supabase } = auth;
 
-    const score = req.body.score;
+    const score = req.body.score as number;
     if (!Number.isInteger(score) || score < 1 || score > 5) {
       return res.status(400).json({ error: "Score must be 1–5" });
     }
@@ -232,7 +355,7 @@ router.post("/:sessionLogId/soreness", async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ ok: true });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, TrendingUp, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import { calculateProgressPercentage } from "@/lib/progress-utils";
 import { calculateCurrentStreak } from "@/lib/milestone-utils";
 import StreakBadge from "@/components/StreakBadge";
@@ -59,7 +60,7 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/progress").then(r => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
+    apiFetch("/api/progress").then(r => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (

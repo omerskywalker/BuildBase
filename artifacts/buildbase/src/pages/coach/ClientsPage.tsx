@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/api";
 
 interface ClientSummary {
   id: string; full_name: string | null; email: string;
@@ -31,7 +32,7 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/coach/clients").then(r => r.json()).then(setClients).catch(() => {}).finally(() => setLoading(false));
+    apiFetch("/api/coach/clients").then(r => r.json()).then(setClients).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (

@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import WeightControl from "./WeightControl";
 import type { TemplateExercise } from "@/lib/types";
 import { getDefaultWeight } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 
 interface LoggedSet { setLogId: string; weight: number | null; reps: number | null; }
 
@@ -26,8 +27,8 @@ export default function SetRow({ sessionLogId, templateExercise, setNumber, tier
     if (isLogging || isLogged) return;
     setIsLogging(true);
     try {
-      const res = await fetch(`/api/sessions/${sessionLogId}/sets`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const res = await apiFetch(`/api/sessions/${sessionLogId}/sets`, {
+        method: "POST",
         body: JSON.stringify({ template_exercise_id: templateExercise.id, exercise_id: templateExercise.exercise_id, set_number: setNumber, weight_used: templateExercise.is_bodyweight ? null : weight, reps_completed: reps }),
       });
       if (res.ok) setIsLogged(true);

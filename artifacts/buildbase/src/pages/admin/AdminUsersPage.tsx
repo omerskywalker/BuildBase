@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Edit, Save, X, Trash2, UserPlus } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 import type { Profile, UserRole, TemplateTier } from "@/lib/types";
 
 interface ProfileWithCoach extends Profile { coach?: { id: string; full_name: string; email: string } | null; }
@@ -18,7 +19,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const r = await fetch("/api/admin/users");
+      const r = await apiFetch("/api/admin/users");
       if (!r.ok) throw new Error();
       const data = await r.json();
       setUsers(data);
@@ -31,7 +32,7 @@ export default function AdminUsersPage() {
 
   const handleSave = async (userId: string) => {
     try {
-      const r = await fetch("/api/admin/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: userId, ...editForm }) });
+      const r = await apiFetch("/api/admin/users", { method: "PUT", body: JSON.stringify({ id: userId, ...editForm }) });
       if (!r.ok) throw new Error();
       await fetchUsers(); setEditingUser(null); setEditForm({});
       toast.success("User updated successfully");
@@ -41,7 +42,7 @@ export default function AdminUsersPage() {
   const handleDelete = async (userId: string, name: string) => {
     if (!confirm(`Deactivate ${name}?`)) return;
     try {
-      const r = await fetch("/api/admin/users", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: userId }) });
+      const r = await apiFetch("/api/admin/users", { method: "DELETE", body: JSON.stringify({ id: userId }) });
       if (!r.ok) throw new Error();
       await fetchUsers(); toast.success("User deactivated");
     } catch { toast.error("Failed to deactivate user"); }

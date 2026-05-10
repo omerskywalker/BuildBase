@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import SessionCard from "./SessionCard";
 import type { SessionLog, WorkoutTemplate } from "@/lib/types";
 
@@ -24,7 +25,7 @@ export default function SessionsPage() {
   useEffect(() => {
     if (!profile) return;
     setLoading(true); setError(null);
-    fetch(`/api/sessions?week=${currentWeek}`)
+    apiFetch(`/api/sessions?week=${currentWeek}`)
       .then(r => r.json())
       .then(data => {
         setSessions(data.sessions ?? []);

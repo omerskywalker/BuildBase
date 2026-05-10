@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Edit, Settings, Dumbbell } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 import type { Program, Phase } from "@/lib/types";
 
 interface ProgramWithPhases extends Program { phases?: Phase[]; }
@@ -14,7 +15,7 @@ export default function AdminProgramsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/programs").then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(setPrograms).catch(() => toast.error("Failed to load programs")).finally(() => setLoading(false));
+    apiFetch("/api/admin/programs").then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(setPrograms).catch(() => toast.error("Failed to load programs")).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="p-6"><h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C1A10" }}>Program Editor</h1><p style={{ color: "#6B5A48" }}>Loading...</p></div>;

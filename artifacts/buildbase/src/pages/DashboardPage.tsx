@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, TrendingUp, BarChart3, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import { calculateCurrentStreak, calculateCompletionRate } from "@/lib/milestone-utils";
 import StreakBadge from "@/components/StreakBadge";
 import CoachNotesBanner from "@/components/CoachNotesBanner";
@@ -27,7 +28,7 @@ export default function DashboardPage() {
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
 
   useEffect(() => {
-    fetch("/api/dashboard")
+    apiFetch("/api/dashboard")
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => setData(d))
       .catch(() => setNoEnrollment(true))

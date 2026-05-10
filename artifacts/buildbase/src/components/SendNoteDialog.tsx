@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MessageSquare, Send } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface SendNoteDialogProps {
   clientId: string;
@@ -21,9 +22,8 @@ export default function SendNoteDialog({ clientId, clientName, onNoteSent }: Sen
     if (!message.trim()) { setError("Message cannot be empty"); return; }
     setIsLoading(true); setError("");
     try {
-      const r = await fetch("/api/coach/notes", {
+      const r = await apiFetch("/api/coach/notes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: message.trim(), userId: clientId }),
       });
       if (r.ok) { setMessage(""); setIsOpen(false); onNoteSent?.(); }

@@ -24,9 +24,9 @@ export function getDefaultWeight(
 ): number {
   if (te.is_bodyweight) return 0;
   const g = gender === "male" ? "m" : "f";
-  if (tier === "pre_baseline") return (te as Record<string, number>)[`weight_pre_baseline_${g}`];
-  if (tier === "post_baseline") return (te as Record<string, number>)[`weight_post_baseline_${g}`];
-  return (te as Record<string, number>)[`weight_default_${g}`];
+  if (tier === "pre_baseline") return (te as unknown as Record<string, number>)[`weight_pre_baseline_${g}`];
+  if (tier === "post_baseline") return (te as unknown as Record<string, number>)[`weight_post_baseline_${g}`];
+  return (te as unknown as Record<string, number>)[`weight_default_${g}`];
 }
 
 export function formatWeight(weight: number, isBodyweight?: boolean): string {

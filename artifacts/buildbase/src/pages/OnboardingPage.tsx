@@ -25,7 +25,9 @@ export default function OnboardingPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const { error: err } = await supabase.from("profiles").update({ full_name: fullName.trim(), gender, onboarding_done: true }).eq("id", user.id);
+      // Supabase client has no typed schema; cast via unknown to satisfy strict TS
+      const table = supabase.from("profiles") as unknown as { update: (v: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<{ error: Error | null }> } };
+      const { error: err } = await table.update({ full_name: fullName.trim(), gender, onboarding_done: true }).eq("id", user.id);
       if (err) throw err;
       navigate("/dashboard");
     } catch (err) {

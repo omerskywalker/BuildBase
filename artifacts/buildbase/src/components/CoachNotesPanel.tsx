@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Trash2, Eye } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface CoachNote {
   id: string;
@@ -24,7 +25,7 @@ export default function CoachNotesPanel({ clientId, clientName }: CoachNotesPane
 
   const fetchNotes = async () => {
     try {
-      const r = await fetch(`/api/coach/notes?userId=${clientId}`);
+      const r = await apiFetch(`/api/coach/notes?userId=${clientId}`);
       if (r.ok) setNotes(await r.json());
     } catch {}
     finally { setIsLoading(false); }
@@ -35,7 +36,7 @@ export default function CoachNotesPanel({ clientId, clientName }: CoachNotesPane
   const handleUnsend = async (noteId: string) => {
     setUnsendingId(noteId);
     try {
-      const r = await fetch(`/api/coach/notes/${noteId}`, { method: "DELETE" });
+      const r = await apiFetch(`/api/coach/notes/${noteId}`, { method: "DELETE" });
       if (r.ok) setNotes(notes.filter(n => n.id !== noteId));
     } catch {}
     finally { setUnsendingId(null); }
