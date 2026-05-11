@@ -18,11 +18,6 @@ interface SetBody {
   reps_completed: number;
 }
 
-interface FormAssessmentRow {
-  exercise_id: string;
-  status: string;
-}
-
 interface TemplateExerciseRow {
   id: string;
   exercise_id: string;
@@ -242,24 +237,27 @@ router.get("/:sessionLogId/exercises", async (req, res) => {
       .eq("id", user.id)
       .single();
 
-    let formAssessments: FormAssessmentRow[] = [];
+    // Use a SECURITY DEFINER RPC to get form assessment status for this athlete.
+    // Direct table access is denied under RLS for athletes; the RPC returns only
+    // exercise_ids where status = 'locked_in' — no private notes ever exposed.
+    let lockedInExerciseIds = new Set<string>();
     if (userProfile?.coach_id) {
       const exerciseIds = (exercises ?? [])
         .map((ex: TemplateExerciseRow) => ex.exercise_id)
-        .filter(Boolean);
-      const { data: assessments } = await supabase
-        .from("coach_form_assessments")
-        .select("exercise_id, status")
-        .eq("coach_id", userProfile.coach_id)
-        .eq("user_id", user.id)
-        .in("exercise_id", exerciseIds);
-      formAssessments = assessments ?? [];
+        .filter(Boolean) as string[];
+      if (exerciseIds.length > 0) {
+        const { data: lockedIn } = await supabase.rpc("get_my_locked_in_exercises", {
+          p_exercise_ids: exerciseIds,
+        });
+        for (const row of lockedIn ?? []) {
+          lockedInExerciseIds.add((row as { exercise_id: string }).exercise_id);
+        }
+      }
     }
 
     const exercisesWithAssessments = (exercises ?? []).map((ex: TemplateExerciseRow) => ({
       ...ex,
-      form_assessment_status:
-        formAssessments.find(fa => fa.exercise_id === ex.exercise_id)?.status ?? null,
+      form_assessment_status: lockedInExerciseIds.has(ex.exercise_id as string) ? "locked_in" : null,
     }));
 
     return res.json({ exercises: exercisesWithAssessments, setLogs: setLogs ?? [] });

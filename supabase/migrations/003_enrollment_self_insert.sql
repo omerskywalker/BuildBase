@@ -1,0 +1,10 @@
+-- NOTE: This migration is superseded by 001_initial_schema.sql.
+-- The "enrollments_self_insert" policy is now part of the initial schema.
+-- This file is kept for historical reference of the incremental change.
+--
+-- If applying migrations individually to an existing database that ran the
+-- original 001 (without the self-insert policy), run this to add it:
+--
+-- CREATE POLICY "enrollments_self_insert" ON user_enrollments
+--   FOR INSERT
+--   WITH CHECK (user_id = auth.uid());

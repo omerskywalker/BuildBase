@@ -370,6 +370,8 @@ router.delete("/notes/:id", async (req, res) => {
 });
 
 // PATCH /api/coach/notes/:id
+// Athletes mark notes read/dismissed via SECURITY DEFINER RPC functions so they
+// cannot gain unrestricted UPDATE access to the coach_notes table.
 router.patch("/notes/:id", async (req, res) => {
   try {
     const auth = await getAuthUser(req, res);
@@ -392,23 +394,27 @@ router.patch("/notes/:id", async (req, res) => {
       return res.status(403).json({ error: "You can only mark your own notes as read or dismissed" });
     }
 
-    const now = new Date().toISOString();
-    const updateData: { read_at?: string; dismissed_at?: string } = {};
+    const noteId = req.params.id;
+
     if (action === "read") {
-      updateData.read_at = now;
+      const { error } = await supabase.rpc("mark_coach_note_read", { p_note_id: noteId });
+      if (error) return res.status(500).json({ error: "Failed to mark note as read" });
     } else {
-      updateData.dismissed_at = now;
-      if (!note.read_at) updateData.read_at = now;
+      if (!note.read_at) {
+        const { error } = await supabase.rpc("mark_coach_note_read", { p_note_id: noteId });
+        if (error) return res.status(500).json({ error: "Failed to mark note as read" });
+      }
+      const { error } = await supabase.rpc("mark_coach_note_dismissed", { p_note_id: noteId });
+      if (error) return res.status(500).json({ error: "Failed to dismiss note" });
     }
 
-    const { data: updatedNote, error } = await supabase
+    const { data: updatedNote, error: fetchError } = await supabase
       .from("coach_notes")
-      .update(updateData)
-      .eq("id", req.params.id)
       .select()
+      .eq("id", noteId)
       .single();
 
-    if (error) return res.status(500).json({ error: `Failed to mark note as ${action}` });
+    if (fetchError) return res.status(500).json({ error: `Failed to fetch updated note` });
     return res.json(updatedNote);
   } catch {
     return res.status(500).json({ error: "Internal server error" });
