@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, TrendingUp, BarChart3, ChevronRight } from "lucide-react";
+import { Dumbbell, TrendingUp, BarChart3, ChevronRight, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import { calculateCurrentStreak, calculateCompletionRate } from "@/lib/milestone-utils";
 import StreakBadge from "@/components/StreakBadge";
 import CoachNotesBanner from "@/components/CoachNotesBanner";
+import QuickLogModal from "@/components/QuickLogModal";
 import type { SessionLog, WorkoutTemplate } from "@/lib/types";
 
 interface DashboardData {
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [noEnrollment, setNoEnrollment] = useState(false);
+  const [quickLogOpen, setQuickLogOpen] = useState(false);
 
   const hasCoach = profile?.coach_id != null;
   const isUser = profile?.role === "user";
@@ -52,7 +54,17 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold font-display mb-1" style={{ color: "#2C1A10" }}>Welcome back, {firstName}</h1>
+      <div className="flex items-start justify-between mb-1">
+        <h1 className="text-2xl font-bold font-display" style={{ color: "#2C1A10" }}>Welcome back, {firstName}</h1>
+        <button
+          onClick={() => setQuickLogOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shadow-sm transition-transform hover:scale-105 active:scale-95 shrink-0"
+          style={{ background: "#C84B1A" }}
+        >
+          <Plus className="h-4 w-4" />
+          Log Workout
+        </button>
+      </div>
       <p className="text-sm mb-6" style={{ color: "#6B5A48" }}>Your strength training home base</p>
 
       {isUser && hasCoach && <CoachNotesBanner />}
@@ -62,9 +74,16 @@ export default function DashboardPage() {
           <CardContent className="py-12 text-center">
             <Dumbbell className="h-12 w-12 mx-auto mb-4" style={{ color: "#988A78" }} />
             <h2 className="text-lg font-semibold mb-2" style={{ color: "#2C1A10" }}>No program assigned yet</h2>
-            <p className="text-sm max-w-md mx-auto" style={{ color: "#6B5A48" }}>
+            <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#6B5A48" }}>
               Your training program hasn't been set up yet. Once your coach or admin assigns you a program, your sessions and progress will appear here.
             </p>
+            <button
+              onClick={() => setQuickLogOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+              style={{ background: "#C84B1A" }}
+            >
+              <Plus className="h-4 w-4" /> Log a Quick Workout
+            </button>
           </CardContent>
         </Card>
       ) : (
@@ -135,6 +154,8 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <QuickLogModal open={quickLogOpen} onClose={() => setQuickLogOpen(false)} />
     </div>
   );
 }

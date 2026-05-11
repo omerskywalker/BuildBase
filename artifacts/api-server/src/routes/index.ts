@@ -6,6 +6,7 @@ import progressRouter from "./progress";
 import coachRouter from "./coach";
 import adminRouter from "./admin";
 import templatesRouter from "./templates";
+import quickLogRouter from "./quick-log";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use("/progress", progressRouter);
 router.use("/coach", coachRouter);
 router.use("/admin", adminRouter);
 router.use("/templates", templatesRouter);
+router.use("/quick-log", quickLogRouter);
 
 export default router;
