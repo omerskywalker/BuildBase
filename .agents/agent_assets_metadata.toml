@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Rkij4hkRCMwsk6Lj5vPZR"
+uri = "file://README.md"
+type = "text"
+title = "BuildBase README.md"
