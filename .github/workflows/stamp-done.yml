@@ -1,0 +1,64 @@
+name: Stamp Roadmap Item Done
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  stamp:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Extract item ID from PR title
+        id: extract
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          # Match feat(1-2): or fix(2-3): pattern
+          ITEM_ID=$(echo "$TITLE" | grep -oP '(?:feat|fix|chore|refactor|perf)\((\K[0-9]+-[0-9]+)' || true)
+          if [ -z "$ITEM_ID" ]; then
+            echo "No roadmap item ID found in PR title: $TITLE"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "item_id=$ITEM_ID" >> "$GITHUB_OUTPUT"
+            echo "Found item ID: $ITEM_ID"
+          fi
+
+      - name: Update roadmap status to done
+        if: steps.extract.outputs.skip != 'true'
+        run: |
+          ITEM_ID="${{ steps.extract.outputs.item_id }}"
+          PR_NUM="${{ github.event.pull_request.number }}"
+
+          python3 -c "
+          import re
+          with open('lib/roadmap-data.ts', 'r') as f:
+              content = f.read()
+
+          # Update status to done
+          pattern = r'(id: \"${ITEM_ID}\".*?status: \")[^\"]*(\")'
+          content = re.sub(pattern, r'\1done\2', content, flags=re.DOTALL)
+
+          # Update PR number
+          pattern = r'(id: \"${ITEM_ID}\".*?)(pr: \d+|pr: undefined)'
+          content = re.sub(pattern, r'\1pr: ${PR_NUM}', content, flags=re.DOTALL)
+
+          with open('lib/roadmap-data.ts', 'w') as f:
+              f.write(content)
+          "
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lib/roadmap-data.ts
+          git diff --cached --quiet || {
+            git commit -m "chore: stamp $ITEM_ID done (PR #$PR_NUM merged)"
+            git push origin main
+          }

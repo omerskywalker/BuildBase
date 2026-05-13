@@ -1,0 +1,283 @@
+name: Claude Feature Implementation
+
+on:
+  workflow_dispatch:
+    inputs:
+      item_id:
+        description: "Roadmap item ID (e.g. 1-1)"
+        required: true
+        type: string
+      item_title:
+        description: "Roadmap item title"
+        required: true
+        type: string
+      item_description:
+        description: "Full implementation spec"
+        required: true
+        type: string
+      branch_name:
+        description: "Branch name (already created by kickoff API)"
+        required: true
+        type: string
+      issue_number:
+        description: "GitHub Issue number"
+        required: false
+        default: ""
+        type: string
+      pr_number:
+        description: "Draft PR number (already created by kickoff API)"
+        required: false
+        default: ""
+        type: string
+      retry:
+        description: "Is this a retry run?"
+        required: false
+        default: "false"
+        type: string
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch_name }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # ── Phase 1: Update roadmap status to in-progress ────────────────────
+      - name: Mark roadmap item in-progress
+        run: |
+          if [ -f "lib/roadmap-data.ts" ]; then
+            sed -i "s/id: \"${{ inputs.item_id }}\"/id: \"${{ inputs.item_id }}\"/" lib/roadmap-data.ts
+            # Find the item block and update status
+            python3 -c "
+          import re
+          with open('lib/roadmap-data.ts', 'r') as f:
+              content = f.read()
+          # Find the item by ID and update its status
+          pattern = r'(id: \"${{ inputs.item_id }}\".*?status: \")not-started(\")'
+          content = re.sub(pattern, r'\1in-progress\2', content, flags=re.DOTALL)
+          with open('lib/roadmap-data.ts', 'w') as f:
+              f.write(content)
+          "
+            git add lib/roadmap-data.ts
+            git diff --cached --quiet || git commit -m "chore: mark ${{ inputs.item_id }} in-progress in roadmap"
+            git push origin "${{ inputs.branch_name }}"
+          fi
+
+      # ── Phase 2: Agent implementation ────────────────────────────────────
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          mode: agent
+          direct_prompt: |
+            You are implementing roadmap item ${{ inputs.item_id }} for BuildBase.
+
+            **Item:** ${{ inputs.item_title }}
+            **Branch:** ${{ inputs.branch_name }}
+            ${{ inputs.issue_number != '' && format('**GitHub Issue:** #{0}', inputs.issue_number) || '' }}
+            ${{ inputs.pr_number != '' && format('**Draft PR:** #{0} — already open, push commits to it. Do NOT create a new PR.', inputs.pr_number) || '' }}
+
+            ## Project Architecture (READ THIS FIRST)
+
+            This is a **pnpm monorepo** with a React SPA frontend and Express API backend:
+
+            ```
+            artifacts/buildbase/    → React SPA (Vite, Tailwind, shadcn, Recharts)
+            artifacts/api-server/   → Express API server (TypeScript)
+            lib/                    → Shared packages (roadmap-data, db, api-spec)
+            supabase/               → Schema, migrations, seed data
+            ```
+
+            **NOT a Next.js app.** No App Router, no server components, no middleware.ts/proxy.ts.
+
+            ### Key files
+            - `artifacts/buildbase/src/lib/api.ts` — apiFetch wrapper (auth token forwarding)
+            - `artifacts/buildbase/src/lib/types.ts` — shared TypeScript types
+            - `artifacts/buildbase/src/lib/auth-context.tsx` — React auth context
+            - `artifacts/api-server/src/app.ts` — Express app setup
+            - `artifacts/api-server/src/lib/supabase.ts` — Supabase client + getAuthUser helper
+            - `supabase/schema.sql` — full database schema (14 tables, RLS on all)
+
+            ### RBAC
+            - **admin** — full access, creates users/coaches, edits programs
+            - **coach** — sees own clients, sends notes, marks form assessments
+            - **user** — sees own data only
+
+            ### Design tokens
+            - bg-base: #EDE4D3, bg-surface: #E5DAC8, bg-elevated: #E8DECE
+            - content-primary: #2C1A10, content-secondary: #6B5A48
+            - brand: #1C3A2A (forest green), accent: #C84B1A (burnt orange)
+            - UI library: shadcn/ui, lucide-react icons, sonner toasts, recharts
+
+            ## Implementation Steps
+
+            1. Read GitHub Issue #121 (Orchestrator — Agent Operating Rules) for mandatory constraints.
+            ${{ inputs.issue_number != '' && format('2. Read GitHub Issue #{0} for the full spec, acceptance criteria, and context.', inputs.issue_number) || '2. Read the item description below.' }}
+            3. Check open PRs (`gh pr list --state open`) to verify no scope conflicts.
+            4. Implement the feature/fix described.
+            5. Write tests for any new functionality that involves logic, API calls, or user interaction.
+            6. Run `pnpm run typecheck` and fix all type errors.
+            7. Run `pnpm run build` and verify it succeeds.
+
+            ## Item Description
+
+            ${{ inputs.item_description }}
+
+            ## Critical Constraints
+
+            - Do NOT run `git add`, `git commit`, or `git push` — the workflow handles this.
+            - Do NOT create a new PR — use the existing draft PR if one exists.
+            - Do NOT modify `lib/roadmap-data.ts` — the workflow manages roadmap status.
+            - Use `sonner` toast for user feedback (already installed).
+            - Use existing `apiFetch` or `apiFetchJson` from `artifacts/buildbase/src/lib/api.ts`.
+            - Follow existing patterns in the codebase — don't introduce new libraries without justification.
+
+      # ── Phase 3: Self-healing CI ─────────────────────────────────────────
+      - name: Type check
+        id: typecheck
+        run: |
+          if ! pnpm run typecheck 2>&1 | tee /tmp/ci-typecheck.txt; then
+            cp /tmp/ci-typecheck.txt .ci-typecheck-errors.txt
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Build
+        id: build
+        run: |
+          if ! pnpm run build 2>&1 | tee /tmp/ci-build.txt; then
+            cp /tmp/ci-build.txt .ci-build-errors.txt
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Self-heal — fix CI failures
+        if: steps.typecheck.outputs.failed == 'true' || steps.build.outputs.failed == 'true'
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          mode: agent
+          direct_prompt: |
+            The implementation for roadmap item ${{ inputs.item_id }} has CI failures.
+
+            1. Read `.ci-typecheck-errors.txt` if it exists — type check errors.
+            2. Read `.ci-build-errors.txt` if it exists — build errors.
+
+            Common fixes:
+            - JSX in a `.ts` file → rename to `.tsx`
+            - Missing imports → add them
+            - Strict null checks → use `T | null` or add guards
+
+            Fix all errors, then verify with `pnpm run typecheck` and `pnpm run build`.
+
+            Do NOT run `git add`, `git commit`, or `git push`.
+            Do NOT delete the `.ci-*` files.
+
+      - name: Clean up error files
+        if: always()
+        run: rm -f .ci-typecheck-errors.txt .ci-build-errors.txt
+
+      - name: Type check (final)
+        if: steps.typecheck.outputs.failed == 'true' || steps.build.outputs.failed == 'true'
+        run: pnpm run typecheck
+
+      - name: Build (final)
+        if: steps.typecheck.outputs.failed == 'true' || steps.build.outputs.failed == 'true'
+        run: pnpm run build
+
+      # ── Phase 4: Code review ─────────────────────────────────────────────
+      - name: Self-review before commit
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          mode: agent
+          direct_prompt: |
+            You are reviewing the changes made for roadmap item ${{ inputs.item_id }}: "${{ inputs.item_title }}".
+
+            Run `git diff` to see all uncommitted changes.
+
+            Review checklist:
+            1. **Security**: No XSS (dangerouslySetInnerHTML without sanitization), no SQL injection,
+               no exposed secrets, no raw error.message sent to clients.
+            2. **Error handling**: All apiFetch calls check response.ok. All catches show user feedback.
+            3. **Types**: No `any` casts. No `as unknown as X` escapes.
+            4. **Consistency**: Follows existing patterns in the codebase.
+            5. **Tests**: New logic has tests. Tests actually assert meaningful behavior.
+            6. **Dead code**: No commented-out code, no unused imports.
+            7. **Scope**: Changes are limited to what the issue describes — no drive-by refactors.
+
+            If you find issues, fix them. If everything looks good, do nothing.
+
+            Do NOT run `git add`, `git commit`, or `git push`.
+
+      # ── Phase 5: Commit and push ─────────────────────────────────────────
+      - name: Verify changes exist
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "::error::Claude Code produced no file changes."
+            exit 1
+          fi
+          echo "Changes staged:"
+          git diff --cached --stat
+
+      - name: Commit and push
+        run: |
+          git commit -m "feat(${{ inputs.item_id }}): ${{ inputs.item_title }}
+
+          Implements roadmap item ${{ inputs.item_id }}.
+          ${{ inputs.issue_number != '' && format('Closes #{0}', inputs.issue_number) || '' }}
+
+          Co-Authored-By: Claude Code <noreply@anthropic.com>"
+          git push origin "${{ inputs.branch_name }}"
+
+      - name: Mark PR ready for review
+        if: ${{ inputs.pr_number != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr ready ${{ inputs.pr_number }} --repo ${{ github.repository }} || true
+
+      # ── Failure reporting ────────────────────────────────────────────────
+      - name: Mark item failed
+        if: failure()
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          ROADMAP_PIN: ${{ secrets.ROADMAP_PIN }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$ROADMAP_PIN" ]; then
+            echo "APP_URL or ROADMAP_PIN not set — skipping failure report"
+            exit 0
+          fi
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${APP_URL}/api/monitor/fail" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${ROADMAP_PIN}" \
+            -d "{\"itemId\": \"${{ inputs.item_id }}\"}"
