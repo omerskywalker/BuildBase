@@ -251,11 +251,47 @@ ALTER TABLE milestones               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coach_form_assessments   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coach_notes              ENABLE ROW LEVEL SECURITY;
 
--- Helper: get current user's role
+-- Helper: returns the current authenticated user's role
 CREATE OR REPLACE FUNCTION auth_role()
 RETURNS text AS $$
   SELECT role FROM profiles WHERE id = auth.uid();
 $$ LANGUAGE sql SECURITY DEFINER;
+
+-- Helper: true when auth.uid() is the assigned coach of the given user_id
+CREATE OR REPLACE FUNCTION is_my_client(p_user_id uuid)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE id = p_user_id AND coach_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- ─── Privilege-escalation guard on profiles ───────────────────────────────────
+-- A BEFORE UPDATE trigger blocks any non-admin from changing role, coach_id,
+-- or email directly. Admins identified via auth_role() = 'admin' are exempt.
+-- This is safer than REVOKE/GRANT (which blocks admins too, since all JWT
+-- users share the same DB role `authenticated`).
+CREATE OR REPLACE FUNCTION prevent_profile_escalation()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF auth_role() = 'admin' THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.role    IS DISTINCT FROM OLD.role    THEN
+    RAISE EXCEPTION 'permission denied: only admins can change role';
+  END IF;
+  IF NEW.coach_id IS DISTINCT FROM OLD.coach_id THEN
+    RAISE EXCEPTION 'permission denied: only admins can change coach_id';
+  END IF;
+  IF NEW.email   IS DISTINCT FROM OLD.email   THEN
+    RAISE EXCEPTION 'permission denied: only admins can change email';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER profiles_prevent_escalation
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION prevent_profile_escalation();
 
 -- profiles: users see own row, coaches see their clients, admins see all
 CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (
@@ -263,66 +299,144 @@ CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (
   OR coach_id = auth.uid()
   OR auth_role() = 'admin'
 );
-CREATE POLICY "profiles_update_self" ON profiles FOR UPDATE USING (id = auth.uid());
+-- Self-update (role/coach_id/email are blocked by the trigger above)
+CREATE POLICY "profiles_update_self" ON profiles FOR UPDATE
+  USING    (id = auth.uid())
+  WITH CHECK (id = auth.uid());
 CREATE POLICY "profiles_admin_all" ON profiles FOR ALL USING (auth_role() = 'admin');
 
--- programs/phases/templates: everyone can read, only admin can write
-CREATE POLICY "programs_read_all" ON programs FOR SELECT USING (true);
-CREATE POLICY "programs_admin_write" ON programs FOR ALL USING (auth_role() = 'admin');
-CREATE POLICY "phases_read_all" ON phases FOR SELECT USING (true);
-CREATE POLICY "phases_admin_write" ON phases FOR ALL USING (auth_role() = 'admin');
-CREATE POLICY "workout_templates_read_all" ON workout_templates FOR SELECT USING (true);
-CREATE POLICY "workout_templates_admin_write" ON workout_templates FOR ALL USING (auth_role() = 'admin');
-CREATE POLICY "exercises_read_all" ON exercises FOR SELECT USING (true);
-CREATE POLICY "exercises_admin_write" ON exercises FOR ALL USING (auth_role() = 'admin');
-CREATE POLICY "template_exercises_read_all" ON template_exercises FOR SELECT USING (true);
-CREATE POLICY "template_exercises_admin_write" ON template_exercises FOR ALL USING (auth_role() = 'admin');
+-- programs/phases/templates/exercises: everyone reads, only admin writes
+CREATE POLICY "programs_read_all"              ON programs           FOR SELECT USING (true);
+CREATE POLICY "programs_admin_write"           ON programs           FOR ALL    USING (auth_role() = 'admin');
+CREATE POLICY "phases_read_all"                ON phases             FOR SELECT USING (true);
+CREATE POLICY "phases_admin_write"             ON phases             FOR ALL    USING (auth_role() = 'admin');
+CREATE POLICY "workout_templates_read_all"     ON workout_templates  FOR SELECT USING (true);
+CREATE POLICY "workout_templates_admin_write"  ON workout_templates  FOR ALL    USING (auth_role() = 'admin');
+CREATE POLICY "exercises_read_all"             ON exercises          FOR SELECT USING (true);
+CREATE POLICY "exercises_admin_write"          ON exercises          FOR ALL    USING (auth_role() = 'admin');
+CREATE POLICY "template_exercises_read_all"    ON template_exercises FOR SELECT USING (true);
+CREATE POLICY "template_exercises_admin_write" ON template_exercises FOR ALL    USING (auth_role() = 'admin');
 
--- user_enrollments: own row + coach + admin
-CREATE POLICY "enrollments_own" ON user_enrollments FOR SELECT USING (
+-- user_enrollments: athlete sees own; coaches see their clients' only; athletes
+--   self-insert during onboarding; admins have full access
+CREATE POLICY "enrollments_select" ON user_enrollments FOR SELECT USING (
   user_id = auth.uid()
-  OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND (role = 'coach' OR role = 'admin'))
-);
-CREATE POLICY "enrollments_admin" ON user_enrollments FOR ALL USING (auth_role() = 'admin');
-
--- session_logs / set_logs: own + coach of user + admin
-CREATE POLICY "session_logs_own" ON session_logs FOR ALL USING (
-  user_id = auth.uid()
-  OR EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND (p.role = 'coach' OR p.role = 'admin'))
-);
-CREATE POLICY "set_logs_own" ON set_logs FOR ALL USING (
-  EXISTS (SELECT 1 FROM session_logs s WHERE s.id = session_logs.session_log_id AND (
-    s.user_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND (p.role = 'coach' OR p.role = 'admin'))
-  ))
-);
-
--- personal_records / milestones: own + coach + admin
-CREATE POLICY "personal_records_own" ON personal_records FOR ALL USING (
-  user_id = auth.uid()
-  OR EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND (p.role = 'coach' OR p.role = 'admin'))
-);
-CREATE POLICY "milestones_own" ON milestones FOR ALL USING (
-  user_id = auth.uid()
-  OR EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND (p.role = 'coach' OR p.role = 'admin'))
-);
-
--- coach_form_assessments: coach who wrote it + admin. NEVER user.
-CREATE POLICY "form_assessments_coach_only" ON coach_form_assessments FOR ALL USING (
-  coach_id = auth.uid() OR auth_role() = 'admin'
-);
-
--- user_exercise_overrides: own user + coach who set it + admin
-CREATE POLICY "overrides_own" ON user_exercise_overrides FOR SELECT USING (
-  user_id = auth.uid()
-  OR set_by = auth.uid()
+  OR is_my_client(user_id)
   OR auth_role() = 'admin'
 );
-CREATE POLICY "overrides_write" ON user_exercise_overrides FOR ALL USING (
-  set_by = auth.uid() OR auth_role() = 'admin'
-);
+CREATE POLICY "enrollments_self_insert" ON user_enrollments FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "enrollments_admin_all" ON user_enrollments FOR ALL
+  USING (auth_role() = 'admin');
 
--- coach_notes: coach sees notes they sent, user sees notes for them, admin all
-CREATE POLICY "coach_notes_coach" ON coach_notes FOR ALL USING (
-  coach_id = auth.uid() OR user_id = auth.uid() OR auth_role() = 'admin'
+-- session_logs: athletes own their logs (full CRUD); coaches read-only for
+--   their clients; admins have full access
+CREATE POLICY "session_logs_athlete" ON session_logs FOR ALL
+  USING    (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "session_logs_coach_select" ON session_logs FOR SELECT
+  USING (is_my_client(user_id));
+CREATE POLICY "session_logs_admin_all" ON session_logs FOR ALL
+  USING (auth_role() = 'admin');
+
+-- set_logs: access mirrors the parent session_log
+CREATE POLICY "set_logs_athlete" ON set_logs FOR ALL USING (
+  EXISTS (SELECT 1 FROM session_logs s WHERE s.id = session_log_id AND s.user_id = auth.uid())
+) WITH CHECK (
+  EXISTS (SELECT 1 FROM session_logs s WHERE s.id = session_log_id AND s.user_id = auth.uid())
 );
+CREATE POLICY "set_logs_coach_select" ON set_logs FOR SELECT USING (
+  EXISTS (SELECT 1 FROM session_logs s WHERE s.id = session_log_id AND is_my_client(s.user_id))
+);
+CREATE POLICY "set_logs_admin_all" ON set_logs FOR ALL
+  USING (auth_role() = 'admin');
+
+-- personal_records: athletes manage own; coaches read their clients'; admins all
+CREATE POLICY "personal_records_athlete" ON personal_records FOR ALL
+  USING    (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "personal_records_coach_select" ON personal_records FOR SELECT
+  USING (is_my_client(user_id));
+CREATE POLICY "personal_records_admin_all" ON personal_records FOR ALL
+  USING (auth_role() = 'admin');
+
+-- milestones: athletes see own; coaches read+write milestones for their clients
+--   (coaches set milestones on behalf of athletes — see set_by column); admins all
+CREATE POLICY "milestones_athlete" ON milestones FOR ALL
+  USING    (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "milestones_coach" ON milestones FOR ALL
+  USING    (is_my_client(user_id))
+  WITH CHECK (is_my_client(user_id));
+CREATE POLICY "milestones_admin_all" ON milestones FOR ALL
+  USING (auth_role() = 'admin');
+
+-- coach_form_assessments: coach who created it + admin. NEVER exposed to athlete.
+CREATE POLICY "form_assessments_coach_own" ON coach_form_assessments FOR ALL
+  USING    (coach_id = auth.uid())
+  WITH CHECK (coach_id = auth.uid());
+CREATE POLICY "form_assessments_admin_all" ON coach_form_assessments FOR ALL
+  USING (auth_role() = 'admin');
+
+-- user_exercise_overrides: athletes read overrides applied to them; coaches
+--   read ALL overrides for their clients (regardless of who originally set them),
+--   but can only write overrides they personally set; admins all
+CREATE POLICY "overrides_athlete_select" ON user_exercise_overrides FOR SELECT
+  USING (user_id = auth.uid());
+CREATE POLICY "overrides_coach_select" ON user_exercise_overrides FOR SELECT
+  USING (is_my_client(user_id));
+CREATE POLICY "overrides_coach_write" ON user_exercise_overrides FOR ALL
+  USING    (set_by = auth.uid() AND is_my_client(user_id))
+  WITH CHECK (set_by = auth.uid() AND is_my_client(user_id));
+CREATE POLICY "overrides_admin_all" ON user_exercise_overrides FOR ALL
+  USING (auth_role() = 'admin');
+
+-- coach_notes: split by operation to enforce strict write boundaries
+-- Athletes must not be able to mutate note content or ownership fields.
+-- Use the mark_coach_note_read() / mark_coach_note_dismissed() functions
+-- (SECURITY DEFINER) so athletes can track read/dismissed state without
+-- gaining unrestricted UPDATE access.
+CREATE POLICY "coach_notes_select" ON coach_notes FOR SELECT
+  USING (coach_id = auth.uid() OR user_id = auth.uid() OR auth_role() = 'admin');
+-- Only coaches can create notes, and only to their assigned clients
+CREATE POLICY "coach_notes_insert" ON coach_notes FOR INSERT
+  WITH CHECK (
+    (coach_id = auth.uid() AND is_my_client(user_id))
+    OR auth_role() = 'admin'
+  );
+-- Only the coach who sent it or an admin may update a note directly
+CREATE POLICY "coach_notes_update" ON coach_notes FOR UPDATE
+  USING    (coach_id = auth.uid() OR auth_role() = 'admin')
+  WITH CHECK (coach_id = auth.uid() OR auth_role() = 'admin');
+-- Only the sending coach or admin may delete a note
+CREATE POLICY "coach_notes_delete" ON coach_notes FOR DELETE
+  USING (coach_id = auth.uid() OR auth_role() = 'admin');
+
+-- Athletes call these SECURITY DEFINER functions to mark notes read/dismissed
+-- without gaining unrestricted UPDATE access to coach_notes.
+CREATE OR REPLACE FUNCTION mark_coach_note_read(p_note_id uuid)
+RETURNS void AS $$
+  UPDATE coach_notes
+  SET read_at = now()
+  WHERE id = p_note_id AND user_id = auth.uid() AND read_at IS NULL;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION mark_coach_note_dismissed(p_note_id uuid)
+RETURNS void AS $$
+  UPDATE coach_notes
+  SET dismissed_at = now()
+  WHERE id = p_note_id AND user_id = auth.uid() AND dismissed_at IS NULL;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Athletes fetch form assessment statuses for exercises in their session.
+-- Returns only exercise_ids where the coach has marked status = 'locked_in'
+-- for the requesting athlete. Private notes and partial statuses are never
+-- exposed — athletes see only "Solid Form ✅" (locked_in) or nothing.
+CREATE OR REPLACE FUNCTION get_my_locked_in_exercises(p_exercise_ids uuid[])
+RETURNS TABLE (exercise_id uuid) AS $$
+  SELECT exercise_id
+  FROM coach_form_assessments
+  WHERE user_id = auth.uid()
+    AND status = 'locked_in'
+    AND exercise_id = ANY(p_exercise_ids);
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
