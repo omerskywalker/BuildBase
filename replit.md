@@ -4,45 +4,56 @@ A structured fitness coaching platform for coaches and athletes. Supports multip
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/buildbase run dev` — run the React SPA (Vite, port from $PORT)
-- `pnpm --filter @workspace/api-server run dev` — run the API server (Express, port 8080)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
+- `pnpm run dev` — run the Next.js dev server (port 3000)
+- `pnpm run build` — production build
+- `pnpm run start` — start production server
+- `pnpm run test` — run vitest unit tests
+- `pnpm tsc --noEmit` — full typecheck
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- Frontend: Vite + React SPA, wouter (routing), TailwindCSS, shadcn/radix UI, framer-motion, recharts
-- Auth/DB: Supabase (`@supabase/supabase-js` browser client)
-- API: Express 5 (port 8080)
-- Build: esbuild (API server CJS bundle)
+- Node.js 24, TypeScript 5, pnpm (single-package, not a monorepo)
+- Framework: **Next.js 16** App Router (not Vite SPA)
+- Frontend: React 19, TailwindCSS v4 (CSS-first, `@theme` in globals.css), shadcn v4, framer-motion, recharts
+- Auth/DB: Supabase — `@supabase/ssr` (server + client), `@supabase/supabase-js`
+- Routing: Next.js App Router (`app/` directory)
+- Testing: vitest + @testing-library/react
 
 ## Where things live
 
-- `artifacts/buildbase/` — React SPA (all pages, components, auth)
-  - `src/lib/supabase.ts` — Supabase client singleton
-  - `src/lib/auth-context.tsx` — AuthProvider + useAuth hook
-  - `src/lib/types.ts` — shared TypeScript types
-  - `src/App.tsx` — wouter router, all routes, ProtectedRoute
-  - `src/index.css` — BuildBase theme tokens (HSL)
-  - `src/pages/` — all page components (auth, dashboard, sessions, progress, coach, admin)
-  - `src/components/layout/` — AppLayout, Header, Sidebar
-- `artifacts/api-server/` — Express API server
+- `app/` — Next.js App Router pages and API routes
+  - `app/(app)/` — authenticated user pages (dashboard, sessions, progress, etc.)
+  - `app/(admin)/` — admin pages
+  - `app/(coach)/` — coach pages
+  - `app/(auth)/` — login, signup, forgot/reset password
+  - `app/api/` — Next.js API routes (Edge/Node)
+- `components/` — shared React components (shadcn UI, custom)
+  - `components/ui/` — shadcn/radix primitive wrappers
+  - `components/QuickLogModal.tsx` — quick workout logger (client component)
+  - `components/LogWorkoutButton.tsx` — client wrapper for dashboard
+- `lib/` — shared utilities and Supabase clients
+  - `lib/supabase/client.ts` — browser Supabase client
+  - `lib/supabase/server.ts` — server Supabase client (uses cookies)
+  - `lib/quick-log-presets.ts` — muscle group + exercise preset data
+  - `lib/rbac.ts` — role-based access control helpers
+- `tests/` — vitest unit/integration tests
+- `supabase/` — Supabase migrations and schema
+- `.migration-backup/` — archived original Next.js codebase (do not delete)
 
 ## Architecture decisions
 
-- Vite SPA (not Next.js/SSR) — migrated from Next.js; all data fetching via useEffect + fetch
-- wouter for routing (not react-router-dom) — lightweight, SPA-compatible
-- `@supabase/supabase-js` browser client (not @supabase/ssr) — client-side auth only
-- Supabase singleton pattern in `supabase.ts` to avoid multiple GoTrueClient instances
-- API calls use relative `/api/...` paths — proxied to Express on port 8080
+- Next.js 16 App Router (SSR + API routes in one project)
+- `@supabase/ssr` for proper cookie-based auth in Server Components and API routes
+- Server Components fetch data directly; client components use `fetch` to API routes
+- Dashboard is a Server Component — interactive elements (QuickLogModal, LogWorkoutButton) are wrapped in `"use client"` components
+- All API routes use `createClient()` from `lib/supabase/server` for auth
 
 ## Product
 
 - **Auth**: Login, signup, forgot/reset password via Supabase auth
 - **Onboarding**: Role-based setup flow for new users
-- **Dashboard**: Overview of sessions, progress, upcoming workouts
-- **Sessions**: Log and track training sessions with detailed cards
+- **Dashboard**: Overview with "Log Workout" quick-log button
+- **Sessions**: Log and track training sessions
 - **Progress**: Charts, milestones, trends over time
 - **Coach Notes**: Coach-to-athlete notes and feedback
 - **Clients**: Coach view of all clients and individual client detail
@@ -53,15 +64,17 @@ A structured fitness coaching platform for coaches and athletes. Supports multip
 
 - Color theme: bg `#EDE4D3`, accent `#C84B1A`, brand `#1C3A2A`, content-primary `#2C1A10`
 - Fonts: Inter (body) + Space Grotesk (display, `var(--font-display)`)
+- Always ask before making major stack or architecture changes
+
+## Secrets required
+
+- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL (e.g. `https://xxxx.supabase.co`)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon/public key
+- `SUPABASE_SERVICE_ROLE_KEY` — service role key (server-only routes)
 
 ## Gotchas
 
-- Secrets must be stored as plain values only (no `KEY=value` format) in the Replit Secrets panel
-- Required secrets: `VITE_SUPABASE_URL` (e.g. `https://xxxx.supabase.co`) and `VITE_SUPABASE_ANON_KEY`
-- After adding/changing secrets, restart the `artifacts/buildbase: web` workflow for Vite to pick them up
-- The `buildbase` Vite config hard-requires `PORT` and `BASE_PATH` env vars at startup — these are injected automatically by the Replit workflow runner. Running `vite` directly from the shell without those set will throw. Use the registered workflow (`artifacts/buildbase: web`) to start the dev server, not a manual `pnpm dev`.
-- All frontend API calls go through `src/lib/api.ts` (`apiFetch`) which reads the Supabase session token and forwards it as `Authorization: Bearer <token>`. Never use raw `fetch()` for `/api/...` calls — it will get 401 Unauthorized from the backend.
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- `allowedDevOrigins` in `next.config.ts` must include `*.replit.dev` for the preview iframe to work
+- Dynamic route param names must be consistent within a path segment — e.g. all routes under `app/api/admin/programs/[programId]/` must use `programId`, not `id`
+- Secrets are stored as plain values in Replit Secrets (not `KEY=value` format)
+- After adding/changing secrets, restart the `Start application` workflow

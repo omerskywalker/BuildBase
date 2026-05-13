@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Cream background, softly rounded -->
+  <rect width="32" height="32" rx="5" fill="#F5EEE0"/>
+  <!-- Green B (Build) -->
+  <text x="2.5" y="24.5"
+    font-family="system-ui, -apple-system, 'Segoe UI', Arial, sans-serif"
+    font-weight="700"
+    font-size="21"
+    fill="#1C3A2A">B</text>
+  <!-- Orange B (Base) -->
+  <text x="15.5" y="24.5"
+    font-family="system-ui, -apple-system, 'Segoe UI', Arial, sans-serif"
+    font-weight="700"
+    font-size="21"
+    fill="#C84B1A">B</text>
+</svg>
