@@ -26,6 +26,7 @@ import PlaybookPage from "@/pages/coach/PlaybookPage";
 
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminProgramsPage from "@/pages/admin/AdminProgramsPage";
+import RoadmapMonitor from "@/pages/monitor/RoadmapMonitor";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,8 @@ function AppRouter() {
       <Route path="/admin/programs">
         <ProtectedRoute component={AdminProgramsPage} roles={["admin"]} />
       </Route>
+
+      <Route path="/monitor/roadmap" component={RoadmapMonitor} />
 
       <Route>
         <Redirect to="/dashboard" />

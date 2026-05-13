@@ -47,3 +47,11 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Next.js (migration backup dev artifacts)
+.next/
+
+# Environment
+.env
+.env.local
+.env.*.local
