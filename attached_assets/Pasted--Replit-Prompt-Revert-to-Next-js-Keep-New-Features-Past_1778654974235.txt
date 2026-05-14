@@ -1,0 +1,104 @@
+# Replit Prompt: Revert to Next.js, Keep New Features
+
+Paste this into Replit:
+
+---
+
+I need you to revert the architecture back to Next.js App Router and undo the React SPA + Express refactor you did. The original Next.js app is in `.migration-backup/`. The refactor breaks my Vercel deployment (Next.js is zero-config on Vercel, but React SPA + Express requires manual wiring) and I lose server components, SSR, built-in API routes, and middleware.
+
+**Here's what happened:** You refactored my working Next.js 16 app into a React SPA (Vite) + Express backend in `artifacts/`. But the only genuinely new code you wrote was 3 files — everything else was the same logic restructured into a worse architecture for my deployment target (Vercel).
+
+## What to do
+
+### Step 1: Restore Next.js as the main app
+
+Move everything from `.migration-backup/` back to the project root as the primary app structure:
+- `app/` directory (App Router pages and API routes)
+- `components/` directory
+- `lib/` directory (types.ts, constants.ts, utils.ts, supabase/)
+- `proxy.ts` (Next.js 16 middleware)
+- `tests/` directory
+- `package.json` (the Next.js one, not the monorepo one)
+- `tailwind` and `next.config` files
+- `CLAUDE.md`, `AGENTS.md`, `WIKI/`
+
+### Step 2: Keep these new files from `artifacts/` — they have real new logic
+
+**1. QuickLogModal component** — `artifacts/buildbase/src/components/QuickLogModal.tsx` (613 lines)
+- This is a genuinely new feature (muscle group picker → exercise logger → set tracker)
+- Port it to Next.js: replace `apiFetch` with `fetch` using the server client pattern, keep it as a client component with `"use client"` directive
+- Place it in `components/QuickLogModal.tsx`
+
+**2. Quick-log presets** — `artifacts/buildbase/src/lib/quick-log-presets.ts` (190 lines)
+- Exercise library by muscle group for the quick-log feature
+- Copy directly to `lib/quick-log-presets.ts` — no changes needed, it's pure data
+
+**3. Quick-log API route** — `artifacts/api-server/src/routes/quick-log.ts` (90 lines)
+- Convert from Express route to Next.js API route handler
+- Place at `app/api/quick-log/route.ts`
+- Use `createClient` from `lib/supabase/server` instead of Express req/res pattern
+- The logic is: authenticate user, get enrollment, insert session_log with JSON summary in notes field
+
+**4. Schema enhancements** — `supabase/migrations/001_initial_schema.sql` 
+- The current version (in project root, NOT in .migration-backup) has improvements:
+  - `is_my_client()` helper function
+  - `prevent_profile_escalation()` trigger
+  - More granular RLS policies
+- Keep the current `supabase/` directory as-is (schema.sql, migrations/, seed.sql)
+
+### Step 3: Keep these files from the project root (not in migration-backup)
+
+- `.github/workflows/claude-feature.yml` — CI/CD workflow for agent automation
+- `.github/workflows/stamp-done.yml` — auto-stamps roadmap items done
+- `lib/roadmap-data.ts` — roadmap V2 data (24 items across 6 phases)
+- `supabase/` directory — has the enhanced schema
+
+### Step 4: Port the monitor
+
+The roadmap monitor was just built as Express + React. Port it to Next.js:
+
+**API routes** (from `artifacts/api-server/src/routes/monitor.ts`):
+- `app/api/monitor/roadmap/route.ts` — GET handler for live GitHub status
+- `app/api/monitor/kickoff/route.ts` — POST handler to create branch + draft PR + dispatch workflow
+- `app/api/monitor/kickoff-batch/route.ts` — POST handler for parallel batch dispatch
+- `app/api/monitor/fail/route.ts` — POST handler for failure reporting
+- All use `GITHUB_TOKEN`, `ROADMAP_PIN` from env vars
+- PIN auth via `x-roadmap-pin` header or `pin` query param
+
+**Monitor page** (from `artifacts/buildbase/src/pages/monitor/RoadmapMonitor.tsx`):
+- `app/monitor/roadmap/page.tsx` — the roadmap dashboard (can keep as client component with "use client")
+- PIN login screen → roadmap grid with Start/Retry/Start All buttons
+- Polls `/api/monitor/roadmap` every 30s for live status
+
+### Step 5: Delete the artifacts/ directory
+
+Once everything is ported, remove `artifacts/` entirely. The Next.js app should be the single source of truth.
+
+### Step 6: Update the workflow
+
+In `.github/workflows/claude-feature.yml`, update the agent prompt to reference Next.js conventions:
+- Change "This is a pnpm monorepo with a React SPA frontend and Express API backend" to "This is a Next.js 16 app with App Router"
+- Change build commands from `pnpm run typecheck && pnpm run build` to `pnpm tsc --noEmit && pnpm build`
+- Change `artifacts/buildbase/src/` paths to `components/`, `app/`, `lib/`
+- Change `artifacts/api-server/src/routes/` paths to `app/api/`
+
+## Critical constraints
+
+- This is **Next.js 16** — `proxy.ts` not `middleware.ts`, async `params`/`cookies`/`headers`
+- **Tailwind CSS v4** — CSS-first config in `globals.css`, `@theme {}` block, no tailwind.config.ts
+- **shadcn v4** — style: base-nova, components in `components/ui/`
+- Keep all existing tests in `tests/`
+- Keep the design tokens (warm parchment theme) — they're in `globals.css`
+- Do NOT modify `supabase/schema.sql` or migration files
+- Do NOT modify `lib/roadmap-data.ts`
+- Do NOT create a new Express server — use Next.js API routes
+
+## Verification
+
+After the revert:
+1. `pnpm tsc --noEmit` should pass
+2. `pnpm build` should succeed
+3. `pnpm test` should pass
+4. The app should run with `pnpm dev` on localhost:3000
+5. `/monitor/roadmap` should show the roadmap dashboard
+6. Quick-log feature should work from the dashboard
