@@ -106,35 +106,40 @@ jobs:
 
             ## Project Architecture (READ THIS FIRST)
 
-            This is a **pnpm monorepo** with a React SPA frontend and Express API backend:
+            This is a **Next.js 16 App Router** application (NOT a monorepo, NOT React SPA + Express):
 
             ```
-            artifacts/buildbase/    → React SPA (Vite, Tailwind, shadcn, Recharts)
-            artifacts/api-server/   → Express API server (TypeScript)
-            lib/                    → Shared packages (roadmap-data, db, api-spec)
+            app/                    → Next.js App Router pages and API routes
+            components/             → React components (ui/ = shadcn, feature components)
+            lib/                    → Utilities, types, Supabase clients, constants
             supabase/               → Schema, migrations, seed data
+            proxy.ts                → Auth guard (NOT middleware.ts — Next.js 16 uses proxy.ts)
             ```
 
-            **NOT a Next.js app.** No App Router, no server components, no middleware.ts/proxy.ts.
+            ### Key conventions (Next.js 16)
+            - `params` and `searchParams` are **async** — always `await params` in page/layout components
+            - `cookies()` and `headers()` are **async** — always `await cookies()` in server components
+            - Auth guard is `proxy.ts` (exports `proxy` function), NOT `middleware.ts`
 
             ### Key files
-            - `artifacts/buildbase/src/lib/api.ts` — apiFetch wrapper (auth token forwarding)
-            - `artifacts/buildbase/src/lib/types.ts` — shared TypeScript types
-            - `artifacts/buildbase/src/lib/auth-context.tsx` — React auth context
-            - `artifacts/api-server/src/app.ts` — Express app setup
-            - `artifacts/api-server/src/lib/supabase.ts` — Supabase client + getAuthUser helper
-            - `supabase/schema.sql` — full database schema (14 tables, RLS on all)
+            - `lib/supabase/client.ts` — Browser Supabase client (Client Components)
+            - `lib/supabase/server.ts` — Server Supabase client (Server Components, Route Handlers)
+            - `lib/types.ts` — All shared TypeScript types
+            - `lib/utils.ts` — cn(), getFormBadge(), getDefaultWeight(), formatWeight(), hoursSince()
+            - `lib/constants.ts` — EFFORT_LABELS, SORENESS_LABELS, shared constants
+            - `supabase/schema.sql` — Full database schema (14 tables, RLS on all)
 
             ### RBAC
             - **admin** — full access, creates users/coaches, edits programs
             - **coach** — sees own clients, sends notes, marks form assessments
-            - **user** — sees own data only
+            - **user** — sees own data only, NEVER sees form scores (coach_form_assessments is coach-only)
 
             ### Design tokens
+            - Tailwind CSS v4 (CSS-first config, `@theme {}` block — NO tailwind.config.ts)
             - bg-base: #EDE4D3, bg-surface: #E5DAC8, bg-elevated: #E8DECE
             - content-primary: #2C1A10, content-secondary: #6B5A48
             - brand: #1C3A2A (forest green), accent: #C84B1A (burnt orange)
-            - UI library: shadcn/ui, lucide-react icons, sonner toasts, recharts
+            - UI library: shadcn/ui (style: base-nova), lucide-react icons, sonner toasts, recharts
 
             ## Implementation Steps
 
@@ -145,6 +150,7 @@ jobs:
             5. Write tests for any new functionality that involves logic, API calls, or user interaction.
             6. Run `pnpm run typecheck` and fix all type errors.
             7. Run `pnpm run build` and verify it succeeds.
+            8. Run `pnpm run test` and ensure all tests pass.
 
             ## Item Description
 
@@ -156,8 +162,9 @@ jobs:
             - Do NOT create a new PR — use the existing draft PR if one exists.
             - Do NOT modify `lib/roadmap-data.ts` — the workflow manages roadmap status.
             - Use `sonner` toast for user feedback (already installed).
-            - Use existing `apiFetch` or `apiFetchJson` from `artifacts/buildbase/src/lib/api.ts`.
+            - Use `createClient` from `lib/supabase/client.ts` (browser) or `lib/supabase/server.ts` (server).
             - Follow existing patterns in the codebase — don't introduce new libraries without justification.
+            - Read `CLAUDE.md` and `AGENTS.md` at repo root for full conventions and gotchas.
 
       # ── Phase 3: Self-healing CI ─────────────────────────────────────────
       - name: Type check
