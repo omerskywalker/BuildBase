@@ -458,6 +458,445 @@ export const ROADMAP: RoadmapBatch[] = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // ROADMAP V2 — Production Readiness (Issues #97–#120, Orchestrator #121)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // ── Phase 9: Stop Lying to Users ──────────────────────────────────────────
+  {
+    number: 9,
+    title: "Stop Lying to Users",
+    summary: "Fix critical bugs that silently lose workout data and show false success messages.",
+    parallelizable: false,
+    items: [
+      {
+        id: "9-1",
+        title: "Fix quick-log persistence — session_logs NOT NULL constraint",
+        description: [
+          "session_logs.week_number and session_number are NOT NULL but the quick-log API sends neither.",
+          "Add a migration: ALTER TABLE session_logs ALTER COLUMN week_number SET DEFAULT 0; same for session_number.",
+          "Verify the quick-log route (app/api/quick-log/route.ts) inserts successfully after the migration.",
+          "Add a test that POSTs to /api/quick-log and asserts the session_log row exists with week_number=0.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/quick-log-persistence",
+        issue: 97,
+        scope: {
+          owns: ["supabase/migrations/004_quick_log_defaults.sql", "app/api/quick-log/route.ts"],
+          avoid: ["components/QuickLogModal.tsx"],
+        },
+      },
+      {
+        id: "9-2",
+        title: "Fix QuickLogModal false success on save failure",
+        description: [
+          "QuickLogModal.tsx catch block sets setSaved(true) even on failure — user sees 'Workout Saved!' when nothing was recorded.",
+          "Also the fetch call never checks response.ok.",
+          "Fix: check response.ok after fetch, throw on non-2xx. In catch block, show toast.error() instead of setSaved(true). Keep modal open for retry.",
+          "Depends on #97 being merged first (otherwise all quick-logs fail).",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/quick-log-false-success",
+        issue: 98,
+        scope: {
+          owns: ["components/QuickLogModal.tsx"],
+          avoid: ["app/api/quick-log/route.ts"],
+        },
+      },
+      {
+        id: "9-3",
+        title: "Add apiFetchJson wrapper — surface API failures as toasts",
+        description: [
+          "Many client components call fetch() without checking response.ok — failures are silently swallowed.",
+          "Create a utility that checks .ok, parses JSON, and throws a typed error on failure.",
+          "Migrate all callers that currently ignore error responses.",
+          "Each migrated caller should catch and show toast.error().",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/api-error-handling",
+        issue: 99,
+        scope: {
+          owns: ["lib/api-helpers.ts"],
+          avoid: ["app/api/"],
+        },
+      },
+    ],
+  },
+
+  // ── Phase 10: Backend Hardening ───────────────────────────────────────────
+  {
+    number: 10,
+    title: "Backend Hardening",
+    summary: "Stop leaking errors, validate inputs, and fix silent no-ops in API routes.",
+    parallelizable: true,
+    items: [
+      {
+        id: "10-1",
+        title: "Stop leaking database error messages to clients",
+        description: [
+          "Multiple API route handlers return raw Supabase error.message in responses.",
+          "This exposes table names, column names, and constraint names to clients.",
+          "Replace all error.message responses with generic messages.",
+          "Log the actual error server-side using console.error with context.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/sanitize-error-responses",
+        issue: 100,
+        scope: {
+          owns: ["app/api/sessions/"],
+          avoid: ["app/api/admin/", "app/api/coach/"],
+        },
+      },
+      {
+        id: "10-2",
+        title: "Verify update row counts — silent no-ops on sessions",
+        description: [
+          "Session mutation endpoints check for Supabase errors but don't verify rows were affected.",
+          "If target row doesn't exist (wrong ID, RLS blocks), response is { ok: true } — silent no-op.",
+          "Fix: use .select('id').single() after .update() and check returned data.",
+          "Return 404 if no rows affected.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/verify-update-row-counts",
+        issue: 101,
+        scope: {
+          owns: ["app/api/sessions/"],
+          avoid: ["app/api/admin/"],
+        },
+      },
+      {
+        id: "10-3",
+        title: "Add RLS INSERT policy for coach_form_assessments",
+        description: [
+          "Missing explicit INSERT WITH CHECK policy on coach_form_assessments.",
+          "Add migration: CREATE POLICY form_assessments_coach_insert ON coach_form_assessments FOR INSERT WITH CHECK (coach_id = auth.uid());",
+        ].join("\n"),
+        status: "not-started",
+        tests: false,
+        branch: "fix/form-assessment-rls",
+        issue: 120,
+        scope: {
+          owns: ["supabase/migrations/005_form_assessment_rls.sql"],
+          avoid: [],
+        },
+      },
+      {
+        id: "10-4",
+        title: "Validate input on admin exercise/user creation routes",
+        description: [
+          "No length limits on text fields, no range validation on numbers, no URL format validation.",
+          "Add Zod validation to admin API routes for exercise/user creation.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/input-validation",
+        issue: 103,
+        scope: {
+          owns: ["app/api/admin/"],
+          avoid: ["app/api/sessions/", "app/api/coach/"],
+        },
+      },
+    ],
+  },
+
+  // ── Phase 11: Data Quality & Resilience ───────────────────────────────────
+  {
+    number: 11,
+    title: "Data Quality & Resilience",
+    summary: "Seed data fixes, transaction safety, and React error boundaries.",
+    parallelizable: true,
+    items: [
+      {
+        id: "11-1",
+        title: "Fix seed data: weights and plank reps",
+        description: [
+          "Female post-baseline weights set to 0 — athletes who complete baseline would see weights drop to 0.",
+          "Plank has reps_default=0 (time hold), UI shows '0 reps'.",
+          "Fix all weight values for logical progression across phases.",
+        ].join("\n"),
+        status: "not-started",
+        tests: false,
+        branch: "fix/seed-data-weights",
+        issue: 117,
+        scope: {
+          owns: ["supabase/seed.sql"],
+          avoid: [],
+        },
+      },
+      {
+        id: "11-2",
+        title: "Exercise reorder: use transaction instead of Promise.all",
+        description: [
+          "Admin exercise reorder uses Promise.all with individual updates — partial state if one fails.",
+          "Fix: use a Supabase RPC function that wraps the reorder in a database transaction.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "fix/exercise-reorder-transaction",
+        issue: 116,
+        scope: {
+          owns: ["app/api/admin/programs/"],
+          avoid: [],
+        },
+      },
+      {
+        id: "11-3",
+        title: "Add error boundaries to React app",
+        description: [
+          "No error boundary components exist. Unhandled errors crash the page (white screen).",
+          "Add root-level ErrorBoundary in layout.tsx and per-page error boundaries.",
+          "Show 'Something went wrong' UI with retry button.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/error-boundaries",
+        issue: 119,
+        scope: {
+          owns: ["components/ErrorBoundary.tsx", "app/error.tsx", "app/(app)/error.tsx"],
+          avoid: [],
+        },
+      },
+    ],
+  },
+
+  // ── Phase 12: Core Loop Features ──────────────────────────────────────────
+  {
+    number: 12,
+    title: "Core Loop Features",
+    summary: "Program enrollment, post-onboarding flow, database-backed playbook, session history, and exercise videos.",
+    parallelizable: true,
+    items: [
+      {
+        id: "12-1",
+        title: "Program enrollment UI — Assign Program button",
+        description: [
+          "Admins must touch the database to enroll athletes into programs.",
+          "Add 'Assign Program' button to admin users page with program dropdown.",
+          "New endpoint: POST /api/admin/enroll { userId, programId }.",
+          "Deactivates current enrollment, creates new user_enrollments row.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/program-enrollment-ui",
+        issue: 106,
+        scope: {
+          owns: ["app/(admin)/users/", "app/api/admin/enroll/"],
+          avoid: ["app/(app)/dashboard/", "app/onboarding/"],
+        },
+      },
+      {
+        id: "12-2",
+        title: "Post-onboarding flow — auto-enroll or prompt",
+        description: [
+          "After onboarding, athletes hit a blank dashboard with no sessions.",
+          "Show 'Getting Started' card if no active enrollment.",
+          "Handle the no-enrollment state gracefully.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/post-onboarding-enrollment",
+        issue: 107,
+        scope: {
+          owns: ["app/(app)/dashboard/", "app/onboarding/"],
+          avoid: ["app/(admin)/"],
+        },
+      },
+      {
+        id: "12-3",
+        title: "Make playbook database-backed",
+        description: [
+          "PlaybookPage has a static PLAYBOOK constant. Coaches can't add/edit without code deploy.",
+          "New table: playbook_entries. RLS: coaches/admins CRUD, athletes SELECT.",
+          "API: GET/POST/PUT/DELETE /api/coach/playbook.",
+          "Update PlaybookPage to fetch from API. Add create/edit UI for coaches.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/playbook-database",
+        issue: 108,
+        scope: {
+          owns: ["app/(coach)/playbook/", "app/api/coach/playbook/", "supabase/migrations/006_playbook_entries.sql"],
+          avoid: ["app/(app)/sessions/", "app/(admin)/"],
+        },
+      },
+      {
+        id: "12-4",
+        title: "Session history view",
+        description: [
+          "Athletes can see charts but can't browse past workouts.",
+          "New page: session history in reverse chronological order with sets/reps/weight.",
+          "Backend: GET /api/sessions/history?page=1&limit=20 (paginated).",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/session-history",
+        issue: 110,
+        scope: {
+          owns: ["app/(app)/sessions/history/", "app/api/sessions/history/"],
+          avoid: ["app/(app)/sessions/page.tsx", "app/(app)/sessions/SessionCard.tsx"],
+        },
+      },
+      {
+        id: "12-5",
+        title: "Render exercise video/demo links in session cards",
+        description: [
+          "video_url column exists on exercises but nothing renders it.",
+          "If exercise has video_url, render a video icon/link in SessionCard.",
+          "Add sample video URLs to seed data.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/exercise-video-links",
+        issue: 109,
+        scope: {
+          owns: ["app/(app)/sessions/SessionCard.tsx", "app/(app)/sessions/SessionDetailModal.tsx"],
+          avoid: ["app/(app)/sessions/page.tsx"],
+        },
+      },
+    ],
+  },
+
+  // ── Phase 13: Code Cleanup ────────────────────────────────────────────────
+  {
+    number: 13,
+    title: "Code Cleanup",
+    summary: "Decompose oversized components, remove unused packages, add database indexes.",
+    parallelizable: true,
+    items: [
+      {
+        id: "13-1",
+        title: "Decompose QuickLogModal (600+ lines)",
+        description: [
+          "QuickLogModal.tsx is 600+ lines with step state machine, muscle group selector, exercise cards,",
+          "set row logic, and save orchestration all in one file.",
+          "Split into focused components in components/quick-log/ directory.",
+          "Must preserve all existing functionality — pure refactor.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "refactor/quick-log-decompose",
+        issue: 104,
+        scope: {
+          owns: ["components/QuickLogModal.tsx", "components/quick-log/"],
+          avoid: [],
+        },
+      },
+      {
+        id: "13-2",
+        title: "Remove unused Drizzle / generated API client packages",
+        description: [
+          "lib/db/src/schema/index.ts is empty. lib/api-client-react only covers health check.",
+          "These packages cause typecheck failures and serve no purpose.",
+          "Remove lib/db/, lib/api-client-react/, lib/api-zod/, lib/api-spec/.",
+        ].join("\n"),
+        status: "not-started",
+        tests: false,
+        branch: "cleanup/drizzle-decision",
+        issue: 118,
+        scope: {
+          owns: ["lib/db/", "lib/api-client-react/", "lib/api-zod/", "lib/api-spec/"],
+          avoid: [],
+        },
+      },
+      {
+        id: "13-3",
+        title: "Add missing database indexes",
+        description: [
+          "Missing FK indexes and compound indexes for common query patterns.",
+          "Add migration with indexes on template_exercises, set_logs, personal_records, user_enrollments, session_logs.",
+        ].join("\n"),
+        status: "not-started",
+        tests: false,
+        branch: "perf/add-database-indexes",
+        issue: 105,
+        scope: {
+          owns: ["supabase/migrations/007_add_indexes.sql"],
+          avoid: [],
+        },
+      },
+    ],
+  },
+
+  // ── Phase 14: Platform Feel ───────────────────────────────────────────────
+  {
+    number: 14,
+    title: "Platform Feel",
+    summary: "Email notifications, admin analytics, CI/CD, and Stripe.",
+    parallelizable: true,
+    items: [
+      {
+        id: "14-1",
+        title: "Coach note email notifications",
+        description: [
+          "Athletes only see notes if they open the app.",
+          "Supabase Edge Function triggered on coach_notes INSERT.",
+          "Send via Resend/SendGrid. Rate limit: 1 email per coach per athlete per hour.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/coach-note-emails",
+        issue: 111,
+        scope: {
+          owns: ["supabase/functions/notify-coach-note/"],
+          avoid: [],
+        },
+      },
+      {
+        id: "14-2",
+        title: "Admin analytics dashboard",
+        description: [
+          "New admin page: total active athletes, weekly completion rate,",
+          "coach workload, new signups. Backend aggregation endpoint.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/admin-analytics",
+        issue: 112,
+        scope: {
+          owns: ["app/(admin)/analytics/", "app/api/admin/analytics/"],
+          avoid: [],
+        },
+      },
+      {
+        id: "14-3",
+        title: "CI/CD pipeline",
+        description: [
+          "Create .github/workflows/ci.yml: typecheck + build + test on push to main and PRs.",
+          "Auto-deploy to Vercel on merge to main.",
+        ].join("\n"),
+        status: "not-started",
+        tests: false,
+        branch: "infra/ci-cd-pipeline",
+        issue: 113,
+        scope: {
+          owns: [".github/workflows/ci.yml"],
+          avoid: [".github/workflows/claude-feature.yml"],
+        },
+      },
+      {
+        id: "14-4",
+        title: "Stripe payments — subscription billing",
+        description: [
+          "Stripe integration for recurring subscriptions.",
+          "Webhook handler, billing portal, plan management.",
+        ].join("\n"),
+        status: "not-started",
+        tests: true,
+        branch: "feat/stripe-payments",
+        issue: 114,
+        scope: {
+          owns: ["app/api/billing/", "app/(app)/billing/"],
+          avoid: [],
+        },
+      },
+    ],
+  },
 ];
 
 // ── Progress helpers ───────────────────────────────────────────────────────────
