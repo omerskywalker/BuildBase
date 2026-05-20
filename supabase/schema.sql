@@ -5,6 +5,7 @@
 --   001_initial_schema.sql
 --   002_add_form_assessment_unique_constraint.sql
 --   003_enrollment_self_insert.sql
+--   004_quick_log_defaults.sql
 --
 -- Use this in the Supabase SQL Editor to set up a fresh database.
 -- For incremental updates, run the individual files in supabase/migrations/.
@@ -134,8 +135,8 @@ CREATE TABLE session_logs (
   user_id               uuid REFERENCES profiles(id) ON DELETE CASCADE,
   workout_template_id   uuid REFERENCES workout_templates(id),
   enrollment_id         uuid REFERENCES user_enrollments(id),
-  week_number           int NOT NULL,
-  session_number        int NOT NULL,
+  week_number           int NOT NULL DEFAULT 0,
+  session_number        int NOT NULL DEFAULT 0,
   started_at            timestamptz NULL,
   completed_at          timestamptz NULL,
   is_complete           boolean DEFAULT false,
