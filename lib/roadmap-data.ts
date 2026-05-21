@@ -479,7 +479,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Verify the quick-log route (app/api/quick-log/route.ts) inserts successfully after the migration.",
           "Add a test that POSTs to /api/quick-log and asserts the session_log row exists with week_number=0.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "fix/quick-log-persistence",
         issue: 97,
