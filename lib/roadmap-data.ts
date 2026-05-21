@@ -497,7 +497,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Fix: check response.ok after fetch, throw on non-2xx. In catch block, show toast.error() instead of setSaved(true). Keep modal open for retry.",
           "Depends on #97 being merged first (otherwise all quick-logs fail).",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "fix/quick-log-false-success",
         issue: 98,
