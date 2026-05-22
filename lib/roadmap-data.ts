@@ -543,7 +543,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Replace all error.message responses with generic messages.",
           "Log the actual error server-side using console.error with context.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: true,
         branch: "fix/sanitize-error-responses",
         issue: 100,

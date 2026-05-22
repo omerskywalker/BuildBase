@@ -30,7 +30,8 @@ export async function POST(
     if (error.code === "PGRST116") {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[sessions/soreness/POST]", error);
+    return NextResponse.json({ error: "Failed to save soreness score" }, { status: 500 });
   }
   if (!data) return NextResponse.json({ error: "Session not found" }, { status: 404 });
   return NextResponse.json({ ok: true });

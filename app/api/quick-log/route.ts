@@ -77,8 +77,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (sessionError || !sessionLog) {
+      console.error("[quick-log/POST]", sessionError);
       return NextResponse.json(
-        { error: sessionError?.message ?? "Failed to save session" },
+        { error: "Failed to save session" },
         { status: 500 }
       );
     }
