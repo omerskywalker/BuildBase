@@ -5,6 +5,8 @@ import { Check } from "lucide-react";
 import WeightControl from "./WeightControl";
 import { TemplateExercise } from "@/lib/types";
 import { getDefaultWeight } from "@/lib/utils";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 interface LoggedSet {
   setLogId: string;
@@ -40,7 +42,7 @@ export default function SetRow({
     if (isLogging || isLogged) return;
     setIsLogging(true);
     try {
-      const res = await fetch(`/api/sessions/${sessionLogId}/sets`, {
+      await apiFetchJson(`/api/sessions/${sessionLogId}/sets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -51,9 +53,9 @@ export default function SetRow({
           reps_completed: reps,
         }),
       });
-      if (res.ok) {
-        setIsLogged(true);
-      }
+      setIsLogged(true);
+    } catch {
+      toast.error("Failed to log set");
     } finally {
       setIsLogging(false);
     }

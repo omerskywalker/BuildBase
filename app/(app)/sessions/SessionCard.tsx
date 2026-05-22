@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { timeAgo, getFormBadge } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2 } from "lucide-react";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 import SetRow from "./SetRow";
 import EffortPrompt from "./EffortPrompt";
 import SorenessPrompt from "./SorenessPrompt";
@@ -57,14 +59,16 @@ export default function SessionCard({
   const fetchExercises = useCallback(async (logId: string) => {
     setLoadingExercises(true);
     try {
-      const res = await fetch(`/api/sessions/${logId}/exercises`);
-      if (!res.ok) return;
-      const data = await res.json() as { exercises: TemplateExercise[]; setLogs: SetLog[] };
+      const data = await apiFetchJson<{ exercises: TemplateExercise[]; setLogs: SetLog[] }>(
+        `/api/sessions/${logId}/exercises`,
+      );
       const merged: ExerciseWithSets[] = data.exercises.map((te) => ({
         templateExercise: te,
         setLogs: data.setLogs.filter((sl) => sl.template_exercise_id === te.id),
       }));
       setExercises(merged);
+    } catch {
+      toast.error("Failed to load exercises");
     } finally {
       setLoadingExercises(false);
     }
@@ -83,7 +87,7 @@ export default function SessionCard({
     try {
       if (isVirtual && !realSessionId) {
         // Create the session_log row first
-        const res = await fetch("/api/sessions", {
+        const newLog = await apiFetchJson<SessionLog>("/api/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -93,16 +97,16 @@ export default function SessionCard({
             session_number: session.session_number,
           }),
         });
-        if (!res.ok) return;
-        const newLog = await res.json() as SessionLog;
         setRealSessionId(newLog.id);
         setIsExpanded(true);
         await fetchExercises(newLog.id);
       } else if (sessionLogId) {
-        await fetch(`/api/sessions/${sessionLogId}/start`, { method: "POST" });
+        await apiFetchJson(`/api/sessions/${sessionLogId}/start`, { method: "POST" });
         setIsExpanded(true);
         await fetchExercises(sessionLogId);
       }
+    } catch {
+      toast.error("Failed to start session");
     } finally {
       setIsStarting(false);
     }
@@ -112,9 +116,11 @@ export default function SessionCard({
     if (!sessionLogId || isCompleting) return;
     setIsCompleting(true);
     try {
-      await fetch(`/api/sessions/${sessionLogId}/complete`, { method: "POST" });
+      await apiFetchJson(`/api/sessions/${sessionLogId}/complete`, { method: "POST" });
       setLocalIsComplete(true);
       setShowEffortPrompt(true);
+    } catch {
+      toast.error("Failed to complete session");
     } finally {
       setIsCompleting(false);
     }

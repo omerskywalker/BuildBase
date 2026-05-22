@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { formatWeight, timeAgo } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 const EFFORT_LABELS: Record<number, string> = {
   1: "🔴 Easy",
@@ -37,16 +39,20 @@ export default function SessionDetailModal({
     if (!open || !session.id || session.id.startsWith("virtual-")) return;
 
     setLoading(true);
-    fetch(`/api/sessions/${session.id}/exercises`)
-      .then((r) => r.json())
-      .then((data: { exercises: TemplateExercise[]; setLogs: SetLog[] }) => {
+    apiFetchJson<{ exercises: TemplateExercise[]; setLogs: SetLog[] }>(
+      `/api/sessions/${session.id}/exercises`,
+    )
+      .then((data) => {
         const merged: ExerciseDetail[] = data.exercises.map((te) => ({
           templateExercise: te,
           setLogs: data.setLogs.filter((sl) => sl.template_exercise_id === te.id),
         }));
         setExercises(merged);
       })
-      .catch(() => setExercises([]))
+      .catch(() => {
+        toast.error("Failed to load session details");
+        setExercises([]);
+      })
       .finally(() => setLoading(false));
   }, [open, session.id]);
 

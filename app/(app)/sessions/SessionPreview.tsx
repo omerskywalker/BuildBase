@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { SessionLog, WorkoutTemplate, TemplateExercise } from "@/lib/types";
 import { formatWeight, getDefaultWeight } from "@/lib/utils";
 import { Eye, Loader2 } from "lucide-react";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 interface SessionPreviewProps {
   session: SessionLog & { template?: WorkoutTemplate };
@@ -28,12 +30,16 @@ export default function SessionPreview({
     if (!open || !session.workout_template_id) return;
 
     setLoading(true);
-    fetch(`/api/templates/${session.workout_template_id}/exercises`)
-      .then((r) => r.json())
-      .then((data: { exercises: TemplateExercise[] }) => {
+    apiFetchJson<{ exercises: TemplateExercise[] }>(
+      `/api/templates/${session.workout_template_id}/exercises`,
+    )
+      .then((data) => {
         setExercises(data.exercises ?? []);
       })
-      .catch(() => setExercises([]))
+      .catch(() => {
+        toast.error("Failed to load session preview");
+        setExercises([]);
+      })
       .finally(() => setLoading(false));
   }, [open, session.workout_template_id]);
 
