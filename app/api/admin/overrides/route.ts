@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { upsertOverrideSchema, deleteOverrideSchema } from "@/lib/validations/admin";
 
 // GET /api/admin/overrides?user_id=<uuid> - Get all overrides for a user
 export async function GET(request: Request) {
@@ -76,20 +77,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { 
-      user_id, 
-      template_exercise_id, 
-      sets_override, 
-      reps_override, 
-      weight_override, 
-      notes 
-    } = body;
-
-    if (!user_id || !template_exercise_id) {
-      return NextResponse.json({ 
-        error: "user_id and template_exercise_id are required" 
-      }, { status: 400 });
+    const parsed = upsertOverrideSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const {
+      user_id,
+      template_exercise_id,
+      sets_override,
+      reps_override,
+      weight_override,
+      notes
+    } = parsed.data;
 
     // Check if override already exists
     const { data: existingOverride } = await supabase
@@ -183,11 +183,12 @@ export async function DELETE(request: Request) {
     }
 
     const body = await request.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "Override ID is required" }, { status: 400 });
+    const parsed = deleteOverrideSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { id } = parsed.data;
 
     const { error } = await supabase
       .from("user_exercise_overrides")

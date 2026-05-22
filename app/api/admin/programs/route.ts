@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { updateProgramSchema } from "@/lib/validations/admin";
 
 export async function GET() {
   try {
@@ -63,11 +64,12 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, name, description, total_phases, total_weeks } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "Program ID is required" }, { status: 400 });
+    const parsed = updateProgramSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { id, name, description, total_phases, total_weeks } = parsed.data;
 
     // Update program
     const updateData: any = {};

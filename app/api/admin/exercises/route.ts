@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { Exercise } from "@/lib/types";
+import { createExerciseSchema, updateExerciseSchema, deleteExerciseSchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
   try {
@@ -80,19 +81,20 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { 
-      name, 
-      muscle_group, 
-      equipment, 
-      instructions, 
-      coaching_cues, 
-      video_url,
-      is_active = true 
-    } = body;
-
-    if (!name?.trim()) {
-      return NextResponse.json({ error: "Exercise name is required" }, { status: 400 });
+    const parsed = createExerciseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const {
+      name,
+      muscle_group,
+      equipment,
+      instructions,
+      coaching_cues,
+      video_url,
+      is_active = true
+    } = parsed.data;
 
     // Check if exercise with same name already exists
     const { data: existing } = await supabase
@@ -153,24 +155,21 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { 
-      id, 
-      name, 
-      muscle_group, 
-      equipment, 
-      instructions, 
-      coaching_cues, 
-      video_url, 
-      is_active 
-    } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "Exercise ID is required" }, { status: 400 });
+    const parsed = updateExerciseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    if (!name?.trim()) {
-      return NextResponse.json({ error: "Exercise name is required" }, { status: 400 });
-    }
+    const {
+      id,
+      name,
+      muscle_group,
+      equipment,
+      instructions,
+      coaching_cues,
+      video_url,
+      is_active
+    } = parsed.data;
 
     // Check if another exercise with same name already exists (excluding current one)
     const { data: existing } = await supabase
@@ -237,11 +236,12 @@ export async function DELETE(request: Request) {
     }
 
     const body = await request.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "Exercise ID is required" }, { status: 400 });
+    const parsed = deleteExerciseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { id } = parsed.data;
 
     // Check if exercise is used in any template exercises
     const { data: usageCount, error: countError } = await supabase

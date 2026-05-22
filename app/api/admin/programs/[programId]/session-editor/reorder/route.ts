@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/rbac';
 import { NextRequest, NextResponse } from 'next/server';
+import { reorderExercisesSchema } from '@/lib/validations/admin';
 
 export async function POST(
   request: NextRequest,
@@ -8,13 +9,15 @@ export async function POST(
 ) {
   try {
     await requireRole(['admin']);
-    
-    const { programId } = await params;
-    const { sessionId, exercises } = await request.json();
 
-    if (!sessionId || !Array.isArray(exercises)) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const { programId } = await params;
+    const body = await request.json();
+    const parsed = reorderExercisesSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
+
+    const { sessionId, exercises } = parsed.data;
 
     const supabase = await createClient();
 

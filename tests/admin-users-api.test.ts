@@ -63,19 +63,19 @@ describe("Admin Users API", () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } } });
       mockSupabase.single
         .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
-        .mockResolvedValueOnce({ data: { id: "u1", role: "coach" }, error: null });
+        .mockResolvedValueOnce({ data: { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", role: "coach" }, error: null });
 
       const request = new Request("http://localhost", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: "u1", role: "coach" }),
+        body: JSON.stringify({ id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", role: "coach" }),
       });
 
       const response = await PUT(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.id).toBe("u1");
+      expect(data.id).toBe("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
     });
 
     it("should return 400 for missing user ID", async () => {
@@ -106,7 +106,7 @@ describe("Admin Users API", () => {
       const request = new Request("http://localhost", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: "u1" }),
+        body: JSON.stringify({ id: "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22" }),
       });
 
       const response = await DELETE(request);
@@ -117,13 +117,14 @@ describe("Admin Users API", () => {
     });
 
     it("should prevent self-deletion", async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } } });
+      const selfId = "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33";
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: selfId } } });
       mockSupabase.single.mockResolvedValueOnce({ data: { role: "admin" }, error: null });
 
       const request = new Request("http://localhost", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: "admin-1" }),
+        body: JSON.stringify({ id: selfId }),
       });
 
       const response = await DELETE(request);
@@ -145,7 +146,7 @@ describe("Admin Users API", () => {
       const response = await DELETE(request);
       expect(response.status).toBe(400);
       const data = await response.json();
-      expect(data.error).toBe("User ID is required");
+      expect(data.error).toBe("Invalid input");
     });
   });
 });

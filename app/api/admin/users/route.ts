@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { updateUserSchema, deleteUserSchema } from "@/lib/validations/admin";
 
 export async function GET() {
   try {
@@ -63,11 +64,12 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, role, coach_id, template_tier, full_name, gender } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    const parsed = updateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { id, role, coach_id, template_tier, full_name, gender } = parsed.data;
 
     // Update user profile
     const updateData: any = {};
@@ -117,11 +119,12 @@ export async function DELETE(request: Request) {
     }
 
     const body = await request.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    const parsed = deleteUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { id } = parsed.data;
 
     // Cannot delete yourself
     if (id === user.id) {
