@@ -483,3 +483,20 @@ RETURNS TABLE (exercise_id uuid) AS $$
     AND status = 'locked_in'
     AND exercise_id = ANY(p_exercise_ids);
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Reorder exercises atomically in a single transaction.
+-- Accepts a JSONB array of {id, order_index} objects and updates each
+-- template_exercises row. If any update fails, the entire batch rolls back.
+CREATE OR REPLACE FUNCTION reorder_exercises(exercise_orders jsonb)
+RETURNS void AS $$
+DECLARE
+  item jsonb;
+BEGIN
+  FOR item IN SELECT * FROM jsonb_array_elements(exercise_orders)
+  LOOP
+    UPDATE template_exercises
+    SET order_index = (item->>'order_index')::int
+    WHERE id = (item->>'id')::uuid;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
