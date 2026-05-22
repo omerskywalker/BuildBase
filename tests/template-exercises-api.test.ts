@@ -88,7 +88,7 @@ describe('/api/admin/exercises/template-exercises', () => {
         order: vi.fn().mockResolvedValue({
           data: [
             {
-              id: 'template-exercise-1',
+              id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
               exercise_id: 'exercise-1',
               workout_template_id: 'workout-1',
               sets_default: 3,
@@ -246,7 +246,7 @@ describe('/api/admin/exercises/template-exercises', () => {
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: {
-            id: 'template-exercise-1',
+            id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
             sets_default: 4,
             reps_default: 8,
             weight_default_f: 105,
@@ -274,7 +274,7 @@ describe('/api/admin/exercises/template-exercises', () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: 'template-exercise-1',
+          id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           sets_default: 4,
           reps_default: 8,
           weight_default_f: 105,
@@ -338,7 +338,7 @@ describe('/api/admin/exercises/template-exercises', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Template exercise ID is required');
+      expect(data.error).toBe('Invalid input');
     });
 
     it('should handle template exercise not found', async () => {
@@ -374,7 +374,7 @@ describe('/api/admin/exercises/template-exercises', () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: 'non-existent-id',
+          id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
           sets_default: 3
         })
       });
@@ -438,7 +438,7 @@ describe('/api/admin/exercises/template-exercises', () => {
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: {
-            id: 'template-exercise-1',
+            id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
             is_bodyweight: true,
             weight_default_f: 0,
             weight_default_m: 0,
@@ -465,7 +465,7 @@ describe('/api/admin/exercises/template-exercises', () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: 'template-exercise-1',
+          id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           is_bodyweight: true,
           weight_default_f: 0,
           weight_default_m: 0

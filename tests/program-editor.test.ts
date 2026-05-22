@@ -121,7 +121,7 @@ describe("Program Editor API", () => {
 
     it("should update program when user is admin", async () => {
       const updateData = {
-        id: "prog-1",
+        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         name: "Updated Program",
         description: "Updated description",
         total_phases: 4,
@@ -156,7 +156,7 @@ describe("Program Editor API", () => {
       const response = await programsPUT(request);
       const data = await response.json();
 
-      expect(data.error).toBe("Program ID is required");
+      expect(data.error).toBe("Invalid input");
       expect(response.status).toBe(400);
     });
   });
@@ -214,8 +214,9 @@ describe("Program Editor API", () => {
     const mockParams = { params: Promise.resolve({ programId: "prog-1" }) };
 
     it("should update phase successfully", async () => {
+      const phaseUuid = "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22";
       const updateData = {
-        phaseId: "phase-1",
+        phaseId: phaseUuid,
         name: "Updated Phase",
         subtitle: "Updated subtitle",
         week_start: 1,
@@ -228,14 +229,14 @@ describe("Program Editor API", () => {
       });
       mockSupabase.single
         .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
-        .mockResolvedValueOnce({ data: { id: "phase-1", ...updateData }, error: null });
+        .mockResolvedValueOnce({ data: { id: phaseUuid, ...updateData }, error: null });
 
       const request = mockRequest(updateData);
       const response = await phasePUT(request, mockParams);
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.id).toBe("phase-1");
+      expect(data.id).toBe(phaseUuid);
     });
 
     it("should return error when phase ID is missing", async () => {
@@ -251,7 +252,7 @@ describe("Program Editor API", () => {
       const response = await phasePUT(request, mockParams);
       const data = await response.json();
 
-      expect(data.error).toBe("Phase ID is required");
+      expect(data.error).toBe("Invalid input");
       expect(response.status).toBe(400);
     });
   });

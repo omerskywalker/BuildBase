@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createUserSchema } from "@/lib/validations/admin";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,30 +23,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, full_name, gender, role, coach_id, template_tier } = body;
-
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    const parsed = createUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
-    }
-
-    const validRoles = ["user", "coach", "admin"];
-    if (role && !validRoles.includes(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
-    }
-
-    const validGenders = ["male", "female", "other", "unset"];
-    if (gender && !validGenders.includes(gender)) {
-      return NextResponse.json({ error: "Invalid gender" }, { status: 400 });
-    }
-
-    const validTiers = ["pre_baseline", "default", "post_baseline"];
-    if (template_tier && !validTiers.includes(template_tier)) {
-      return NextResponse.json({ error: "Invalid template tier" }, { status: 400 });
-    }
+    const { email, password, full_name, gender, role, coach_id, template_tier } = parsed.data;
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {

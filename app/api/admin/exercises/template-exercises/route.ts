@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { TemplateExercise } from "@/lib/types";
+import { updateTemplateExerciseSchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
   try {
@@ -103,8 +104,13 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { 
-      id, 
+    const parsed = updateTemplateExerciseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const {
+      id,
       sets_default,
       reps_default,
       weight_pre_baseline_f,
@@ -118,11 +124,7 @@ export async function PUT(request: Request) {
       is_abs_finisher,
       coaching_cues,
       notes
-    } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: "Template exercise ID is required" }, { status: 400 });
-    }
+    } = parsed.data;
 
     // Create program version snapshot before making changes
     // First, get the program ID for this template exercise

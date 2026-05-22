@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/rbac';
 import { NextRequest, NextResponse } from 'next/server';
+import { patchTemplateExerciseSchema } from '@/lib/validations/admin';
 
 export async function PATCH(
   request: NextRequest,
@@ -8,9 +9,15 @@ export async function PATCH(
 ) {
   try {
     await requireRole(['admin']);
-    
+
     const { exerciseId } = await params;
-    const updates = await request.json();
+    const body = await request.json();
+    const parsed = patchTemplateExerciseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+
+    const updates = parsed.data;
 
     const supabase = await createClient();
 

@@ -75,7 +75,7 @@ describe("POST /api/admin/users/create", () => {
     const response = await POST(makeRequest({ password: "123456" }));
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toBe("Email and password are required");
+    expect(data.error).toBe("Invalid input");
   });
 
   it("should return 400 if password is too short", async () => {
@@ -85,7 +85,7 @@ describe("POST /api/admin/users/create", () => {
     const response = await POST(makeRequest({ email: "a@b.com", password: "123" }));
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toBe("Password must be at least 6 characters");
+    expect(data.error).toBe("Invalid input");
   });
 
   it("should return 400 for invalid role", async () => {
@@ -95,7 +95,7 @@ describe("POST /api/admin/users/create", () => {
     const response = await POST(makeRequest({ email: "a@b.com", password: "123456", role: "superadmin" }));
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toBe("Invalid role");
+    expect(data.error).toBe("Invalid input");
   });
 
   it("should return 400 for invalid gender", async () => {
@@ -105,7 +105,7 @@ describe("POST /api/admin/users/create", () => {
     const response = await POST(makeRequest({ email: "a@b.com", password: "123456", gender: "xyz" }));
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toBe("Invalid gender");
+    expect(data.error).toBe("Invalid input");
   });
 
   it("should return 400 for invalid template tier", async () => {
@@ -115,7 +115,7 @@ describe("POST /api/admin/users/create", () => {
     const response = await POST(makeRequest({ email: "a@b.com", password: "123456", template_tier: "mega" }));
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toBe("Invalid template tier");
+    expect(data.error).toBe("Invalid input");
   });
 
   it("should return 409 if email already exists", async () => {

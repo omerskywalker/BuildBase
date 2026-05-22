@@ -301,7 +301,7 @@ describe('/api/admin/exercises', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Exercise name is required');
+      expect(data.error).toBe('Invalid input');
     });
   });
 
@@ -337,7 +337,7 @@ describe('/api/admin/exercises', () => {
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: {
-            id: 'exercise-id',
+            id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
             name: 'Updated Exercise',
             muscle_group: 'Updated Group',
             is_active: false
@@ -358,7 +358,7 @@ describe('/api/admin/exercises', () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: 'exercise-id',
+          id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           name: 'Updated Exercise',
           muscle_group: 'Updated Group',
           is_active: false
@@ -408,7 +408,7 @@ describe('/api/admin/exercises', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Exercise ID is required');
+      expect(data.error).toBe('Invalid input');
     });
   });
 
@@ -455,7 +455,7 @@ describe('/api/admin/exercises', () => {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: 'exercise-id'
+          id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
         })
       });
 
@@ -510,7 +510,7 @@ describe('/api/admin/exercises', () => {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: 'exercise-id'
+          id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
         })
       });
 
@@ -548,7 +548,7 @@ describe('/api/admin/exercises', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Exercise ID is required');
+      expect(data.error).toBe('Invalid input');
     });
   });
 });

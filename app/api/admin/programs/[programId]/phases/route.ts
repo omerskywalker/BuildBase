@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { updatePhaseSchema } from "@/lib/validations/admin";
 
 export async function PUT(
   request: Request,
@@ -26,11 +27,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { phaseId, name, subtitle, week_start, week_end, description } = body;
-
-    if (!phaseId) {
-      return NextResponse.json({ error: "Phase ID is required" }, { status: 400 });
+    const parsed = updatePhaseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { phaseId, name, subtitle, week_start, week_end, description } = parsed.data;
 
     // Update phase
     const updateData: any = {};

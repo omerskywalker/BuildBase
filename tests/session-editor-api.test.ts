@@ -72,10 +72,10 @@ describe('Session Editor API Routes', () => {
       const request = new NextRequest('http://localhost:3000/api/admin/programs/program-1/session-editor/reorder', {
         method: 'POST',
         body: JSON.stringify({
-          sessionId: 'session-1',
+          sessionId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           exercises: [
-            { id: 'exercise-1', order_index: 1 },
-            { id: 'exercise-2', order_index: 0 }
+            { id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', order_index: 1 },
+            { id: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', order_index: 0 }
           ]
         })
       });
@@ -92,7 +92,7 @@ describe('Session Editor API Routes', () => {
       const request = new NextRequest('http://localhost:3000/api/admin/programs/program-1/session-editor/reorder', {
         method: 'POST',
         body: JSON.stringify({
-          sessionId: 'session-1'
+          sessionId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
           // missing exercises array
         })
       });
@@ -102,7 +102,7 @@ describe('Session Editor API Routes', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
+      expect(data.error).toBe('Invalid input');
     });
   });
 

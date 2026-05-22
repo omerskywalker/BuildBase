@@ -593,7 +593,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "No length limits on text fields, no range validation on numbers, no URL format validation.",
           "Add Zod validation to admin API routes for exercise/user creation.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: true,
         branch: "fix/input-validation",
         issue: 103,

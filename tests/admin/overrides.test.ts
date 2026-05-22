@@ -79,7 +79,7 @@ describe("Overrides API Routes", () => {
 
       const mockOverrides = [
         {
-          id: "override-1",
+          id: "e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55",
           user_id: "user-1",
           template_exercise_id: "exercise-1",
           sets_override: 4,
@@ -130,13 +130,13 @@ describe("Overrides API Routes", () => {
 
       const request = new Request("http://localhost/api/admin/overrides", {
         method: "POST",
-        body: JSON.stringify({ user_id: "user-1" }),
+        body: JSON.stringify({ user_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" }),
       });
       const response = await POST(request);
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("user_id and template_exercise_id are required");
+      expect(data.error).toBe("Invalid input");
     });
 
     it("should create new override successfully", async () => {
@@ -144,10 +144,12 @@ describe("Overrides API Routes", () => {
         data: { user: { id: "admin-1" } },
       });
 
+      const userId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+      const templateExerciseId = "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22";
       const newOverride = {
-        id: "override-1",
-        user_id: "user-1",
-        template_exercise_id: "exercise-1",
+        id: "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
+        user_id: userId,
+        template_exercise_id: templateExerciseId,
         sets_override: 4,
       };
 
@@ -159,8 +161,8 @@ describe("Overrides API Routes", () => {
       const request = new Request("http://localhost/api/admin/overrides", {
         method: "POST",
         body: JSON.stringify({
-          user_id: "user-1",
-          template_exercise_id: "exercise-1",
+          user_id: userId,
+          template_exercise_id: templateExerciseId,
           sets_override: 4,
         }),
       });
@@ -176,23 +178,26 @@ describe("Overrides API Routes", () => {
         data: { user: { id: "admin-1" } },
       });
 
+      const userId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+      const templateExerciseId = "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22";
+      const existingOverrideId = "d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44";
       const updatedOverride = {
-        id: "existing-override-1",
-        user_id: "user-1",
-        template_exercise_id: "exercise-1",
+        id: existingOverrideId,
+        user_id: userId,
+        template_exercise_id: templateExerciseId,
         sets_override: 5,
       };
 
       mockSupabase.single
         .mockResolvedValueOnce({ data: { role: "admin" }, error: null })
-        .mockResolvedValueOnce({ data: { id: "existing-override-1" }, error: null })
+        .mockResolvedValueOnce({ data: { id: existingOverrideId }, error: null })
         .mockResolvedValueOnce({ data: updatedOverride, error: null });
 
       const request = new Request("http://localhost/api/admin/overrides", {
         method: "POST",
         body: JSON.stringify({
-          user_id: "user-1",
-          template_exercise_id: "exercise-1",
+          user_id: userId,
+          template_exercise_id: templateExerciseId,
           sets_override: 5,
         }),
       });
@@ -210,7 +215,7 @@ describe("Overrides API Routes", () => {
 
       const request = new Request("http://localhost/api/admin/overrides", {
         method: "DELETE",
-        body: JSON.stringify({ id: "override-1" }),
+        body: JSON.stringify({ id: "e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55" }),
       });
       const response = await DELETE(request);
 
@@ -234,7 +239,7 @@ describe("Overrides API Routes", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Override ID is required");
+      expect(data.error).toBe("Invalid input");
     });
 
     it("should delete override successfully", async () => {
@@ -252,7 +257,7 @@ describe("Overrides API Routes", () => {
 
       const request = new Request("http://localhost/api/admin/overrides", {
         method: "DELETE",
-        body: JSON.stringify({ id: "override-1" }),
+        body: JSON.stringify({ id: "e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55" }),
       });
       const response = await DELETE(request);
       const data = await response.json();
