@@ -561,7 +561,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Fix: use .select('id').single() after .update() and check returned data.",
           "Return 404 if no rows affected.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: true,
         branch: "fix/verify-update-row-counts",
         issue: 101,

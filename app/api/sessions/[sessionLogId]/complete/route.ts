@@ -12,12 +12,20 @@ export async function POST(
 
   const { sessionLogId } = await params;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("session_logs")
     .update({ is_complete: true, completed_at: new Date().toISOString() })
     .eq("id", sessionLogId)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .select("id")
+    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    if (error.code === "PGRST116") {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data) return NextResponse.json({ error: "Session not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
