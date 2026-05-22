@@ -653,7 +653,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Add root-level ErrorBoundary in layout.tsx and per-page error boundaries.",
           "Show 'Something went wrong' UI with retry button.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: true,
         branch: "feat/error-boundaries",
         issue: 119,
