@@ -413,6 +413,8 @@ CREATE POLICY "milestones_admin_all" ON milestones FOR ALL
 CREATE POLICY "form_assessments_coach_own" ON coach_form_assessments FOR ALL
   USING    (coach_id = auth.uid())
   WITH CHECK (coach_id = auth.uid());
+CREATE POLICY "form_assessments_coach_insert" ON coach_form_assessments FOR INSERT
+  WITH CHECK (coach_id = auth.uid());
 CREATE POLICY "form_assessments_admin_all" ON coach_form_assessments FOR ALL
   USING (auth_role() = 'admin');
 
