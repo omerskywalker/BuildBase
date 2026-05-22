@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { apiFetchJson } from "@/lib/api-helpers";
 import type { UserRole, Gender, TemplateTier } from "@/lib/types";
 
 interface CoachOption {
@@ -33,15 +34,16 @@ export default function CreateUserPage() {
   });
 
   useEffect(() => {
-    fetch("/api/admin/users")
-      .then((res) => res.json())
+    apiFetchJson<CoachOption[]>("/api/admin/users")
       .then((data) => {
         const coachList = data.filter(
           (u: any) => u.role === "coach" || u.role === "admin"
         );
         setCoaches(coachList);
       })
-      .catch(() => {});
+      .catch(() => {
+        toast.error("Failed to load coaches");
+      });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,23 +56,16 @@ export default function CreateUserPage() {
         coach_id: form.coach_id || null,
       };
 
-      const res = await fetch("/api/admin/users/create", {
+      await apiFetchJson("/api/admin/users/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error || "Failed to create user");
-        return;
-      }
-
       toast.success("User created successfully");
       router.push("/admin/users");
-    } catch {
-      toast.error("Something went wrong");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create user");
     } finally {
       setSubmitting(false);
     }

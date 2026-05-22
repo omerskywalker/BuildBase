@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Trash2, Eye, X } from "lucide-react";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 interface CoachNote {
   id: string;
@@ -29,13 +31,10 @@ export default function CoachNotesPanel({ clientId, clientName }: CoachNotesPane
 
   const fetchNotes = async () => {
     try {
-      const response = await fetch(`/api/coach/notes?userId=${clientId}`);
-      if (response.ok) {
-        const notesData = await response.json();
-        setNotes(notesData);
-      }
-    } catch (error) {
-      console.error("Failed to fetch notes:", error);
+      const notesData = await apiFetchJson<CoachNote[]>(`/api/coach/notes?userId=${clientId}`);
+      setNotes(notesData);
+    } catch {
+      toast.error("Failed to load notes");
     } finally {
       setIsLoading(false);
     }
@@ -48,20 +47,12 @@ export default function CoachNotesPanel({ clientId, clientName }: CoachNotesPane
   const handleUnsend = async (noteId: string) => {
     setUnsendingId(noteId);
     try {
-      const response = await fetch(`/api/coach/notes/${noteId}`, {
+      await apiFetchJson(`/api/coach/notes/${noteId}`, {
         method: "DELETE",
       });
-
-      if (response.ok) {
-        // Remove the note from the list
-        setNotes(notes.filter(note => note.id !== noteId));
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || "Failed to unsend note");
-      }
-    } catch (error) {
-      console.error("Error unsending note:", error);
-      alert("Failed to unsend note");
+      setNotes(notes.filter(note => note.id !== noteId));
+    } catch {
+      toast.error("Failed to unsend note");
     } finally {
       setUnsendingId(null);
     }

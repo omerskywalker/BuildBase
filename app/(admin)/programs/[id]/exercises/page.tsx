@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, Eye, Settings } from 'lucide-react';
+import { toast } from 'sonner';
+import { apiFetchJson } from '@/lib/api-helpers';
 import type { Exercise, TemplateExercise } from '@/lib/types';
 
 const MUSCLE_GROUPS = [
@@ -66,13 +68,10 @@ export default function ExerciseLibraryPage() {
       if (muscleGroupFilter !== 'all') params.append('muscle_group', muscleGroupFilter);
       if (isActiveFilter) params.append('is_active', isActiveFilter);
 
-      const response = await fetch(`/api/admin/exercises?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        setExercises(data);
-      }
-    } catch (error) {
-      console.error('Error fetching exercises:', error);
+      const data = await apiFetchJson<Exercise[]>(`/api/admin/exercises?${params}`);
+      setExercises(data);
+    } catch {
+      toast.error('Failed to load exercises');
     } finally {
       setLoading(false);
     }
@@ -80,50 +79,43 @@ export default function ExerciseLibraryPage() {
 
   const fetchTemplateExercises = async () => {
     try {
-      const response = await fetch('/api/admin/exercises/template-exercises');
-      if (response.ok) {
-        const data = await response.json();
-        setTemplateExercises(data);
-      }
-    } catch (error) {
-      console.error('Error fetching template exercises:', error);
+      const data = await apiFetchJson<TemplateExercise[]>('/api/admin/exercises/template-exercises');
+      setTemplateExercises(data);
+    } catch {
+      toast.error('Failed to load template exercises');
     }
   };
 
   const handleCreateExercise = async () => {
     try {
-      const response = await fetch('/api/admin/exercises', {
+      await apiFetchJson('/api/admin/exercises', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(exerciseForm)
       });
-
-      if (response.ok) {
-        setShowCreateModal(false);
-        resetForm();
-        fetchExercises();
-      }
-    } catch (error) {
-      console.error('Error creating exercise:', error);
+      setShowCreateModal(false);
+      resetForm();
+      fetchExercises();
+      toast.success('Exercise created');
+    } catch {
+      toast.error('Failed to create exercise');
     }
   };
 
   const handleUpdateExercise = async () => {
     try {
-      const response = await fetch('/api/admin/exercises', {
+      await apiFetchJson('/api/admin/exercises', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selectedExercise?.id, ...exerciseForm })
       });
-
-      if (response.ok) {
-        setShowEditModal(false);
-        setSelectedExercise(null);
-        resetForm();
-        fetchExercises();
-      }
-    } catch (error) {
-      console.error('Error updating exercise:', error);
+      setShowEditModal(false);
+      setSelectedExercise(null);
+      resetForm();
+      fetchExercises();
+      toast.success('Exercise updated');
+    } catch {
+      toast.error('Failed to update exercise');
     }
   };
 
@@ -133,17 +125,15 @@ export default function ExerciseLibraryPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/exercises', {
+      await apiFetchJson('/api/admin/exercises', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: exercise.id })
       });
-
-      if (response.ok) {
-        fetchExercises();
-      }
-    } catch (error) {
-      console.error('Error deleting exercise:', error);
+      fetchExercises();
+      toast.success('Exercise deleted');
+    } catch {
+      toast.error('Failed to delete exercise');
     }
   };
 
@@ -518,17 +508,15 @@ function WeightEditorModal({ templateExercise, onClose, onSave }: WeightEditorMo
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/admin/exercises/template-exercises', {
+      await apiFetchJson('/api/admin/exercises/template-exercises', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: templateExercise.id, ...formData })
       });
-
-      if (response.ok) {
-        onSave();
-      }
-    } catch (error) {
-      console.error('Error updating template exercise:', error);
+      onSave();
+      toast.success('Weight settings saved');
+    } catch {
+      toast.error('Failed to save weight settings');
     }
   };
 

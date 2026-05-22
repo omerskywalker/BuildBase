@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { EFFORT_LABELS } from "@/lib/constants";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 interface EffortPromptProps {
   sessionLogId: string;
@@ -26,12 +28,14 @@ export default function EffortPrompt({ sessionLogId, onDismiss }: EffortPromptPr
     if (submitting || selected !== null) return;
     setSubmitting(true);
     try {
-      await fetch(`/api/sessions/${sessionLogId}/effort`, {
+      await apiFetchJson(`/api/sessions/${sessionLogId}/effort`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score }),
       });
       setSelected(score);
+    } catch {
+      toast.error("Failed to save effort score");
     } finally {
       setSubmitting(false);
     }

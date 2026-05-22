@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, X } from "lucide-react";
 import Link from "next/link";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 interface CoachNote {
   id: string;
@@ -33,19 +35,16 @@ export default function CoachNotesBanner() {
 
   const fetchLatestNote = async () => {
     try {
-      const response = await fetch("/api/coach/notes");
-      if (response.ok) {
-        const notes: CoachNote[] = await response.json();
-        
-        // Find the latest unread, undismissed note
-        const unreadNote = notes.find(
-          (note) => !note.read_at && !note.dismissed_at && note.is_sent
-        );
-        
-        setLatestNote(unreadNote || null);
-      }
-    } catch (error) {
-      console.error("Failed to fetch notes:", error);
+      const notes = await apiFetchJson<CoachNote[]>("/api/coach/notes");
+
+      // Find the latest unread, undismissed note
+      const unreadNote = notes.find(
+        (note) => !note.read_at && !note.dismissed_at && note.is_sent
+      );
+
+      setLatestNote(unreadNote || null);
+    } catch {
+      // Silent fail on dashboard banner — non-critical
     } finally {
       setIsLoading(false);
     }
@@ -56,21 +55,16 @@ export default function CoachNotesBanner() {
 
     setIsDismissing(true);
     try {
-      const response = await fetch(`/api/coach/notes/${latestNote.id}`, {
+      await apiFetchJson(`/api/coach/notes/${latestNote.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ action: "dismiss" }),
       });
-
-      if (response.ok) {
-        setLatestNote(null);
-      } else {
-        console.error("Failed to dismiss note");
-      }
-    } catch (error) {
-      console.error("Error dismissing note:", error);
+      setLatestNote(null);
+    } catch {
+      toast.error("Failed to dismiss note");
     } finally {
       setIsDismissing(false);
     }
@@ -80,15 +74,15 @@ export default function CoachNotesBanner() {
     if (!latestNote || latestNote.read_at) return;
 
     try {
-      await fetch(`/api/coach/notes/${latestNote.id}`, {
+      await apiFetchJson(`/api/coach/notes/${latestNote.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ action: "read" }),
       });
-    } catch (error) {
-      console.error("Error marking note as read:", error);
+    } catch {
+      // Silent fail — marking as read is not critical
     }
   };
 

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { SORENESS_LABELS, SORENESS_PROMPT_GAP_HOURS } from "@/lib/constants";
 import { hoursSince } from "@/lib/utils";
+import { apiFetchJson } from "@/lib/api-helpers";
+import { toast } from "sonner";
 
 interface SorenessPromptProps {
   sessionLogId: string;
@@ -35,13 +37,15 @@ export default function SorenessPrompt({
     if (submitting) return;
     setSubmitting(true);
     try {
-      await fetch(`/api/sessions/${sessionLogId}/soreness`, {
+      await apiFetchJson(`/api/sessions/${sessionLogId}/soreness`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score }),
       });
       setDone(true);
       onDismiss();
+    } catch {
+      toast.error("Failed to save soreness score");
     } finally {
       setSubmitting(false);
     }

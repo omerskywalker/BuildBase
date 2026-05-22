@@ -515,7 +515,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Migrate all callers that currently ignore error responses.",
           "Each migrated caller should catch and show toast.error().",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: true,
         branch: "fix/api-error-handling",
         issue: 99,
