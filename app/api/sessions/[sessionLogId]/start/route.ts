@@ -20,7 +20,10 @@ export async function POST(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[sessions/start/POST]", error);
+    return NextResponse.json({ error: "Failed to start session" }, { status: 500 });
+  }
   if (!data) return NextResponse.json({ error: "Session not found" }, { status: 404 });
   return NextResponse.json(data);
 }
