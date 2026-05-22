@@ -620,7 +620,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Plank has reps_default=0 (time hold), UI shows '0 reps'.",
           "Fix all weight values for logical progression across phases.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: false,
         branch: "fix/seed-data-weights",
         issue: 117,
