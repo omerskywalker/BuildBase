@@ -30,6 +30,7 @@ export function getNavItems(role: UserRole, hasCoach: boolean): NavItem[] {
   const adminItems: NavItem[] = [
     { label: "Users", href: "/admin/users", icon: "UserCog" },
     { label: "Programs", href: "/admin/programs", icon: "ClipboardList" },
+    { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
   ];
 
   if (role === "admin") {
