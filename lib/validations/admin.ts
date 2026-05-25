@@ -167,3 +167,10 @@ export const upsertOverrideSchema = z.object({
 export const deleteOverrideSchema = z.object({
   id: uuidSchema,
 });
+
+// ─── Enrollment (POST /api/admin/enroll) ────────────────────────────────────
+
+export const enrollUserSchema = z.object({
+  userId: uuidSchema,
+  programId: uuidSchema,
+});

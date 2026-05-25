@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Profile, UserRole, TemplateTier, Gender } from "@/lib/types";
+import { Profile, Program, UserRole, TemplateTier, Gender } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,8 +15,9 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Edit, Save, X, Trash2, UserPlus } from "lucide-react";
+import { Edit, Save, X, Trash2, UserPlus, ClipboardList } from "lucide-react";
 import Link from "next/link";
+import { apiFetchJson } from "@/lib/api-helpers";
 
 interface ProfileWithCoach extends Profile {
   coach?: { id: string; full_name: string; email: string } | null;
@@ -25,12 +26,16 @@ interface ProfileWithCoach extends Profile {
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<ProfileWithCoach[]>([]);
   const [coaches, setCoaches] = useState<ProfileWithCoach[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Profile>>({});
+  const [enrollingUser, setEnrollingUser] = useState<string | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     fetchUsers();
+    fetchPrograms();
   }, []);
 
   const fetchUsers = async () => {
@@ -47,6 +52,33 @@ export default function AdminUsersPage() {
       toast.error("Failed to load users");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPrograms = async () => {
+    try {
+      const data = await apiFetchJson<Program[]>("/api/admin/programs");
+      setPrograms(data.filter((p) => p.is_active));
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    }
+  };
+
+  const handleEnroll = async (userId: string, programId: string) => {
+    setEnrolling(true);
+    try {
+      await apiFetchJson("/api/admin/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, programId }),
+      });
+      toast.success("Program assigned successfully");
+      setEnrollingUser(null);
+    } catch (error) {
+      console.error("Error enrolling user:", error);
+      toast.error("Failed to assign program");
+    } finally {
+      setEnrolling(false);
     }
   };
 
@@ -280,7 +312,7 @@ export default function AdminUsersPage() {
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       {editingUser === user.id ? (
                         <>
                           <Button
@@ -299,6 +331,37 @@ export default function AdminUsersPage() {
                             <X className="h-4 w-4" />
                           </Button>
                         </>
+                      ) : enrollingUser === user.id ? (
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <Select
+                            defaultValue=""
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                              if (e.target.value) {
+                                handleEnroll(user.id, e.target.value);
+                              }
+                            }}
+                            className="w-36 text-sm"
+                            disabled={enrolling}
+                          >
+                            <option value="" disabled>
+                              Select program
+                            </option>
+                            {programs.map((program) => (
+                              <option key={program.id} value={program.id}>
+                                {program.name}
+                              </option>
+                            ))}
+                          </Select>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEnrollingUser(null)}
+                            className="h-8 w-8 p-0"
+                            disabled={enrolling}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       ) : (
                         <>
                           <Button
@@ -309,6 +372,18 @@ export default function AdminUsersPage() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                          {user.role === "user" && (
+                            <Button
+                              size="sm"
+                              onClick={() => setEnrollingUser(user.id)}
+                              className="h-8 px-2 text-xs"
+                              style={{ backgroundColor: "#C84B1A", color: "#FEFCF8" }}
+                              title="Assign Program"
+                            >
+                              <ClipboardList className="h-4 w-4 mr-1" />
+                              Assign
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
