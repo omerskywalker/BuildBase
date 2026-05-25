@@ -80,6 +80,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fire-and-forget email notification
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    fetch(`${appUrl}/api/coach/notify-note`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie: request.headers.get("cookie") || "" },
+      body: JSON.stringify({
+        noteId: note.id,
+        userId,
+        coachId: user.id,
+        content: message.trim(),
+      }),
+    }).catch(console.error);
+
     return NextResponse.json(note);
   } catch (error) {
     console.error("Error in POST /api/coach/notes:", error);
