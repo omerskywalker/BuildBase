@@ -500,3 +500,42 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- INDEXES
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- ─── template_exercises ──────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_template_exercises_session_id
+  ON template_exercises (workout_template_id);
+
+CREATE INDEX IF NOT EXISTS idx_template_exercises_exercise_id
+  ON template_exercises (exercise_id);
+
+-- ─── set_logs ────────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_set_logs_session_log_id
+  ON set_logs (session_log_id);
+
+-- ─── personal_records ────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_personal_records_user_exercise
+  ON personal_records (user_id, exercise_id);
+
+-- ─── user_enrollments ────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_user_enrollments_user_active
+  ON user_enrollments (user_id, is_active);
+
+-- ─── session_logs ────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_session_logs_user_completed
+  ON session_logs (user_id, completed_at);
+
+CREATE INDEX IF NOT EXISTS idx_session_logs_enrollment_id
+  ON session_logs (enrollment_id);
+
+-- ─── coach_form_assessments ──────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_coach_form_assessments_coach_user
+  ON coach_form_assessments (coach_id, user_id);
+
+-- ─── coach_notes ─────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_coach_notes_user_id
+  ON coach_notes (user_id);
