@@ -26,6 +26,10 @@ CREATE TABLE profiles (
   coach_id        uuid REFERENCES profiles(id) NULL,
   template_tier   text CHECK (template_tier IN ('pre_baseline', 'default', 'post_baseline')) DEFAULT 'default',
   onboarding_done boolean DEFAULT false,
+  stripe_customer_id      text,
+  subscription_status     text DEFAULT 'inactive',
+  subscription_plan       text,
+  subscription_period_end timestamptz,
   created_at      timestamptz DEFAULT now(),
   updated_at      timestamptz DEFAULT now()
 );
