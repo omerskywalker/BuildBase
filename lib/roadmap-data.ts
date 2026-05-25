@@ -682,7 +682,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "New endpoint: POST /api/admin/enroll { userId, programId }.",
           "Deactivates current enrollment, creates new user_enrollments row.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/program-enrollment-ui",
         issue: 106,
