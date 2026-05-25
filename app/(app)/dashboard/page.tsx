@@ -9,6 +9,7 @@ import { calculateProgressPercentage } from "@/lib/progress-utils";
 import StreakBadge from "@/components/StreakBadge";
 import CoachNotesBanner from "@/components/CoachNotesBanner";
 import LogWorkoutButton from "@/components/LogWorkoutButton";
+import GettingStartedCard from "@/components/GettingStartedCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,7 +23,7 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  const hasCoach = profile?.coach_id !== null;
+  const hasCoach = profile?.coach_id !== null && profile?.coach_id !== undefined;
   const isUser = profile?.role === "user";
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
 
@@ -41,13 +42,13 @@ export default async function DashboardPage() {
       {isUser && hasCoach && <CoachNotesBanner />}
 
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardWidgets userId={user.id} />
+        <DashboardWidgets userId={user.id} hasCoach={hasCoach} />
       </Suspense>
     </div>
   );
 }
 
-async function DashboardWidgets({ userId }: { userId: string }) {
+async function DashboardWidgets({ userId, hasCoach }: { userId: string; hasCoach: boolean }) {
   const supabase = await createClient();
 
   const { data: enrollment } = await supabase
@@ -58,7 +59,7 @@ async function DashboardWidgets({ userId }: { userId: string }) {
     .single();
 
   if (!enrollment) {
-    return <NoEnrollmentState />;
+    return <GettingStartedCard hasCoach={hasCoach} />;
   }
 
   const { data: phases } = await supabase
@@ -222,23 +223,6 @@ function QuickLink({ href, icon, title, subtitle }: {
         </CardContent>
       </Card>
     </Link>
-  );
-}
-
-function NoEnrollmentState() {
-  return (
-    <Card>
-      <CardContent className="py-12 text-center">
-        <Dumbbell className="h-12 w-12 text-content-muted mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-content-primary mb-2">
-          No program assigned yet
-        </h2>
-        <p className="text-sm text-content-secondary max-w-md mx-auto">
-          Your training program hasn&apos;t been set up yet. Once your coach or admin assigns
-          you a program, your sessions and progress will appear here.
-        </p>
-      </CardContent>
-    </Card>
   );
 }
 
