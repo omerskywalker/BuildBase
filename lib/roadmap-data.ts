@@ -699,7 +699,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Show 'Getting Started' card if no active enrollment.",
           "Handle the no-enrollment state gracefully.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/post-onboarding-enrollment",
         issue: 107,
