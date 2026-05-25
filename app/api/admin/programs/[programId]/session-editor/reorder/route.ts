@@ -17,21 +17,20 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
-    const { sessionId, exercises } = parsed.data;
+    const { exercises } = parsed.data;
 
     const supabase = await createClient();
 
-    // Update order_index for all exercises in batch
-    const updates = exercises.map(async ({ id, order_index }) => {
-      const { error } = await supabase
-        .from('template_exercises')
-        .update({ order_index })
-        .eq('id', id);
-      
-      if (error) throw error;
+    // Use RPC to update all exercise orders in a single database transaction.
+    // This prevents partial state if one update fails midway through.
+    const { error } = await supabase.rpc('reorder_exercises', {
+      exercise_orders: exercises.map(({ id, order_index }) => ({
+        id,
+        order_index,
+      })),
     });
 
-    await Promise.all(updates);
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {

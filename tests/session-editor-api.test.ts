@@ -35,7 +35,8 @@ vi.mock('@/lib/supabase/server', () => ({
           }))
         }))
       }))
-    }))
+    })),
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null }))
   }))
 }));
 
