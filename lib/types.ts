@@ -155,6 +155,18 @@ export interface CoachNote {
   created_at: string;
 }
 
+// ─── Playbook ────────────────────────────────────────────────────────────────
+
+export interface PlaybookEntry {
+  id: string;
+  title: string;
+  content: string;
+  category: string | null;
+  coach_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Milestones / PRs ─────────────────────────────────────────────────────────
 
 export interface Milestone {
