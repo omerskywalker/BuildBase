@@ -181,7 +181,7 @@ FOREACH t IN ARRAY ARRAY[p1w1a, p1w2a, p1w3a, p1w4a] LOOP
   INSERT INTO template_exercises (workout_template_id, exercise_id, order_index, sets_default, reps_default,
     weight_pre_baseline_f, weight_pre_baseline_m, weight_default_f, weight_default_m, weight_post_baseline_f, weight_post_baseline_m,
     is_bodyweight, is_abs_finisher) VALUES
-  (t, e_smith_squat,       1, 3, 8,   0,    45,   45,   55,   0,    0,    false, false),
+  (t, e_smith_squat,       1, 3, 8,   35,   45,   45,   55,   55,   75,   false, false),
   (t, e_ham_curl,          2, 3, 8,   30,   40,   40,   55,   55,   75,   false, false),
   (t, e_walking_lunge,     3, 3, 8,   0,    0,    0,    0,    0,    0,    true,  false),
   (t, e_bw_hip_thrust,     4, 3, 8,   0,    0,    0,    0,    0,    0,    true,  false),
@@ -201,7 +201,7 @@ FOREACH t IN ARRAY ARRAY[p1w1b, p1w2b, p1w3b, p1w4b] LOOP
   (t, e_skull_crusher, 2, 3, 8,  5,  8,  8,   12.5, 10,  15,   false, false, 'A'),
   (t, e_hammer_curl,   3, 3, 8,  5,  8,  10,  15,  12.5, 17.5, false, false, 'B'),
   (t, e_tri_kickback,  4, 3, 8,  3,  5,  5,   8,   8,    10,   false, false, 'B'),
-  (t, e_plank,         5, 2, 0,  0,  0,  0,   0,   0,    0,    true,  true,  null),
+  (t, e_plank,         5, 2, 1,  0,  0,  0,   0,   0,    0,    true,  true,  null),  -- reps=1 (timed hold)
   (t, e_dead_bug,      6, 2, 8,  0,  0,  0,   0,   0,    0,    true,  true,  null);
 END LOOP;
 
@@ -217,7 +217,7 @@ FOREACH t IN ARRAY ARRAY[p1w1c, p1w2c, p1w3c, p1w4c] LOOP
   (t, e_incline_pushup,   5, 3, 8,  0,   0,   0,   0,   0,   0,   true,  false),
   (t, e_face_pull,        6, 3, 12, 15,  20,  20,  30,  30,  40,  false, false),
   (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
-  (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
+  (t, e_hollow_body,      8, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true);  -- reps=1 (timed hold)
 END LOOP;
 
 -- PHASE 2 — Day A sessions (4 weeks): Goblet Squat + Barbell Hip Thrust introduced
@@ -232,7 +232,7 @@ FOREACH t IN ARRAY ARRAY[p2w5a, p2w6a, p2w7a, p2w8a] LOOP
   (t, e_db_shoulder_press, 5, 3, 10, 5,   8,   7.5, 12.5,12.5,17.5,false, false),
   (t, e_lateral_raise,     6, 3, 10, 3,   5,   5,   8,   8,   10,  false, false),
   (t, e_rear_delt_fly,     7, 3, 10, 3,   5,   5,   8,   8,   10,  false, false),
-  (t, e_plank,             8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_plank,             8, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true),  -- reps=1 (timed hold)
   (t, e_dead_bug,          9, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
 END LOOP;
 
@@ -247,7 +247,7 @@ FOREACH t IN ARRAY ARRAY[p2w5b, p2w6b, p2w7b, p2w8b] LOOP
   (t, e_db_chest_press,4, 3, 10, 8,   12.5,12.5,20,  17.5,25,  false, false),
   (t, e_bicep_curl,    5, 3, 10, 5,   8,   10,  15,  12.5,17.5,false, false),
   (t, e_tri_pushdown,  6, 3, 10, 10,  15,  15,  25,  25,  35,  false, false),
-  (t, e_plank,         7, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_plank,         7, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true),  -- reps=1 (timed hold)
   (t, e_dead_bug,      8, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
 END LOOP;
 
@@ -263,7 +263,7 @@ FOREACH t IN ARRAY ARRAY[p2w5c, p2w6c, p2w7c, p2w8c] LOOP
   (t, e_floor_pushup,     5, 3, 10, 0,   0,   0,   0,   0,   0,   true,  false),
   (t, e_face_pull,        6, 3, 12, 15,  20,  20,  30,  30,  40,  false, false),
   (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
-  (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
+  (t, e_hollow_body,      8, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true);  -- reps=1 (timed hold)
 END LOOP;
 
 -- PHASE 3 — Day A sessions (4 weeks): Barbell Back Squat
@@ -278,7 +278,7 @@ FOREACH t IN ARRAY ARRAY[p3w9a, p3w10a, p3w11a, p3w12a] LOOP
   (t, e_db_shoulder_press, 5, 3, 12, 5,   8,   10,  15,  12.5,17.5,false, false),
   (t, e_lateral_raise,     6, 3, 12, 3,   5,   5,   8,   8,   10,  false, false),
   (t, e_rear_delt_fly,     7, 3, 12, 3,   5,   5,   8,   8,   10,  false, false),
-  (t, e_plank,             8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_plank,             8, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true),  -- reps=1 (timed hold)
   (t, e_dead_bug,          9, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
 END LOOP;
 
@@ -293,7 +293,7 @@ FOREACH t IN ARRAY ARRAY[p3w9b, p3w10b, p3w11b, p3w12b] LOOP
   (t, e_db_chest_press,4, 3, 12, 8,   12.5,15,  22.5,20,  30,  false, false),
   (t, e_bicep_curl,    5, 3, 12, 5,   8,   10,  15,  12.5,17.5,false, false),
   (t, e_tri_pushdown,  6, 3, 12, 10,  15,  20,  30,  30,  40,  false, false),
-  (t, e_plank,         7, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true),
+  (t, e_plank,         7, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true),  -- reps=1 (timed hold)
   (t, e_dead_bug,      8, 2, 8,  0,   0,   0,   0,   0,   0,   true,  true);
 END LOOP;
 
@@ -309,7 +309,7 @@ FOREACH t IN ARRAY ARRAY[p3w9c, p3w10c, p3w11c, p3w12c] LOOP
   (t, e_floor_pushup,     5, 3, 12, 0,   0,   0,   0,   0,   0,   true,  false),
   (t, e_face_pull,        6, 3, 15, 15,  20,  20,  30,  30,  40,  false, false),
   (t, e_bicycle_crunch,   7, 2, 15, 0,   0,   0,   0,   0,   0,   true,  true),
-  (t, e_hollow_body,      8, 2, 0,  0,   0,   0,   0,   0,   0,   true,  true);
+  (t, e_hollow_body,      8, 2, 1,  0,   0,   0,   0,   0,   0,   true,  true);  -- reps=1 (timed hold)
 END LOOP;
 
 END $$;
