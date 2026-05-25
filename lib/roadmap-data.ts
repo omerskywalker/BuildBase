@@ -636,7 +636,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Admin exercise reorder uses Promise.all with individual updates — partial state if one fails.",
           "Fix: use a Supabase RPC function that wraps the reorder in a database transaction.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "fix/exercise-reorder-transaction",
         pr: 134,
