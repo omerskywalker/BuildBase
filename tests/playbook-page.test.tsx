@@ -1,141 +1,196 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import PlaybookPage from "@/app/(coach)/playbook/page";
 
+// Mock sonner
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+const mockEntries = [
+  {
+    id: "e1",
+    title: "Squat Technique Guide",
+    content: "Detailed squat instructions and coaching cues for hip crease depth.",
+    category: "Movement Patterns",
+    coach_id: "coach-1",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: "e2",
+    title: "Deadlift Safety Protocol",
+    content: "How to coach safe deadlift form with posterior-chain engagement.",
+    category: "Movement Patterns",
+    coach_id: "coach-1",
+    created_at: "2024-01-02T00:00:00Z",
+    updated_at: "2024-01-02T00:00:00Z",
+  },
+  {
+    id: "e3",
+    title: "Client Communication Tips",
+    content: "Best practices for motivating clients during tough sessions.",
+    category: "Coaching",
+    coach_id: "coach-1",
+    created_at: "2024-01-03T00:00:00Z",
+    updated_at: "2024-01-03T00:00:00Z",
+  },
+];
+
+async function renderAndWait() {
+  await act(async () => {
+    render(<PlaybookPage />);
+  });
+}
+
 describe("PlaybookPage", () => {
-  it("renders the playbook page with title and search", () => {
-    render(<PlaybookPage />);
-    
-    expect(screen.getByText("Coach's Playbook")).toBeInTheDocument();
-    expect(screen.getByText("Comprehensive coaching guide for the 12-week strength program")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Search by exercise, phase, or technique...")).toBeInTheDocument();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockEntries),
+    });
   });
 
-  it("displays all playbook sections initially", () => {
-    render(<PlaybookPage />);
-    
-    // Check for main section titles
-    expect(screen.getByText("Form Assessment & Coaching")).toBeInTheDocument();
-    expect(screen.getByText("Squat Technique & Progressions")).toBeInTheDocument();
-    expect(screen.getByText("Deadlift Technique & Safety")).toBeInTheDocument();
-    expect(screen.getByText("Upper Body Movement Patterns")).toBeInTheDocument();
-    expect(screen.getByText("12-Week Program Structure")).toBeInTheDocument();
-    expect(screen.getByText("Client Communication & Motivation")).toBeInTheDocument();
-    expect(screen.getByText("Common Issues & Solutions")).toBeInTheDocument();
+  it("renders the playbook page with title and search after loading", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Coach's Playbook")).toBeInTheDocument();
+    });
+    expect(screen.getByPlaceholderText("Search by title, content, or category...")).toBeInTheDocument();
   });
 
-  it("expands and collapses sections when clicked", () => {
-    render(<PlaybookPage />);
-    
-    const formSection = screen.getByText("Form Assessment & Coaching");
-    
-    // Content should not be visible initially (sections are collapsed)
-    expect(screen.queryByText("Three-Stage Assessment System")).not.toBeInTheDocument();
-    
-    // Click to expand
-    fireEvent.click(formSection.closest("[data-testid]") || formSection.closest("div")!);
-    
-    // Content should now be visible
-    expect(screen.getByText("Three-Stage Assessment System")).toBeInTheDocument();
-    expect(screen.getByText("Universal Coaching Cues")).toBeInTheDocument();
-  });
+  it("displays all entries grouped by category after fetch", async () => {
+    await renderAndWait();
 
-  it("filters sections based on search term", () => {
-    render(<PlaybookPage />);
-    
-    const searchInput = screen.getByPlaceholderText("Search by exercise, phase, or technique...");
-    
-    // Search for "squat"
-    fireEvent.change(searchInput, { target: { value: "squat" } });
-    
-    // Should show squat section
-    expect(screen.getByText("Squat Technique & Progressions")).toBeInTheDocument();
-    
-    // Should not show unrelated sections
-    expect(screen.queryByText("Client Communication & Motivation")).not.toBeInTheDocument();
-    
-    // Should show results count
-    expect(screen.getByText(/Found \d+ section/)).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Deadlift Safety Protocol")).toBeInTheDocument();
+    expect(screen.getByText("Client Communication Tips")).toBeInTheDocument();
 
-  it("shows no results message when search has no matches", () => {
-    render(<PlaybookPage />);
-    
-    const searchInput = screen.getByPlaceholderText("Search by exercise, phase, or technique...");
-    
-    // Search for something that doesn't exist
-    fireEvent.change(searchInput, { target: { value: "nonexistent" } });
-    
-    expect(screen.getByText("No results found")).toBeInTheDocument();
-    expect(screen.getByText("Try adjusting your search terms or browse all sections by clearing the search.")).toBeInTheDocument();
-  });
-
-  it("displays category and phase badges", () => {
-    render(<PlaybookPage />);
-    
-    // Check for category badges (some appear on multiple sections)
-    expect(screen.getByText("Assessment")).toBeInTheDocument();
+    // Category headers (may also appear as badge text on entries, so use getAllByText)
     expect(screen.getAllByText("Movement Patterns").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Programming")).toBeInTheDocument();
-    expect(screen.getByText("Coaching")).toBeInTheDocument();
-    expect(screen.getByText("Problem Solving")).toBeInTheDocument();
-
-    // Check for phase badges (some appear on multiple sections)
-    expect(screen.getAllByText("All Phases").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Phase 2-3")).toBeInTheDocument();
+    expect(screen.getAllByText("Coaching").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows content types and priority indicators when sections are expanded", () => {
-    render(<PlaybookPage />);
-    
-    const formSection = screen.getByText("Form Assessment & Coaching");
-    
-    // Expand the section
-    fireEvent.click(formSection.closest("[data-testid]") || formSection.closest("div")!);
-    
-    // Check for content type labels (rendered lowercase, CSS uppercases them)
-    expect(screen.getByText("principle")).toBeInTheDocument();
-    expect(screen.getByText("cue")).toBeInTheDocument();
-    
-    // Check for tags
-    expect(screen.getByText("#form")).toBeInTheDocument();
-    expect(screen.getByText("#cues")).toBeInTheDocument();
+  it("expands and collapses entries when clicked", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+
+    // Content should not be visible initially
+    expect(screen.queryByText(/Detailed squat instructions/)).not.toBeInTheDocument();
+
+    // Click to expand
+    fireEvent.click(screen.getByText("Squat Technique Guide"));
+
+    // Content should now be visible
+    expect(screen.getByText(/Detailed squat instructions/)).toBeInTheDocument();
   });
 
-  it("searches within content and tags", () => {
-    render(<PlaybookPage />);
-    
-    const searchInput = screen.getByPlaceholderText("Search by exercise, phase, or technique...");
-    
-    // Search for a tag
-    fireEvent.change(searchInput, { target: { value: "posterior-chain" } });
-    
-    // Should show deadlift section which has posterior-chain tags
-    expect(screen.getByText("Deadlift Technique & Safety")).toBeInTheDocument();
-    
-    // Clear search
-    fireEvent.change(searchInput, { target: { value: "" } });
-    
-    // Search for content within exercises
-    fireEvent.change(searchInput, { target: { value: "hip crease" } });
-    
-    // Should show squat section which mentions hip crease
-    expect(screen.getByText("Squat Technique & Progressions")).toBeInTheDocument();
+  it("filters entries based on search term", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText("Search by title, content, or category...");
+
+    fireEvent.change(searchInput, { target: { value: "squat" } });
+
+    expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    expect(screen.queryByText("Client Communication Tips")).not.toBeInTheDocument();
+
+    // Should show results count
+    expect(screen.getByText(/Found 1 entr/)).toBeInTheDocument();
   });
 
-  it("handles search case insensitivity", () => {
-    render(<PlaybookPage />);
-    
-    const searchInput = screen.getByPlaceholderText("Search by exercise, phase, or technique...");
-    
-    // Search with different cases
+  it("shows no results message when search has no matches", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText("Search by title, content, or category...");
+    fireEvent.change(searchInput, { target: { value: "nonexistent" } });
+
+    expect(screen.getByText("No results found")).toBeInTheDocument();
+  });
+
+  it("handles search case insensitivity", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText("Search by title, content, or category...");
+
     fireEvent.change(searchInput, { target: { value: "SQUAT" } });
-    expect(screen.getByText("Squat Technique & Progressions")).toBeInTheDocument();
-    
+    expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+
     fireEvent.change(searchInput, { target: { value: "deadlift" } });
-    expect(screen.getByText("Deadlift Technique & Safety")).toBeInTheDocument();
-    
+    expect(screen.getByText("Deadlift Safety Protocol")).toBeInTheDocument();
+
     fireEvent.change(searchInput, { target: { value: "Communication" } });
-    expect(screen.getByText("Client Communication & Motivation")).toBeInTheDocument();
+    expect(screen.getByText("Client Communication Tips")).toBeInTheDocument();
+  });
+
+  it("shows empty state when no entries exist", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("No playbook entries yet")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Create First Entry")).toBeInTheDocument();
+  });
+
+  it("shows create form when New Entry is clicked", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("New Entry"));
+
+    expect(screen.getByText("New Playbook Entry")).toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+    expect(screen.getByLabelText("Content")).toBeInTheDocument();
+    expect(screen.getByLabelText("Category")).toBeInTheDocument();
+  });
+
+  it("searches within content", async () => {
+    await renderAndWait();
+
+    await waitFor(() => {
+      expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText("Search by title, content, or category...");
+
+    fireEvent.change(searchInput, { target: { value: "posterior-chain" } });
+    expect(screen.getByText("Deadlift Safety Protocol")).toBeInTheDocument();
+    expect(screen.queryByText("Squat Technique Guide")).not.toBeInTheDocument();
+
+    fireEvent.change(searchInput, { target: { value: "" } });
+
+    fireEvent.change(searchInput, { target: { value: "hip crease" } });
+    expect(screen.getByText("Squat Technique Guide")).toBeInTheDocument();
+    expect(screen.queryByText("Client Communication Tips")).not.toBeInTheDocument();
   });
 });

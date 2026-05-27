@@ -200,6 +200,17 @@ CREATE TABLE coach_form_assessments (
   CONSTRAINT unique_coach_user_exercise UNIQUE (coach_id, user_id, exercise_id)
 );
 
+-- ─── PLAYBOOK ENTRIES ─────────────────────────────────────────────────────────
+CREATE TABLE playbook_entries (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title      text NOT NULL,
+  content    text NOT NULL,
+  category   text,
+  coach_id   uuid REFERENCES auth.users(id) NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 -- ─── COACH NOTES ─────────────────────────────────────────────────────────────
 CREATE TABLE coach_notes (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -239,6 +250,10 @@ CREATE TRIGGER coach_form_assessments_updated_at
   BEFORE UPDATE ON coach_form_assessments
   FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 
+CREATE TRIGGER playbook_entries_updated_at
+  BEFORE UPDATE ON playbook_entries
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
 -- ─── Auto-create profile row on signup ───────────────────────────────────────
 -- Fires after a new auth.users row is inserted (i.e. after email signup or OAuth).
 -- Creates the corresponding profiles row so all downstream queries have a target.
@@ -273,6 +288,7 @@ ALTER TABLE set_logs                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personal_records         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE milestones               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coach_form_assessments   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE playbook_entries          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coach_notes              ENABLE ROW LEVEL SECURITY;
 
 -- Helper: returns the current authenticated user's role
@@ -432,6 +448,28 @@ CREATE POLICY "overrides_coach_write" ON user_exercise_overrides FOR ALL
   WITH CHECK (set_by = auth.uid() AND is_my_client(user_id));
 CREATE POLICY "overrides_admin_all" ON user_exercise_overrides FOR ALL
   USING (auth_role() = 'admin');
+
+-- ─── playbook_entries ────────────────────────────────────────────────────────
+-- All authenticated users can read; coaches/admins can CRUD their own entries.
+CREATE POLICY "playbook_entries_select_all" ON playbook_entries
+  FOR SELECT USING (true);
+CREATE POLICY "playbook_entries_coach_insert" ON playbook_entries
+  FOR INSERT WITH CHECK (
+    coach_id = auth.uid()
+    AND auth_role() IN ('coach', 'admin')
+  );
+CREATE POLICY "playbook_entries_coach_update" ON playbook_entries
+  FOR UPDATE USING (
+    coach_id = auth.uid() OR auth_role() = 'admin'
+  ) WITH CHECK (
+    coach_id = auth.uid() OR auth_role() = 'admin'
+  );
+CREATE POLICY "playbook_entries_coach_delete" ON playbook_entries
+  FOR DELETE USING (
+    coach_id = auth.uid() OR auth_role() = 'admin'
+  );
+CREATE POLICY "playbook_entries_admin_all" ON playbook_entries
+  FOR ALL USING (auth_role() = 'admin');
 
 -- ─── coach_notes ─────────────────────────────────────────────────────────────
 -- Policies split by operation. Athletes cannot update note content or ownership.
