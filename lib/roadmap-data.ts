@@ -887,7 +887,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Stripe integration for recurring subscriptions.",
           "Webhook handler, billing portal, plan management.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/stripe-payments",
         issue: 114,
