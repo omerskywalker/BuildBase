@@ -717,7 +717,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "API: GET/POST/PUT/DELETE /api/coach/playbook.",
           "Update PlaybookPage to fetch from API. Add create/edit UI for coaches.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/playbook-database",
         issue: 108,
