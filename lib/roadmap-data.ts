@@ -839,7 +839,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Supabase Edge Function triggered on coach_notes INSERT.",
           "Send via Resend/SendGrid. Rate limit: 1 email per coach per athlete per hour.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/coach-note-emails",
         issue: 111,
