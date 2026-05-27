@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { formatWeight, timeAgo } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Video } from "lucide-react";
 import { apiFetchJson } from "@/lib/api-helpers";
 import { toast } from "sonner";
 
@@ -112,14 +112,27 @@ export default function SessionDetailModal({
             const completedSets = setLogs.filter((sl) => sl.is_completed);
             return (
               <div key={templateExercise.id} className="space-y-1">
-                <p className="text-sm font-semibold text-content-primary">
-                  {templateExercise.exercise?.name ?? "Exercise"}
-                  {templateExercise.exercise?.muscle_group && (
-                    <span className="text-content-muted font-normal text-xs ml-2">
-                      {templateExercise.exercise.muscle_group}
-                    </span>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-content-primary">
+                    {templateExercise.exercise?.name ?? "Exercise"}
+                    {templateExercise.exercise?.muscle_group && (
+                      <span className="text-content-muted font-normal text-xs ml-2">
+                        {templateExercise.exercise.muscle_group}
+                      </span>
+                    )}
+                  </p>
+                  {templateExercise.exercise?.video_url && (
+                    <a
+                      href={templateExercise.exercise.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-dim transition-colors"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Watch Demo</span>
+                    </a>
                   )}
-                </p>
+                </div>
 
                 {completedSets.length === 0 ? (
                   <p className="text-xs text-content-muted pl-1">No sets logged</p>

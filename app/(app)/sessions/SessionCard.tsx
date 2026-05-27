@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SessionLog, WorkoutTemplate, TemplateExercise, SetLog } from "@/lib/types";
 import { timeAgo, getFormBadge } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2, Video } from "lucide-react";
 import { apiFetchJson } from "@/lib/api-helpers";
 import { toast } from "sonner";
 import SetRow from "./SetRow";
@@ -240,6 +240,17 @@ export default function SessionCard({
                     )}
                     {templateExercise.coaching_cues && (
                       <span className="text-xs text-content-secondary italic ml-auto">{templateExercise.coaching_cues}</span>
+                    )}
+                    {templateExercise.exercise?.video_url && (
+                      <a
+                        href={templateExercise.exercise.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto text-content-muted hover:text-accent transition-colors"
+                        title="Watch demo video"
+                      >
+                        <Video className="w-4 h-4" />
+                      </a>
                     )}
                   </div>
 

@@ -751,7 +751,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "If exercise has video_url, render a video icon/link in SessionCard.",
           "Add sample video URLs to seed data.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: true,
         branch: "feat/exercise-video-links",
         issue: 109,
