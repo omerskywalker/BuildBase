@@ -812,7 +812,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Missing FK indexes and compound indexes for common query patterns.",
           "Add migration with indexes on template_exercises, set_logs, personal_records, user_enrollments, session_logs.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: false,
         branch: "perf/add-database-indexes",
         issue: 105,
