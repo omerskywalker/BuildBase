@@ -871,7 +871,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Create .github/workflows/ci.yml: typecheck + build + test on push to main and PRs.",
           "Auto-deploy to Vercel on merge to main.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: false,
         branch: "infra/ci-cd-pipeline",
         issue: 113,
