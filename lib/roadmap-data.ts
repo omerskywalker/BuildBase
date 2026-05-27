@@ -855,7 +855,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "New admin page: total active athletes, weekly completion rate,",
           "coach workload, new signups. Backend aggregation endpoint.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/admin-analytics",
         issue: 112,
