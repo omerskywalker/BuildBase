@@ -734,7 +734,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "New page: session history in reverse chronological order with sets/reps/weight.",
           "Backend: GET /api/sessions/history?page=1&limit=20 (paginated).",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "feat/session-history",
         issue: 110,
