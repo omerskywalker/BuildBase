@@ -38,10 +38,6 @@
   "exclude": [
     "node_modules",
     "artifacts",
-    "lib/api-spec",
-    "lib/api-zod",
-    "lib/api-client-react",
-    "lib/db",
     ".migration-backup",
     ".next"
   ]

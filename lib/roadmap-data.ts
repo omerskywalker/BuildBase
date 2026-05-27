@@ -796,7 +796,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "These packages cause typecheck failures and serve no purpose.",
           "Remove lib/db/, lib/api-client-react/, lib/api-zod/, lib/api-spec/.",
         ].join("\n"),
-        status: "not-started",
+        status: "in-progress",
         tests: false,
         branch: "cleanup/drizzle-decision",
         issue: 118,
