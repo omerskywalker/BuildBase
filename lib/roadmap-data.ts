@@ -779,7 +779,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Split into focused components in components/quick-log/ directory.",
           "Must preserve all existing functionality — pure refactor.",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: true,
         branch: "refactor/quick-log-decompose",
         issue: 104,
