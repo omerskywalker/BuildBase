@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { History } from "lucide-react";
 import SessionCard from "./SessionCard";
 
 interface SearchParams {
@@ -133,6 +135,13 @@ export default async function SessionsPage({ searchParams }: SessionsPageProps) 
             Week {currentWeek} • Track your workouts and progress
           </p>
         </div>
+        <Link
+          href="/sessions/history"
+          className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg text-content-secondary hover:text-content-primary hover:bg-bg-hover transition-colors"
+        >
+          <History className="w-4 h-4" />
+          History
+        </Link>
       </div>
 
       <Suspense fallback={<div className="text-content-secondary">Loading sessions...</div>}>
