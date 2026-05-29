@@ -40,11 +40,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/admin/users");
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      const data = await response.json();
+      const data = await apiFetchJson<ProfileWithCoach[]>("/api/admin/users");
       setUsers(data);
       setCoaches(data.filter((user: ProfileWithCoach) => user.role === "coach" || user.role === "admin"));
     } catch (error) {
@@ -100,15 +96,11 @@ export default function AdminUsersPage() {
 
   const handleEditSave = async (userId: string) => {
     try {
-      const response = await fetch("/api/admin/users", {
+      await apiFetchJson("/api/admin/users", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: userId, ...editForm }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update user");
-      }
 
       await fetchUsers();
       setEditingUser(null);
@@ -126,15 +118,11 @@ export default function AdminUsersPage() {
     }
 
     try {
-      const response = await fetch("/api/admin/users", {
+      await apiFetchJson("/api/admin/users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: userId }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to deactivate user");
-      }
 
       await fetchUsers();
       toast.success("User deactivated successfully");

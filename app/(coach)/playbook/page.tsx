@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 import type { PlaybookEntry } from "@/lib/types";
 
 interface EntryFormData {
@@ -34,11 +35,7 @@ export default function PlaybookPage() {
 
   const fetchEntries = useCallback(async () => {
     try {
-      const res = await fetch("/api/coach/playbook");
-      if (!res.ok) {
-        throw new Error("Failed to fetch playbook entries");
-      }
-      const data = await res.json();
+      const data = await apiFetchJson<PlaybookEntry[]>("/api/coach/playbook");
       setEntries(data);
     } catch {
       toast.error("Failed to load playbook entries");
@@ -94,24 +91,18 @@ export default function PlaybookPage() {
         category: formData.category.trim() || null,
       };
 
-      let res: Response;
       if (editingId) {
-        res = await fetch("/api/coach/playbook", {
+        await apiFetchJson("/api/coach/playbook", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editingId, ...payload }),
         });
       } else {
-        res = await fetch("/api/coach/playbook", {
+        await apiFetchJson("/api/coach/playbook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-      }
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to save");
       }
 
       toast.success(editingId ? "Entry updated" : "Entry created");
@@ -127,15 +118,7 @@ export default function PlaybookPage() {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/coach/playbook?id=${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to delete");
-      }
-
+      await apiFetchJson(`/api/coach/playbook?id=${id}`, { method: "DELETE" });
       toast.success("Entry deleted");
       fetchEntries();
     } catch (err) {

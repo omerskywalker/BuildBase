@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 import LiftChart from "@/components/LiftChart";
 import ExerciseSelector from "./ExerciseSelector";
 
@@ -37,18 +39,14 @@ export default function ChartContainer({ userId }: ChartContainerProps) {
       setError(null);
       
       try {
-        const response = await fetch(
+        const data = await apiFetchJson<{ data: ChartDataPoint[] }>(
           `/api/progress/charts?exerciseId=${selectedExerciseId}&userId=${userId}`
         );
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch chart data');
-        }
-        
-        const data = await response.json();
         setChartData(data.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(message);
+        toast.error(message);
         setChartData([]);
       } finally {
         setLoading(false);

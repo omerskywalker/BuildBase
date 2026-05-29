@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 
 interface PlanTier {
   name: string;
@@ -89,18 +90,11 @@ export default function BillingPage() {
   async function handleCheckout(priceId: string) {
     setCheckoutLoading(priceId);
     try {
-      const res = await fetch("/api/billing/checkout", {
+      const { url } = await apiFetchJson<{ url: string }>("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Failed to create checkout session");
-      }
-
-      const { url } = await res.json();
       if (url) {
         window.location.href = url;
       }
@@ -114,17 +108,10 @@ export default function BillingPage() {
   async function handlePortal() {
     setPortalLoading(true);
     try {
-      const res = await fetch("/api/billing/portal", {
+      const { url } = await apiFetchJson<{ url: string }>("/api/billing/portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Failed to open billing portal");
-      }
-
-      const { url } = await res.json();
       if (url) {
         window.location.href = url;
       }

@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Search, Users, Settings } from "lucide-react";
+import { apiFetchJson } from "@/lib/api-helpers";
 import { UserOverrideEditor } from "./user-override-editor";
 
 interface ProfileWithCoach extends Profile {
@@ -25,11 +26,7 @@ export default function OverridesPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/admin/users");
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      const data = await response.json();
+      const data = await apiFetchJson<ProfileWithCoach[]>("/api/admin/users");
       // Only include users with user role for overrides
       setUsers(data.filter((user: ProfileWithCoach) => user.role === "user"));
     } catch (error) {

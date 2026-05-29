@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Save, Edit, X, Check, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { apiFetchJson, ApiError } from "@/lib/api-helpers";
 
 interface ProgramWithPhases extends Program {
   phases?: Phase[];
@@ -56,15 +57,7 @@ export default function ProgramEditorPage() {
 
   const fetchProgram = async () => {
     try {
-      const response = await fetch(`/api/admin/programs/${programId}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          toast.error("Program not found");
-          return;
-        }
-        throw new Error("Failed to fetch program");
-      }
-      const data = await response.json();
+      const data = await apiFetchJson<ProgramWithPhases>(`/api/admin/programs/${programId}`);
       setProgram(data);
       setProgramForm({
         name: data.name || "",
@@ -74,7 +67,11 @@ export default function ProgramEditorPage() {
       });
     } catch (error) {
       console.error("Error fetching program:", error);
-      toast.error("Failed to load program");
+      if (error instanceof ApiError && error.status === 404) {
+        toast.error("Program not found");
+      } else {
+        toast.error("Failed to load program");
+      }
     } finally {
       setLoading(false);
     }
@@ -83,15 +80,11 @@ export default function ProgramEditorPage() {
   const handleSaveProgram = async () => {
     setSaving(true);
     try {
-      const response = await fetch("/api/admin/programs", {
+      await apiFetchJson("/api/admin/programs", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: programId, ...programForm }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update program");
-      }
 
       await fetchProgram();
       setEditingProgram(false);
@@ -118,15 +111,11 @@ export default function ProgramEditorPage() {
   const handleSavePhase = async (phaseId: string) => {
     setSaving(true);
     try {
-      const response = await fetch(`/api/admin/programs/${programId}/phases`, {
+      await apiFetchJson(`/api/admin/programs/${programId}/phases`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phaseId, ...phaseForm }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update phase");
-      }
 
       await fetchProgram();
       setEditingPhase(null);

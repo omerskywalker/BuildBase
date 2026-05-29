@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 
 interface Exercise {
   id: string;
@@ -26,14 +28,12 @@ export default function ExerciseSelector({
   useEffect(() => {
     async function fetchExercises() {
       try {
-        const response = await fetch(`/api/progress/exercises?userId=${userId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch exercises');
-        }
-        const data = await response.json();
+        const data = await apiFetchJson<{ exercises: Exercise[] }>(`/api/progress/exercises?userId=${userId}`);
         setExercises(data.exercises || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
