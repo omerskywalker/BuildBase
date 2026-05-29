@@ -31,12 +31,11 @@ BuildBase gives coaches and athletes a shared home for structured training. Coac
 
 | Layer | Tech |
 |---|---|
-| Frontend | React 19 + Vite, TypeScript, TailwindCSS, shadcn/ui, Framer Motion, Recharts |
-| Routing | wouter (lightweight SPA routing) |
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, Recharts |
 | Auth & DB | Supabase (Postgres + Row Level Security + Auth) |
-| API | Express 5, Node.js 24, TypeScript |
-| Monorepo | pnpm workspaces |
-| Build | esbuild (API), Vite (frontend) |
+| State | React Query (server), Zustand (client) |
+| Payments | Stripe |
+| Hosting | Vercel |
 
 ---
 
@@ -44,16 +43,18 @@ BuildBase gives coaches and athletes a shared home for structured training. Coac
 
 ```
 buildbase/
-├── artifacts/
-│   ├── buildbase/          # React SPA (Vite)
-│   │   └── src/
-│   │       ├── pages/      # All page components
-│   │       ├── components/ # Shared UI components
-│   │       └── lib/        # Auth context, API client, types, utils
-│   └── api-server/         # Express API server
-│       └── src/
-│           ├── routes/     # All API route handlers
-│           └── lib/        # Supabase server client, auth helpers
+├── app/                    # Next.js App Router
+│   ├── (app)/              # Protected athlete routes (dashboard, sessions, progress)
+│   ├── (auth)/             # Login, signup, password reset
+│   ├── (admin)/            # Admin routes (users, programs, overrides, analytics)
+│   ├── (coach)/            # Coach routes (clients, playbook)
+│   ├── api/                # API route handlers
+│   └── monitor/            # PIN-gated roadmap monitor
+├── components/             # Shared React components
+│   ├── ui/                 # shadcn/ui primitives
+│   ├── layout/             # Header, Sidebar
+│   └── quick-log/          # QuickLogModal sub-components
+├── lib/                    # Utilities, types, Supabase clients, validations
 └── supabase/
     ├── migrations/         # SQL migration files
     └── seed.sql            # 12-week program seed data
@@ -79,59 +80,50 @@ Row Level Security is enforced on every table. Athletes can only read/write thei
 
 ### Environment variables
 
-Create the following in your environment (Replit Secrets or `.env`):
+Copy `.env.local.example` or set these in your environment:
 
 ```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-### Install dependencies
+### Install & run
 
 ```bash
 pnpm install
-```
-
-### Run locally
-
-```bash
-# Start the API server (port 8080)
-pnpm --filter @workspace/api-server run dev
-
-# Start the React SPA (port from $PORT)
-pnpm --filter @workspace/buildbase run dev
-```
-
-### Typecheck
-
-```bash
-pnpm run typecheck
-```
-
-### Build
-
-```bash
-pnpm run build
+pnpm dev          # Next.js dev server
+pnpm typecheck    # tsc --noEmit
+pnpm test         # vitest run
+pnpm build        # production build
 ```
 
 ---
 
 ## API overview
 
-All routes are under `/api/` and require a Supabase Bearer token in the `Authorization` header.
+All routes are Next.js Route Handlers under `/api/`. Auth is handled via Supabase session cookies (set by `proxy.ts`).
 
 | Method | Route | Description |
 |---|---|---|
-| GET | `/api/dashboard` | Dashboard summary for current user |
 | GET | `/api/sessions` | Session list (grouped by week) |
 | POST | `/api/sessions` | Create a new session log |
-| PATCH | `/api/sessions/:id` | Update session (complete, effort, soreness) |
-| GET | `/api/progress` | Progress stats, milestones, trends |
+| PATCH | `/api/sessions/:id/complete` | Mark session complete |
+| POST | `/api/sessions/:id/effort` | Record effort score |
+| POST | `/api/sessions/:id/soreness` | Record soreness score |
+| GET | `/api/sessions/history` | Paginated session history |
 | POST | `/api/quick-log` | Log a freestyle workout by muscle group |
-| GET | `/api/coach/clients` | Coach: list all clients |
-| GET | `/api/coach/clients/:id` | Coach: client detail |
-| GET | `/api/admin/users` | Admin: all users |
-| GET | `/api/admin/programs` | Admin: all programs |
+| GET | `/api/progress/charts` | Per-exercise chart data |
+| GET/POST | `/api/coach/notes` | Coach notes CRUD |
+| GET/POST/PUT/DELETE | `/api/coach/playbook` | Playbook entries CRUD |
+| POST | `/api/coach/form-assessment` | Form assessment upsert |
+| GET/POST | `/api/admin/users` | User management |
+| POST | `/api/admin/enroll` | Enroll user in program |
+| GET/POST | `/api/admin/programs` | Program management |
+| GET/POST | `/api/admin/analytics` | Admin analytics |
+| POST | `/api/billing/webhook` | Stripe webhook handler |
 
 ---
 
@@ -140,7 +132,7 @@ All routes are under `/api/` and require a Supabase Bearer token in the `Authori
 - All data access is gated by Supabase RLS policies
 - `SECURITY DEFINER` functions (`auth_role()`, `is_my_client()`) prevent privilege escalation through policy bypasses
 - A BEFORE UPDATE trigger on `profiles` blocks non-admins from changing `role`, `coach_id`, or `email`
-- The API server verifies the Supabase JWT on every request via `getAuthUser()`
+- `proxy.ts` enforces auth gates and role-based route access (defense-in-depth — RLS is the real gate)
 - The frontend never exposes the service role key — only the anon key is used client-side
 
 ---
