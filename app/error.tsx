@@ -20,7 +20,7 @@ export default function RootError({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#EDE4D3",
+        background: "var(--color-bg-base)",
         padding: "24px",
         fontFamily: "var(--font-inter, Inter, sans-serif)",
       }}
@@ -30,8 +30,8 @@ export default function RootError({
           maxWidth: "480px",
           width: "100%",
           textAlign: "center",
-          background: "#E8DECE",
-          border: "1px solid #C8B99D",
+          background: "var(--color-bg-elevated)",
+          border: "1px solid var(--color-border-subtle)",
           borderRadius: "12px",
           padding: "48px 32px",
         }}
@@ -49,7 +49,7 @@ export default function RootError({
           style={{
             fontSize: "24px",
             fontWeight: 700,
-            color: "#2C1A10",
+            color: "var(--color-content-primary)",
             marginBottom: "8px",
             fontFamily: "var(--font-space-grotesk, Space Grotesk, sans-serif)",
           }}
@@ -59,7 +59,7 @@ export default function RootError({
         <p
           style={{
             fontSize: "16px",
-            color: "#6B5A48",
+            color: "var(--color-content-secondary)",
             marginBottom: "32px",
             lineHeight: 1.5,
           }}
@@ -69,7 +69,7 @@ export default function RootError({
         <button
           onClick={reset}
           style={{
-            background: "#C84B1A",
+            background: "var(--color-accent)",
             color: "#FEFCF8",
             border: "none",
             borderRadius: "8px",

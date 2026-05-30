@@ -50,25 +50,31 @@ export default function RootLayout({
     <html
       lang="en"
       className={`h-full ${inter.variable} ${spaceGrotesk.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("buildbase-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body
-        className="min-h-full antialiased"
+        className="min-h-full antialiased bg-bg-base text-content-primary"
         style={{
-          background: "#EDE4D3",
-          color: "#2C1A10",
           fontFamily: "var(--font-inter, Inter, sans-serif)",
         }}
       >
         {children}
         <Analytics />
         <Toaster
-          theme="dark"
+          theme="system"
           position="bottom-right"
           toastOptions={{
             style: {
-              background: "#E8DECE",
-              border: "1px solid #C8B99D",
-              color: "#2C1A10",
+              background: "var(--color-bg-elevated)",
+              border: "1px solid var(--color-border-subtle)",
+              color: "var(--color-content-primary)",
               fontFamily: "var(--font-inter, Inter, sans-serif)",
             },
           }}
