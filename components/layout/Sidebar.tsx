@@ -38,46 +38,19 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
   const items = getNavItems(role, hasCoach);
 
   return (
-    <aside
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: 220,
-        height: "100vh",
-        background: "#E5DAC8",
-        borderRight: "1px solid #C8B99D",
-        display: "flex",
-        flexDirection: "column",
-        padding: "20px 0",
-        zIndex: 20,
-      }}
-      className="hidden lg:flex"
-    >
+    <aside className="hidden lg:flex fixed top-0 left-0 w-[220px] h-screen bg-bg-surface border-r border-border-subtle flex-col py-5 z-20">
       {/* Logo */}
-      <div
-        style={{
-          padding: "0 20px 20px",
-          borderBottom: "1px solid #C8B99D",
-          marginBottom: 12,
-        }}
-      >
-        <Link href="/dashboard" style={{ textDecoration: "none" }}>
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              fontFamily: "var(--font-display, sans-serif)",
-            }}
-          >
-            <span style={{ color: "#1C3A2A" }}>Build</span>
-            <span style={{ color: "#C84B1A" }}>Base</span>
+      <div className="px-5 pb-5 border-b border-border-subtle mb-3">
+        <Link href="/dashboard" className="no-underline">
+          <span className="text-xl font-bold font-display">
+            <span className="text-brand">Build</span>
+            <span className="text-accent">Base</span>
           </span>
         </Link>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "0 12px", overflowY: "auto" }}>
+      <nav className="flex-1 px-3 overflow-y-auto">
         {items.map((item: NavItem) => {
           const Icon = ICON_MAP[item.icon];
           const isActive =
@@ -89,20 +62,12 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 12px",
-                borderRadius: 8,
-                color: isActive ? "#2C1A10" : "#6B5A48",
-                background: isActive ? "#DDD2BF" : "transparent",
-                textDecoration: "none",
-                fontSize: 14,
-                fontWeight: isActive ? 600 : 500,
-                marginBottom: 2,
-                transition: "background 0.1s, color 0.1s",
-              }}
+              className={[
+                "flex items-center gap-2.5 px-3 py-2 rounded-lg no-underline text-sm mb-0.5 transition-colors",
+                isActive
+                  ? "text-content-primary bg-bg-hover font-semibold"
+                  : "text-content-secondary bg-transparent font-medium hover:bg-bg-hover hover:text-content-primary",
+              ].join(" ")}
             >
               {Icon && <Icon size={16} />}
               {item.label}
@@ -112,16 +77,8 @@ export function Sidebar({ role, hasCoach }: SidebarProps) {
       </nav>
 
       {/* Role badge */}
-      <div style={{ padding: "12px 20px", borderTop: "1px solid #C8B99D" }}>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "#988A78",
-          }}
-        >
+      <div className="px-5 pt-3 border-t border-border-subtle">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-content-muted">
           {role}
         </span>
       </div>

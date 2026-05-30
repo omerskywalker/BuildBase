@@ -9,48 +9,19 @@ interface HeaderProps {
 
 export function Header({ fullName }: HeaderProps) {
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        background: "#E5DAC8",
-        borderBottom: "1px solid #C8B99D",
-        padding: "0 16px",
-        height: 56,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
+    <header className="sticky top-0 z-10 bg-bg-surface border-b border-border-subtle px-4 h-14 flex items-center justify-between">
       {/* Mobile logo */}
-      <span
-        className="lg:hidden"
-        style={{
-          fontSize: 18,
-          fontWeight: 700,
-          fontFamily: "var(--font-display, sans-serif)",
-        }}
-      >
-        <span style={{ color: "#1C3A2A" }}>Build</span>
-        <span style={{ color: "#C84B1A" }}>Base</span>
+      <span className="lg:hidden text-lg font-bold font-display">
+        <span className="text-brand">Build</span>
+        <span className="text-accent font-bold">Base</span>
       </span>
 
       {/* Spacer for desktop (sidebar takes left side) */}
       <div className="hidden lg:block" />
 
       {/* Right: user name + sign out */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span
-          style={{
-            fontSize: 13,
-            color: "#6B5A48",
-            maxWidth: 160,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
+      <div className="flex items-center gap-3">
+        <span className="text-[13px] text-content-secondary max-w-[160px] truncate">
           {fullName}
         </span>
 
@@ -58,19 +29,7 @@ export function Header({ fullName }: HeaderProps) {
           <button
             type="submit"
             title="Sign out"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "transparent",
-              border: "1px solid #C8B99D",
-              color: "#6B5A48",
-              cursor: "pointer",
-              transition: "border-color 0.15s, color 0.15s",
-            }}
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-transparent border border-border-subtle text-content-secondary cursor-pointer transition-colors hover:border-border-strong hover:text-content-primary"
           >
             <LogOut size={15} />
           </button>
