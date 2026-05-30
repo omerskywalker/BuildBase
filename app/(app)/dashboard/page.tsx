@@ -3,13 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, TrendingUp, BarChart3, ChevronRight } from "lucide-react";
+import { Dumbbell, TrendingUp, BarChart3, ChevronRight, Calendar, Trophy } from "lucide-react";
 import { calculateCurrentStreak } from "@/lib/milestone-utils";
 import { calculateProgressPercentage } from "@/lib/progress-utils";
 import StreakBadge from "@/components/StreakBadge";
 import CoachNotesBanner from "@/components/CoachNotesBanner";
 import LogWorkoutButton from "@/components/LogWorkoutButton";
 import GettingStartedCard from "@/components/GettingStartedCard";
+import WeeklyVolumeChart from "./WeeklyVolumeChart";
+import type { VolumeDataPoint } from "./WeeklyVolumeChart";
+import RecentPRs from "./RecentPRs";
+import type { PREntry } from "./RecentPRs";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -29,8 +33,8 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-1">
-        <h1 className="text-2xl font-bold text-content-primary font-display">
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-content-primary font-display">
           Welcome back, {firstName}
         </h1>
         <LogWorkoutButton />
@@ -95,6 +99,68 @@ async function DashboardWidgets({ userId, hasCoach }: { userId: string; hasCoach
   const nextWeek = nextTemplate
     ? Math.ceil(nextTemplate.session_number / 3)
     : null;
+
+  // ── Weekly Volume (last 7 days of set_logs) ──────────────────────────────
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const completedLogIds = completedLogs.map(l => l.id);
+
+  const { data: recentSetLogs } = completedLogIds.length > 0
+    ? await supabase
+        .from("set_logs")
+        .select("id, logged_at, session_log_id")
+        .in("session_log_id", completedLogIds)
+        .gte("logged_at", sevenDaysAgo.toISOString())
+        .eq("is_completed", true)
+    : { data: [] };
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const volumeByDay = new Map<string, number>();
+
+  // Pre-fill last 7 days
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const key = d.toISOString().slice(0, 10);
+    volumeByDay.set(key, 0);
+  }
+
+  for (const sl of recentSetLogs ?? []) {
+    const dateKey = sl.logged_at.slice(0, 10);
+    if (volumeByDay.has(dateKey)) {
+      volumeByDay.set(dateKey, (volumeByDay.get(dateKey) ?? 0) + 1);
+    }
+  }
+
+  const volumeData: VolumeDataPoint[] = Array.from(volumeByDay.entries()).map(
+    ([dateStr, sets]) => ({
+      day: dayNames[new Date(dateStr + "T12:00:00").getDay()],
+      sets,
+    })
+  );
+
+  // ── Upcoming Sessions (next 2-3 incomplete) ──────────────────────────────
+  const upcomingSessions = allTemplates
+    .filter(t => !completedTemplateIds.has(t.id))
+    .slice(0, 3);
+
+  // ── Recent PRs (heaviest weight per exercise) ────────────────────────────
+  const { data: recentPRs } = await supabase
+    .from("personal_records")
+    .select("weight, achieved_at, exercise:exercises(name)")
+    .eq("user_id", userId)
+    .order("achieved_at", { ascending: false })
+    .limit(5);
+
+  const prEntries: PREntry[] = (recentPRs ?? [])
+    .filter((pr: any) => pr.exercise?.name)
+    .map((pr: any) => ({
+      exerciseName: pr.exercise.name as string,
+      weight: pr.weight as number,
+      achievedAt: pr.achieved_at as string,
+    }));
 
   return (
     <div className="space-y-6">
@@ -200,6 +266,86 @@ async function DashboardWidgets({ userId, hasCoach }: { userId: string; hasCoach
           subtitle="Track your lifts"
         />
       </div>
+
+      {/* Bottom row: Weekly Volume + Upcoming Sessions + Recent PRs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Weekly Volume Chart */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-accent" />
+              Weekly Volume
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <WeeklyVolumeChart data={volumeData} />
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Sessions */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-brand" />
+                Upcoming
+              </CardTitle>
+              <Link
+                href="/sessions"
+                className="text-xs text-accent hover:text-accent-dim transition-colors flex items-center gap-0.5"
+              >
+                All <ChevronRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {upcomingSessions.length === 0 ? (
+              <p className="text-content-muted text-sm py-6 text-center">
+                All sessions complete!
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {upcomingSessions.map((t) => (
+                  <li key={t.id} className="flex items-center gap-3">
+                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-brand/10 flex items-center justify-center">
+                      <Dumbbell className="h-4 w-4 text-brand" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-content-primary truncate">
+                        {t.title}
+                      </div>
+                      <div className="text-xs text-content-muted">
+                        Week {t.week_number} · Day {t.day_label}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent PRs */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-warning" />
+                Recent PRs
+              </CardTitle>
+              <Link
+                href="/progress/milestones"
+                className="text-xs text-accent hover:text-accent-dim transition-colors flex items-center gap-0.5"
+              >
+                All <ChevronRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <RecentPRs prs={prEntries} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -237,6 +383,11 @@ function DashboardSkeleton() {
         <div className="h-20 bg-bg-elevated rounded-lg animate-pulse" />
         <div className="h-20 bg-bg-elevated rounded-lg animate-pulse" />
         <div className="h-20 bg-bg-elevated rounded-lg animate-pulse" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="h-64 bg-bg-elevated rounded-lg animate-pulse" />
+        <div className="h-64 bg-bg-elevated rounded-lg animate-pulse" />
+        <div className="h-64 bg-bg-elevated rounded-lg animate-pulse" />
       </div>
     </div>
   );
