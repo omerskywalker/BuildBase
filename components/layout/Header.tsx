@@ -2,6 +2,7 @@
 
 import { LogOut } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
   fullName: string;
@@ -19,11 +20,13 @@ export function Header({ fullName }: HeaderProps) {
       {/* Spacer for desktop (sidebar takes left side) */}
       <div className="hidden lg:block" />
 
-      {/* Right: user name + sign out */}
+      {/* Right: user name + theme toggle + sign out */}
       <div className="flex items-center gap-3">
         <span className="text-[13px] text-content-secondary max-w-[160px] truncate">
           {fullName}
         </span>
+
+        <ThemeToggle />
 
         <form action={signOut}>
           <button

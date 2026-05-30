@@ -10,15 +10,12 @@ export default async function HomePage() {
   if (user) redirect("/dashboard");
 
   return (
-    <main
-      className="min-h-screen flex flex-col"
-      style={{ background: "#EDE4D3" }}
-    >
+    <main className="min-h-screen flex flex-col bg-bg-base">
       {/* Nav */}
       <nav
         style={{
-          background: "#E5DAC8",
-          borderBottom: "1px solid #C8B99D",
+          background: "var(--color-bg-surface)",
+          borderBottom: "1px solid var(--color-border-subtle)",
           padding: "12px 24px",
           display: "flex",
           alignItems: "center",
@@ -32,19 +29,19 @@ export default async function HomePage() {
             fontFamily: "var(--font-space-grotesk, sans-serif)",
           }}
         >
-          <span style={{ color: "#1C3A2A" }}>Build</span>
-          <span style={{ color: "#C84B1A" }}>Base</span>
+          <span style={{ color: "var(--color-brand)" }}>Build</span>
+          <span style={{ color: "var(--color-accent)" }}>Base</span>
         </span>
         <div style={{ display: "flex", gap: 12 }}>
           <Link
             href="/login"
             style={{
               fontSize: 14,
-              color: "#2C1A10",
+              color: "var(--color-content-primary)",
               textDecoration: "none",
               padding: "8px 16px",
               borderRadius: 8,
-              border: "1px solid #C8B99D",
+              border: "1px solid var(--color-border-subtle)",
               transition: "background 0.15s",
             }}
           >
@@ -59,7 +56,7 @@ export default async function HomePage() {
               textDecoration: "none",
               padding: "8px 20px",
               borderRadius: 8,
-              background: "#C84B1A",
+              background: "var(--color-accent)",
               transition: "background 0.15s",
             }}
           >
@@ -77,19 +74,19 @@ export default async function HomePage() {
           className="text-5xl sm:text-6xl font-bold tracking-tight mb-6"
           style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
         >
-          <span style={{ color: "#1C3A2A" }}>Build</span>
-          <span style={{ color: "#C84B1A" }}>Base</span>
+          <span style={{ color: "var(--color-brand)" }}>Build</span>
+          <span style={{ color: "var(--color-accent)" }}>Base</span>
         </h1>
         <p
           className="text-xl sm:text-2xl max-w-lg mb-4"
-          style={{ color: "#2C1A10", lineHeight: 1.5 }}
+          style={{ color: "var(--color-content-primary)", lineHeight: 1.5 }}
         >
           Structured fitness coaching,{" "}
-          <span style={{ color: "#C84B1A", fontWeight: 600 }}>simplified</span>.
+          <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>simplified</span>.
         </p>
         <p
           className="text-base max-w-md mb-10"
-          style={{ color: "#6B5A48", lineHeight: 1.6 }}
+          style={{ color: "var(--color-content-secondary)", lineHeight: 1.6 }}
         >
           12-week strength programs with guided sessions, real-time set logging,
           and coach-driven form assessments — all in one place.
@@ -142,15 +139,15 @@ export default async function HomePage() {
       {/* Footer */}
       <footer
         style={{
-          borderTop: "1px solid #C8B99D",
+          borderTop: "1px solid var(--color-border-subtle)",
           padding: "16px 24px",
           textAlign: "center",
-          color: "#988A78",
+          color: "var(--color-content-muted)",
           fontSize: 12,
         }}
       >
-        <span style={{ color: "#1C3A2A" }}>Build</span>
-        <span style={{ color: "#C84B1A", fontWeight: 700 }}>Base</span>
+        <span style={{ color: "var(--color-brand)" }}>Build</span>
+        <span style={{ color: "var(--color-accent)", fontWeight: 700 }}>Base</span>
         <span> — structured strength coaching</span>
       </footer>
     </main>
@@ -169,25 +166,25 @@ function FeatureCard({
   return (
     <div
       style={{
-        background: "#E8DECE",
-        border: "1px solid #C8B99D",
+        background: "var(--color-bg-elevated)",
+        border: "1px solid var(--color-border-subtle)",
         borderRadius: 12,
         padding: "24px 20px",
       }}
     >
-      <div style={{ color: "#C84B1A", marginBottom: 12 }}>{icon}</div>
+      <div style={{ color: "var(--color-accent)", marginBottom: 12 }}>{icon}</div>
       <h3
         style={{
           fontSize: 16,
           fontWeight: 700,
-          color: "#2C1A10",
+          color: "var(--color-content-primary)",
           marginBottom: 8,
           fontFamily: "var(--font-space-grotesk, sans-serif)",
         }}
       >
         {title}
       </h3>
-      <p style={{ fontSize: 13, color: "#6B5A48", lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: "var(--color-content-secondary)", lineHeight: 1.5 }}>
         {description}
       </p>
     </div>
