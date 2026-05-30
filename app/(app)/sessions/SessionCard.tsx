@@ -227,13 +227,8 @@ export default function SessionCard({
                       <span className="text-xs text-content-muted">{templateExercise.exercise.muscle_group}</span>
                     )}
                     {getFormBadge(templateExercise.form_assessment_status) && (
-                      <span 
-                        className="text-xs font-medium px-2 py-1 rounded"
-                        style={{ 
-                          backgroundColor: "#F0FDF4", 
-                          color: "#2D7A3A",
-                          border: "1px solid #2D7A3A20"
-                        }}
+                      <span
+                        className="text-xs font-medium px-2 py-1 rounded text-success bg-success/10 border border-success/20"
                       >
                         {getFormBadge(templateExercise.form_assessment_status)}
                       </span>
