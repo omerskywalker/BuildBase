@@ -577,7 +577,7 @@ export const ROADMAP: RoadmapBatch[] = [
           "Missing explicit INSERT WITH CHECK policy on coach_form_assessments.",
           "Add migration: CREATE POLICY form_assessments_coach_insert ON coach_form_assessments FOR INSERT WITH CHECK (coach_id = auth.uid());",
         ].join("\n"),
-        status: "in-progress",
+        status: "done",
         tests: false,
         branch: "fix/form-assessment-rls",
         issue: 120,
