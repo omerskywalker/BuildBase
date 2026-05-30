@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CoachFormAssessment, Exercise, FormAssessmentStatus } from "@/lib/types";
 import { Loader2, CheckCircle, AlertTriangle, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 
 interface FormAssessmentPanelProps {
   clientId: string;
@@ -47,13 +48,11 @@ export default function FormAssessmentPanel({ clientId }: FormAssessmentPanelPro
 
   const fetchExercisesWithAssessments = useCallback(async () => {
     try {
-      const res = await fetch(`/api/coach/form-assessment?clientId=${clientId}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch form assessments');
-      }
-      const data = await res.json();
+      const data = await apiFetchJson<{ exercises: ExerciseWithAssessment[] }>(
+        `/api/coach/form-assessment?clientId=${clientId}`
+      );
       setExercises(data.exercises);
-      
+
       // Initialize local notes state
       const notesMap: Record<string, string> = {};
       data.exercises.forEach((ex: ExerciseWithAssessment) => {
@@ -77,27 +76,24 @@ export default function FormAssessmentPanel({ clientId }: FormAssessmentPanelPro
   const handleStatusChange = async (exerciseId: string, status: FormAssessmentStatus) => {
     setSaving(exerciseId);
     try {
-      const res = await fetch('/api/coach/form-assessment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId,
-          exerciseId,
-          status,
-          privateNotes: localNotes[exerciseId] || null,
-        }),
-      });
+      const updatedAssessment = await apiFetchJson<{ assessment: CoachFormAssessment }>(
+        '/api/coach/form-assessment',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId,
+            exerciseId,
+            status,
+            privateNotes: localNotes[exerciseId] || null,
+          }),
+        }
+      );
 
-      if (!res.ok) {
-        throw new Error('Failed to save assessment');
-      }
-
-      const updatedAssessment = await res.json();
-      
       // Update local state
-      setExercises(prev => 
-        prev.map(ex => 
-          ex.id === exerciseId 
+      setExercises(prev =>
+        prev.map(ex =>
+          ex.id === exerciseId
             ? { ...ex, assessment: updatedAssessment.assessment }
             : ex
         )
@@ -125,7 +121,7 @@ export default function FormAssessmentPanel({ clientId }: FormAssessmentPanelPro
 
     setSaving(exerciseId);
     try {
-      const res = await fetch('/api/coach/form-assessment', {
+      await apiFetchJson('/api/coach/form-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,10 +131,6 @@ export default function FormAssessmentPanel({ clientId }: FormAssessmentPanelPro
           privateNotes: localNotes[exerciseId] || null,
         }),
       });
-
-      if (!res.ok) {
-        throw new Error('Failed to save notes');
-      }
 
       await fetchExercisesWithAssessments(); // Refresh to get updated timestamps
       toast.success('Notes saved');

@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Edit, Settings, Dumbbell } from "lucide-react";
 import Link from "next/link";
+import { apiFetchJson } from "@/lib/api-helpers";
 
 interface ProgramWithPhases extends Program {
   phases?: Phase[];
@@ -31,11 +32,7 @@ export default function AdminProgramsPage() {
 
   const fetchPrograms = async () => {
     try {
-      const response = await fetch("/api/admin/programs");
-      if (!response.ok) {
-        throw new Error("Failed to fetch programs");
-      }
-      const data = await response.json();
+      const data = await apiFetchJson<ProgramWithPhases[]>("/api/admin/programs");
       setPrograms(data);
     } catch (error) {
       console.error("Error fetching programs:", error);

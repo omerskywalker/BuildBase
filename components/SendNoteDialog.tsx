@@ -14,6 +14,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MessageSquare, Send } from "lucide-react";
+import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 
 interface SendNoteDialogProps {
   clientId: string;
@@ -41,7 +43,7 @@ export default function SendNoteDialog({
     setError("");
 
     try {
-      const response = await fetch("/api/coach/notes", {
+      await apiFetchJson("/api/coach/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,16 +54,13 @@ export default function SendNoteDialog({
         }),
       });
 
-      if (response.ok) {
-        setMessage("");
-        setIsOpen(false);
-        onNoteSent?.();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to send note");
-      }
+      setMessage("");
+      setIsOpen(false);
+      onNoteSent?.();
     } catch (err) {
-      setError("Network error - please try again");
+      const message = err instanceof Error ? err.message : "Failed to send note";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

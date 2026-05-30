@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Settings, Save, X, Edit, Trash2, Plus } from "lucide-react";
+import { apiFetchJson } from "@/lib/api-helpers";
 import { getDefaultWeight } from "@/lib/utils";
 
 interface UserProgramData {
@@ -72,11 +73,7 @@ export function UserOverrideEditor({ userId }: { userId: string }) {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/overrides/users?user_id=${userId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-      const data = await response.json();
+      const data = await apiFetchJson<UserProgramData>(`/api/admin/overrides/users?user_id=${userId}`);
       setUserData(data);
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -126,15 +123,11 @@ export function UserOverrideEditor({ userId }: { userId: string }) {
         notes: editForm.notes,
       };
 
-      const response = await fetch("/api/admin/overrides", {
+      await apiFetchJson("/api/admin/overrides", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save override");
-      }
 
       await fetchUserData();
       handleEditCancel();
@@ -151,15 +144,11 @@ export function UserOverrideEditor({ userId }: { userId: string }) {
     }
 
     try {
-      const response = await fetch("/api/admin/overrides", {
+      await apiFetchJson("/api/admin/overrides", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: overrideId }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete override");
-      }
 
       await fetchUserData();
       toast.success("Override removed successfully");

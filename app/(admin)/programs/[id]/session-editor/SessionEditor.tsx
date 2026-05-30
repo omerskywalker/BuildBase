@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Save, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { apiFetchJson } from '@/lib/api-helpers';
 import type { WorkoutTemplate, TemplateExercise, Exercise } from '@/lib/types';
 import { ExerciseItem } from './ExerciseItem';
 import { ExerciseLibraryDialog } from './ExerciseLibraryDialog';
@@ -53,7 +54,7 @@ export function SessionEditor({ template, templateExercises, allExercises, progr
     
     try {
       // Update in database
-      const response = await fetch(`/api/admin/programs/${programId}/session-editor/reorder`, {
+      await apiFetchJson(`/api/admin/programs/${programId}/session-editor/reorder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,11 +62,7 @@ export function SessionEditor({ template, templateExercises, allExercises, progr
           exercises: newExercises.map(ex => ({ id: ex.id, order_index: ex.order_index }))
         })
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to reorder exercises');
-      }
-      
+
       setExercises(newExercises);
       toast.success('Exercise order updated');
     } catch (error) {
@@ -78,22 +75,19 @@ export function SessionEditor({ template, templateExercises, allExercises, progr
 
   const handleAddExercise = async (exerciseId: string) => {
     try {
-      const response = await fetch(`/api/admin/programs/${programId}/session-editor/exercises`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: template.id,
-          exerciseId,
-          orderIndex: exercises.length
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to add exercise');
-      }
-      
-      const { templateExercise } = await response.json();
-      
+      const { templateExercise } = await apiFetchJson<{ templateExercise: TemplateExercise & { exercise: Exercise } }>(
+        `/api/admin/programs/${programId}/session-editor/exercises`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: template.id,
+            exerciseId,
+            orderIndex: exercises.length
+          })
+        }
+      );
+
       setExercises(prev => [...prev, templateExercise]);
       toast.success('Exercise added to session');
       setIsLibraryOpen(false);
@@ -105,14 +99,10 @@ export function SessionEditor({ template, templateExercises, allExercises, progr
 
   const handleRemoveExercise = async (exerciseId: string) => {
     try {
-      const response = await fetch(`/api/admin/programs/${programId}/session-editor/exercises/${exerciseId}`, {
+      await apiFetchJson(`/api/admin/programs/${programId}/session-editor/exercises/${exerciseId}`, {
         method: 'DELETE'
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to remove exercise');
-      }
-      
+
       setExercises(prev => prev.filter(ex => ex.id !== exerciseId));
       toast.success('Exercise removed from session');
     } catch (error) {
@@ -123,18 +113,15 @@ export function SessionEditor({ template, templateExercises, allExercises, progr
 
   const handleUpdateExercise = async (exerciseId: string, updates: Partial<TemplateExercise>) => {
     try {
-      const response = await fetch(`/api/admin/programs/${programId}/session-editor/exercises/${exerciseId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update exercise');
-      }
-      
-      const { templateExercise } = await response.json();
-      
+      const { templateExercise } = await apiFetchJson<{ templateExercise: TemplateExercise & { exercise: Exercise } }>(
+        `/api/admin/programs/${programId}/session-editor/exercises/${exerciseId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        }
+      );
+
       setExercises(prev => prev.map(ex => ex.id === exerciseId ? { ...ex, ...templateExercise } : ex));
       toast.success('Exercise updated');
     } catch (error) {

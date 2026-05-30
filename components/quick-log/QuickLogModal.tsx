@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Dumbbell } from "lucide-react";
 import { toast } from "sonner";
+import { apiFetchJson } from "@/lib/api-helpers";
 import {
   getPresetExercises,
   type MuscleGroupKey,
@@ -36,7 +37,7 @@ export default function QuickLogModal({ open, onClose }: { open: boolean; onClos
     setSaving(true);
     try {
       const start = performance.now();
-      const res = await fetch("/api/quick-log", {
+      await apiFetchJson("/api/quick-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -44,7 +45,6 @@ export default function QuickLogModal({ open, onClose }: { open: boolean; onClos
           exercises: exercises.map(ex => ({ name: ex.name, muscleGroup: ex.muscleGroup, sets: ex.sets })),
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
       const elapsed = performance.now() - start;
       if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed));
       setSaved(true);
