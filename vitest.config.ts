@@ -6,7 +6,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
-    exclude: ["**/node_modules/**", "**/.migration-backup/**"],
+    exclude: ["**/node_modules/**", "**/.migration-backup/**", "**/.claude/**"],
     coverage: {
       provider: "v8",
       include: ["lib/**/*.ts"],
