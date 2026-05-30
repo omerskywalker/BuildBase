@@ -28,7 +28,7 @@ export default function LiftChart({ data, exerciseName, height = 300 }: LiftChar
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid 
           strokeDasharray="3 3" 
           stroke="#C8B99D" 

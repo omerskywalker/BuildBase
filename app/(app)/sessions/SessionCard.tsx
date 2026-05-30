@@ -141,17 +141,17 @@ export default function SessionCard({
   return (
     <Card className="transition-all duration-200">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-content-muted">Day {dayLabel}</span>
-            <span className="text-content-muted">•</span>
-            <h3 className="text-base font-semibold text-content-primary">{sessionTitle}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <span className="text-sm font-medium text-content-muted shrink-0">Day {dayLabel}</span>
+            <span className="text-content-muted hidden sm:inline">•</span>
+            <h3 className="text-sm sm:text-base font-semibold text-content-primary truncate">{sessionTitle}</h3>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${statusInfo.color}`}>
               {statusInfo.icon}
-              <span>{statusInfo.text}</span>
+              <span className="hidden sm:inline">{statusInfo.text}</span>
             </div>
             <button
               type="button"
@@ -219,7 +219,7 @@ export default function SessionCard({
               {!loadingExercises && exercises.map(({ templateExercise, setLogs }) => (
                 <div key={templateExercise.id} className="space-y-2">
                   {/* Exercise header */}
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="text-sm font-semibold text-content-primary">
                       {templateExercise.exercise?.name ?? "Exercise"}
                     </span>
@@ -234,14 +234,14 @@ export default function SessionCard({
                       </span>
                     )}
                     {templateExercise.coaching_cues && (
-                      <span className="text-xs text-content-secondary italic ml-auto">{templateExercise.coaching_cues}</span>
+                      <span className="text-xs text-content-secondary italic sm:ml-auto">{templateExercise.coaching_cues}</span>
                     )}
                     {templateExercise.exercise?.video_url && (
                       <a
                         href={templateExercise.exercise.video_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-auto text-content-muted hover:text-accent transition-colors"
+                        className="sm:ml-auto text-content-muted hover:text-accent transition-colors"
                         title="Watch demo video"
                       >
                         <Video className="w-4 h-4" />
@@ -250,11 +250,11 @@ export default function SessionCard({
                   </div>
 
                   {/* Column headers */}
-                  <div className="flex items-center gap-3 px-3 text-xs text-content-muted">
-                    <span className="w-6 text-center">Set</span>
+                  <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 text-xs text-content-muted">
+                    <span className="w-6 text-center shrink-0">Set</span>
                     <span className="flex-1">Weight</span>
-                    <span className="min-w-[84px] text-center">Reps</span>
-                    <span className="w-8" />
+                    <span className="min-w-[70px] sm:min-w-[84px] text-center">Reps</span>
+                    <span className="w-8 shrink-0" />
                   </div>
 
                   {/* Set rows */}

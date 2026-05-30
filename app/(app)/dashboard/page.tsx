@@ -29,8 +29,8 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-1">
-        <h1 className="text-2xl font-bold text-content-primary font-display">
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-content-primary font-display">
           Welcome back, {firstName}
         </h1>
         <LogWorkoutButton />

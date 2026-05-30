@@ -69,7 +69,7 @@ export default function ChartContainer({ userId }: ChartContainerProps) {
 
       {/* Chart Display */}
       <div className="lg:col-span-2">
-        <div className="bg-bg-elevated border border-border-subtle rounded-lg p-6">
+        <div className="bg-bg-elevated border border-border-subtle rounded-lg p-3 sm:p-6">
           {!selectedExerciseId ? (
             <div className="flex items-center justify-center h-80 text-content-muted text-sm">
               Select an exercise to view its progress chart

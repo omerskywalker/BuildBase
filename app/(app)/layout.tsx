@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div style={{ minHeight: "100vh", background: "#EDE4D3" }}>
       <Sidebar role={role} hasCoach={hasCoach} />
       <div className="lg:ml-[220px] flex flex-col min-h-screen">
-        <Header fullName={fullName} />
+        <Header fullName={fullName} role={role} hasCoach={hasCoach} />
         <main className="flex-1 px-4 py-6">{children}</main>
       </div>
     </div>
