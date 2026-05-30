@@ -329,6 +329,113 @@ describe('milestone-utils', () => {
       expect(result).toContain('halfway_hero');
     });
 
+    it('should award program_complete at 100% completion', () => {
+      const sessionLogs: SessionLog[] = Array.from({ length: 36 }, (_, i) => ({
+        id: `session${i + 1}`,
+        user_id: 'user1',
+        workout_template_id: `template${i + 1}`,
+        enrollment_id: 'enrollment1',
+        week_number: Math.floor(i / 3) + 1,
+        session_number: (i % 3) + 1,
+        started_at: `2024-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        completed_at: `2024-01-${String(i + 1).padStart(2, '0')}T11:00:00Z`,
+        is_complete: true,
+        post_session_effort: 3,
+        pre_session_soreness: null,
+        soreness_prompted: false,
+        notes: null,
+        created_at: `2024-01-${String(i + 1).padStart(2, '0')}T09:00:00Z`
+      }));
+
+      const result = checkNewMilestones(sessionLogs, [], [], 36);
+      expect(result).toContain('program_complete');
+    });
+
+    it('should award first_pr when personal records exist', () => {
+      const sessionLogs: SessionLog[] = [
+        {
+          id: '1',
+          user_id: 'user1',
+          workout_template_id: 'template1',
+          enrollment_id: 'enrollment1',
+          week_number: 1,
+          session_number: 1,
+          started_at: '2024-01-01T10:00:00Z',
+          completed_at: '2024-01-01T11:00:00Z',
+          is_complete: true,
+          post_session_effort: 3,
+          pre_session_soreness: null,
+          soreness_prompted: false,
+          notes: null,
+          created_at: '2024-01-01T09:00:00Z'
+        }
+      ];
+
+      const personalRecords: PersonalRecord[] = [
+        {
+          id: 'pr1',
+          user_id: 'user1',
+          exercise_id: 'exercise1',
+          weight: 100,
+          reps: 8,
+          achieved_at: new Date().toISOString(),
+          set_log_id: 'set1'
+        }
+      ];
+
+      const result = checkNewMilestones(sessionLogs, personalRecords, [], 36);
+      expect(result).toContain('first_pr');
+    });
+
+    it('should award phase_1_complete after 12 sessions in weeks 1-4', () => {
+      const sessionLogs: SessionLog[] = Array.from({ length: 12 }, (_, i) => ({
+        id: `session${i + 1}`,
+        user_id: 'user1',
+        workout_template_id: `template${i + 1}`,
+        enrollment_id: 'enrollment1',
+        week_number: Math.floor(i / 3) + 1,
+        session_number: (i % 3) + 1,
+        started_at: `2024-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        completed_at: `2024-01-${String(i + 1).padStart(2, '0')}T11:00:00Z`,
+        is_complete: true,
+        post_session_effort: 3,
+        pre_session_soreness: null,
+        soreness_prompted: false,
+        notes: null,
+        created_at: `2024-01-${String(i + 1).padStart(2, '0')}T09:00:00Z`
+      }));
+
+      const result = checkNewMilestones(sessionLogs, [], [], 36);
+      expect(result).toContain('phase_1_complete');
+    });
+
+    it('should not award phase_1_complete when fewer than 12 sessions in weeks 1-4', () => {
+      const sessionLogs: SessionLog[] = Array.from({ length: 6 }, (_, i) => ({
+        id: `session${i + 1}`,
+        user_id: 'user1',
+        workout_template_id: `template${i + 1}`,
+        enrollment_id: 'enrollment1',
+        week_number: Math.floor(i / 3) + 1,
+        session_number: (i % 3) + 1,
+        started_at: `2024-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        completed_at: `2024-01-${String(i + 1).padStart(2, '0')}T11:00:00Z`,
+        is_complete: true,
+        post_session_effort: 3,
+        pre_session_soreness: null,
+        soreness_prompted: false,
+        notes: null,
+        created_at: `2024-01-${String(i + 1).padStart(2, '0')}T09:00:00Z`
+      }));
+
+      const result = checkNewMilestones(sessionLogs, [], [], 36);
+      expect(result).not.toContain('phase_1_complete');
+    });
+
+    it('should not award any milestone when no sessions completed', () => {
+      const result = checkNewMilestones([], [], [], 36);
+      expect(result).toHaveLength(0);
+    });
+
     it('should not award already achieved milestones', () => {
       const sessionLogs: SessionLog[] = [
         {
