@@ -31,19 +31,19 @@ export default function WeightControl({
         type="button"
         onClick={() => onChange(Math.max(min, value - step))}
         disabled={disabled || value <= min}
-        className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover hover:text-content-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover hover:text-content-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium shrink-0"
         aria-label={`Decrease by ${step}`}
       >
         −
       </button>
-      <span className="min-w-[52px] text-center text-sm font-semibold text-content-primary">
-        {value} lbs
+      <span className="min-w-[44px] sm:min-w-[52px] text-center text-xs sm:text-sm font-semibold text-content-primary">
+        {value}<span className="hidden sm:inline"> lbs</span><span className="sm:hidden">lb</span>
       </span>
       <button
         type="button"
         onClick={() => onChange(value + step)}
         disabled={disabled}
-        className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover hover:text-content-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover hover:text-content-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium shrink-0"
         aria-label={`Increase by ${step}`}
       >
         +
