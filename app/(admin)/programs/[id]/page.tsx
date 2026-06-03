@@ -157,8 +157,8 @@ export default function ProgramEditorPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{ marginBottom: 24 }}>
+      <div className="p-4 sm:p-6">
+        <div className="mb-6">
           <Link href="/admin/programs">
             <Button variant="outline" size="sm" className="mb-4 flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
@@ -166,15 +166,15 @@ export default function ProgramEditorPage() {
             </Button>
           </Link>
         </div>
-        <p style={{ color: "#6B5A48" }}>Loading program...</p>
+        <p className="text-content-secondary">Loading program...</p>
       </div>
     );
   }
 
   if (!program) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{ marginBottom: 24 }}>
+      <div className="p-4 sm:p-6">
+        <div className="mb-6">
           <Link href="/admin/programs">
             <Button variant="outline" size="sm" className="mb-4 flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
@@ -182,25 +182,25 @@ export default function ProgramEditorPage() {
             </Button>
           </Link>
         </div>
-        <p style={{ color: "#B83020" }}>Program not found</p>
+        <p className="text-error">Program not found</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
+    <div className="p-4 sm:p-6">
+      <div className="mb-6">
         <Link href="/admin/programs">
           <Button variant="outline" size="sm" className="mb-4 flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Back to Programs
           </Button>
         </Link>
-        
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
+
+        <h1 className="text-xl sm:text-2xl font-bold text-content-primary font-display mb-1">
           Edit Program
         </h1>
-        <p style={{ color: "#6B5A48", fontSize: 14 }}>
+        <p className="text-sm text-content-secondary">
           Manage program details and phase structure
         </p>
       </div>
@@ -288,7 +288,7 @@ export default function ProgramEditorPage() {
               )}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="total_phases">Total Phases</Label>
                 {editingProgram ? (
@@ -426,8 +426,8 @@ export default function ProgramEditorPage() {
                     </CardHeader>
                     <CardContent>
                       {editingPhase === phase.id ? (
-                        <div style={{ display: "grid", gap: 12 }}>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <div className="grid gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <Label htmlFor={`week_start_${phase.id}`}>Start Week</Label>
                               <Input

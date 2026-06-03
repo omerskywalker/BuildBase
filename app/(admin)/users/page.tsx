@@ -152,23 +152,23 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk)", marginBottom: 16 }}>
+      <div className="p-4 sm:p-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-content-primary font-display mb-4">
           Users
         </h1>
-        <p style={{ color: "#6B5A48" }}>Loading users...</p>
+        <p className="text-content-secondary">Loading users...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C1A10", fontFamily: "var(--font-space-grotesk)", marginBottom: 4 }}>
+          <h1 className="text-xl sm:text-2xl font-bold text-content-primary font-display mb-1">
             Users
           </h1>
-          <p style={{ color: "#6B5A48", fontSize: 14 }}>
+          <p className="text-sm text-content-secondary">
             Manage user accounts, roles, and coach assignments
           </p>
         </div>
@@ -188,6 +188,7 @@ export default function AdminUsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="overflow-x-auto -mx-6 px-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -388,6 +389,7 @@ export default function AdminUsersPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

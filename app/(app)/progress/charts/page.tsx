@@ -15,16 +15,16 @@ export default async function ChartsPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
         <Link
           href="/progress"
-          className="inline-flex items-center gap-2 px-3 py-2 text-content-secondary hover:text-content-primary hover:bg-bg-hover rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 text-content-secondary hover:text-content-primary hover:bg-bg-hover rounded-lg transition-colors self-start"
         >
           <ArrowLeft size={16} />
           Back to Progress
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-content-primary font-display mb-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-content-primary font-display mb-1">
             Lift Charts
           </h1>
           <p className="text-sm text-content-secondary">

@@ -63,7 +63,7 @@ export default function SetRow({
 
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+      className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 rounded-lg transition-colors ${
         isLogged ? "bg-success/8 border border-success/20" : "bg-bg-surface border border-transparent"
       }`}
     >
@@ -88,12 +88,12 @@ export default function SetRow({
           type="button"
           onClick={() => setReps((r) => Math.max(1, r - 1))}
           disabled={isLogged || reps <= 1}
-          className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium shrink-0"
           aria-label="Decrease reps"
         >
           −
         </button>
-        <span className="min-w-[40px] text-center text-sm font-semibold text-content-primary">
+        <span className="min-w-[32px] sm:min-w-[40px] text-center text-xs sm:text-sm font-semibold text-content-primary">
           {reps}
           <span className="text-xs text-content-muted ml-0.5">r</span>
         </span>
@@ -101,7 +101,7 @@ export default function SetRow({
           type="button"
           onClick={() => setReps((r) => r + 1)}
           disabled={isLogged}
-          className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          className="w-7 h-7 flex items-center justify-center rounded-md text-content-secondary border border-border-subtle bg-bg-surface hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium shrink-0"
           aria-label="Increase reps"
         >
           +
