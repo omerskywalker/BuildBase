@@ -103,91 +103,52 @@ export default function CoachNotesBanner() {
   const coachName = latestNote.profiles?.full_name || "Your Coach";
 
   return (
-    <Card 
-      className="mb-6 border-l-4"
-      style={{ 
-        backgroundColor: "#FFF8F3", 
-        borderColor: "#C84B1A",
-        borderLeftColor: "#C84B1A"
-      }}
+    <Card
+      className="mb-6 border-l-4 border-accent"
+      style={{ backgroundColor: "#FFF8F3" }}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1">
-            <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#C84B1A" }}
-            >
-              <MessageSquare className="w-4 h-4" style={{ color: "#FEFCF8" }} />
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-accent">
+              <MessageSquare className="w-4 h-4 text-button-text" />
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <h3 
-                  style={{ 
-                    fontSize: 16, 
-                    fontWeight: 600, 
-                    color: "#2C1A10" 
-                  }}
-                >
+                <h3 className="text-base font-semibold text-content-primary">
                   New message from {coachName}
                 </h3>
-                <span 
-                  style={{ 
-                    fontSize: 12, 
-                    color: "#988A78",
-                    fontWeight: 500
-                  }}
-                >
+                <span className="text-xs text-content-muted font-medium">
                   {formatDate(latestNote.sent_at)}
                 </span>
               </div>
-              
-              <p 
-                style={{ 
-                  color: "#6B5A48", 
-                  fontSize: 14, 
-                  lineHeight: 1.5,
-                  marginBottom: 12
-                }}
-              >
+
+              <p className="text-content-secondary text-sm leading-relaxed mb-3">
                 {latestNote.message}
               </p>
-              
-              <Link 
-                href="/coach-notes" 
+
+              <Link
+                href="/coach-notes"
                 onClick={markAsRead}
               >
                 <Button
                   variant="outline"
                   size="sm"
-                  style={{
-                    backgroundColor: "transparent",
-                    borderColor: "#C84B1A",
-                    color: "#C84B1A",
-                    fontSize: 12,
-                    height: 32
-                  }}
-                  className="hover:bg-white"
+                  className="bg-transparent border-accent text-accent text-xs h-8 hover:bg-white"
                 >
                   View All Messages
                 </Button>
               </Link>
             </div>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
             onClick={handleDismiss}
             disabled={isDismissing}
-            style={{ 
-              color: "#988A78",
-              padding: 4,
-              height: "auto",
-              minWidth: "auto"
-            }}
-            className="hover:bg-transparent flex-shrink-0"
+            className="text-content-muted p-1 h-auto min-w-auto hover:bg-transparent flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </Button>

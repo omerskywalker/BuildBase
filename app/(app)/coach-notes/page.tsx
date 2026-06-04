@@ -89,87 +89,55 @@ function NoteCard({ note }: NoteCardProps) {
   const wasDismissed = !!note.dismissed_at;
   
   return (
-    <Card 
-      className={`${isUnread && !wasDismissed ? 'border-l-4' : ''}`}
-      style={{ 
-        backgroundColor: isUnread && !wasDismissed ? "#FFF8F3" : "#E8DECE",
-        borderLeftColor: isUnread && !wasDismissed ? "#C84B1A" : undefined
-      }}
+    <Card
+      className={`${isUnread && !wasDismissed ? 'border-l-4 border-l-accent' : ''} ${isUnread && !wasDismissed ? '' : 'bg-bg-elevated'}`}
+      style={isUnread && !wasDismissed ? { backgroundColor: "#FFF8F3" } : undefined}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div 
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: isUnread && !wasDismissed ? "#C84B1A" : "#B5A68C" }}
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUnread && !wasDismissed ? 'bg-accent' : 'bg-border-strong'}`}
           >
-            <MessageSquare 
-              className="w-4 h-4" 
-              style={{ color: "#FEFCF8" }} 
-            />
+            <MessageSquare className="w-4 h-4 text-button-text" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-2">
-              <h3 style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                color: "#2C1A10" 
-              }}>
+              <h3 className="text-base font-semibold text-content-primary">
                 {coachName}
               </h3>
-              
+
               <div className="flex items-center gap-3">
                 {note.read_at && (
                   <div className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" style={{ color: "#6B5A48" }} />
-                    <span style={{ 
-                      fontSize: 11, 
-                      color: "#6B5A48",
-                      fontWeight: 500
-                    }}>
+                    <Eye className="w-3 h-3 text-content-secondary" />
+                    <span className="text-[11px] text-content-secondary font-medium">
                       Read
                     </span>
                   </div>
                 )}
-                
+
                 {wasDismissed && (
                   <div className="flex items-center gap-1">
-                    <Check className="w-3 h-3" style={{ color: "#2D7A3A" }} />
-                    <span style={{ 
-                      fontSize: 11, 
-                      color: "#2D7A3A",
-                      fontWeight: 500
-                    }}>
+                    <Check className="w-3 h-3 text-success" />
+                    <span className="text-[11px] text-success font-medium">
                       Dismissed
                     </span>
                   </div>
                 )}
-                
-                <span style={{ 
-                  fontSize: 12, 
-                  color: "#988A78",
-                  fontWeight: 500
-                }}>
+
+                <span className="text-xs text-content-muted font-medium">
                   {formatRelativeDate(note.sent_at)}
                 </span>
               </div>
             </div>
-            
-            <p style={{ 
-              color: isUnread && !wasDismissed ? "#2C1A10" : "#6B5A48", 
-              fontSize: 14, 
-              lineHeight: 1.5,
-              fontWeight: isUnread && !wasDismissed ? 500 : 400
-            }}>
+
+            <p className={`text-sm leading-relaxed ${isUnread && !wasDismissed ? 'text-content-primary font-medium' : 'text-content-secondary font-normal'}`}>
               {note.message}
             </p>
-            
-            <div className="mt-3 pt-2" style={{ borderTop: "1px solid #C8B99D" }}>
-              <p style={{ 
-                fontSize: 12, 
-                color: "#988A78",
-                fontStyle: "italic"
-              }}>
+
+            <div className="mt-3 pt-2 border-t border-border-subtle">
+              <p className="text-xs text-content-muted italic">
                 Sent {formatDate(note.sent_at)}
                 {note.read_at && ` • Read ${formatDate(note.read_at)}`}
                 {wasDismissed && note.dismissed_at && ` • Dismissed ${formatDate(note.dismissed_at)}`}
@@ -204,32 +172,18 @@ export default async function CoachNotesPage() {
   if (!profile.coach_id) {
     return (
       <div>
-        <h1 style={{ 
-          fontSize: 28, 
-          fontWeight: 700, 
-          color: "#2C1A10", 
-          fontFamily: "var(--font-display)", 
-          marginBottom: 16 
-        }}>
+        <h1 className="text-[28px] font-bold text-content-primary font-display mb-4">
           Coach&apos;s Notes
         </h1>
-        
-        <Card style={{ backgroundColor: "#E8DECE" }}>
+
+        <Card className="bg-bg-elevated">
           <CardContent className="p-6 text-center">
-            <MessageSquare 
-              className="w-12 h-12 mx-auto mb-4" 
-              style={{ color: "#988A78" }} 
-            />
-            <h2 style={{ 
-              fontSize: 18, 
-              fontWeight: 600, 
-              color: "#2C1A10", 
-              marginBottom: 8 
-            }}>
+            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-content-muted" />
+            <h2 className="text-lg font-semibold text-content-primary mb-2">
               No Coach Assigned
             </h2>
-            <p style={{ color: "#6B5A48", fontSize: 14 }}>
-              You don&apos;t currently have a coach assigned to your account. 
+            <p className="text-content-secondary text-sm">
+              You don&apos;t currently have a coach assigned to your account.
               Contact support if you need assistance.
             </p>
           </CardContent>
@@ -242,41 +196,27 @@ export default async function CoachNotesPage() {
 
   return (
     <div>
-      <h1 style={{ 
-        fontSize: 28, 
-        fontWeight: 700, 
-        color: "#2C1A10", 
-        fontFamily: "var(--font-display)", 
-        marginBottom: 16 
-      }}>
+      <h1 className="text-[28px] font-bold text-content-primary font-display mb-4">
         Coach&apos;s Notes
       </h1>
-      
+
       {notes.length === 0 ? (
-        <Card style={{ backgroundColor: "#E8DECE" }}>
+        <Card className="bg-bg-elevated">
           <CardContent className="p-6 text-center">
-            <MessageSquare 
-              className="w-12 h-12 mx-auto mb-4" 
-              style={{ color: "#988A78" }} 
-            />
-            <h2 style={{ 
-              fontSize: 18, 
-              fontWeight: 600, 
-              color: "#2C1A10", 
-              marginBottom: 8 
-            }}>
+            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-content-muted" />
+            <h2 className="text-lg font-semibold text-content-primary mb-2">
               No Messages Yet
             </h2>
-            <p style={{ color: "#6B5A48", fontSize: 14 }}>
-              Your coach hasn&apos;t sent you any messages yet. 
+            <p className="text-content-secondary text-sm">
+              Your coach hasn&apos;t sent you any messages yet.
               Check back later or continue with your training program.
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          <p style={{ color: "#6B5A48", fontSize: 14, marginBottom: 20 }}>
-            All messages from your coach, newest first. 
+          <p className="text-content-secondary text-sm mb-5">
+            All messages from your coach, newest first.
             Unread messages are highlighted with an orange border.
           </p>
           
