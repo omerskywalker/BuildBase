@@ -45,6 +45,42 @@
   --font-mono:    "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
 
+/* ─── Dark theme overrides ───────────────────────────────── */
+.dark {
+  /* Backgrounds — deep warm browns ("dark leather journal") */
+  --color-bg-base:     #1A1512;
+  --color-bg-surface:  #221C17;
+  --color-bg-elevated: #2A231D;
+  --color-bg-hover:    #332B23;
+
+  /* Borders — warm dark tones */
+  --color-border-subtle: #3D3328;
+  --color-border-strong: #524636;
+
+  /* Content — inverted warm tones */
+  --color-content-primary:   #E8DFCF;
+  --color-content-secondary: #B5A790;
+  --color-content-muted:     #7D6F5E;
+
+  /* Brand — slightly brighter for contrast on dark */
+  --color-brand:       #2A6B48;
+  --color-accent:      #E05A25;
+  --color-accent-dim:  #A84418;
+
+  /* Semantic — brighter for dark bg readability */
+  --color-success: #3DA050;
+  --color-warning: #D99840;
+  --color-error:   #D44030;
+  --color-info:    #4878C0;
+
+  /* Effort scale — keep vibrant */
+  --color-effort-1: #E04040;
+  --color-effort-2: #F09020;
+  --color-effort-3: #FDD040;
+  --color-effort-4: #48A850;
+  --color-effort-5: #2D7A30;
+}
+
 /* ─── Base ───────────────────────────────────────────────── */
 body {
   background-color: var(--color-bg-base);

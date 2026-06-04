@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "./MobileNav";
 import type { UserRole } from "@/lib/types";
 
@@ -37,11 +38,13 @@ export function Header({ fullName, role = "user", hasCoach = false }: HeaderProp
         {/* Spacer for desktop (sidebar takes left side) */}
         <div className="hidden lg:block" />
 
-        {/* Right: user name + sign out */}
+        {/* Right: user name + theme toggle + sign out */}
         <div className="flex items-center gap-3">
           <span className="text-[13px] text-content-secondary max-w-[160px] truncate">
             {fullName}
           </span>
+
+          <ThemeToggle />
 
           <form action={signOut}>
             <button
