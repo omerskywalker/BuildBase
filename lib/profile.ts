@@ -22,6 +22,8 @@ export function getNavItems(role: UserRole, hasCoach: boolean): NavItem[] {
     userItems.push({ label: "Coach's Notes", href: "/coach-notes", icon: "MessageSquare" });
   }
 
+  userItems.push({ label: "Settings", href: "/settings", icon: "Settings" });
+
   const coachItems: NavItem[] = [
     { label: "Clients", href: "/clients", icon: "Users" },
     { label: "Playbook", href: "/playbook", icon: "BookOpen" },
