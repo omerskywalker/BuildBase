@@ -22,8 +22,8 @@ export default async function OnboardingPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-content-primary font-display mb-2">
             Welcome to{" "}
-            <span style={{ color: "#1C3A2A" }}>Build</span>
-            <span style={{ color: "#C84B1A", fontWeight: 700 }}>Base</span>
+            <span className="text-brand">Build</span>
+            <span className="text-accent font-bold">Base</span>
           </h1>
           <p className="text-sm text-content-secondary leading-relaxed">
             Let&apos;s get you set up with your personalized strength training program.

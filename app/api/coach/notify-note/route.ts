@@ -2,10 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 async function sendEmail(to: string, subject: string, html: string) {
-  // TODO: Wire up Resend/SendGrid when API key is configured
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // await resend.emails.send({ from: 'BuildBase <notifications@buildbase.io>', to, subject, html });
-  console.log(`[notify-note] Would send email to ${to}: ${subject}`);
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[notify-note] RESEND_API_KEY not set — skipping email to ${to}: ${subject}`);
+    return;
+  }
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: "BuildBase <notifications@buildbase.io>",
+    to,
+    subject,
+    html,
+  });
 }
 
 // POST /api/coach/notify-note - Send email notification for a new coach note
