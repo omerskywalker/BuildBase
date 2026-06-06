@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "@/components/NotificationBell";
 import { MobileNav } from "./MobileNav";
 import type { UserRole } from "@/lib/types";
 
@@ -45,6 +46,8 @@ export function Header({ fullName, role = "user", hasCoach = false }: HeaderProp
           </span>
 
           <ThemeToggle />
+
+          <NotificationBell />
 
           <form action={signOut}>
             <button

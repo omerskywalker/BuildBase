@@ -220,6 +220,21 @@ export interface UserExerciseOverride {
   set_by_profile?: { id: string; full_name: string | null; email: string };
 }
 
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+export type NotificationType = "coach_note" | "milestone" | "system";
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
 export interface SessionWeekGroup {
