@@ -20,6 +20,19 @@ describe("getNavItems — user role", () => {
     expect(items.map((i) => i.href)).toContain("/coach-notes");
   });
 
+  it("includes settings for all users", () => {
+    const items = getNavItems("user", false);
+    const hrefs = items.map((i) => i.href);
+    expect(hrefs).toContain("/settings");
+  });
+
+  it("places settings after other user items", () => {
+    const items = getNavItems("user", false);
+    const settingsIdx = items.findIndex((i) => i.href === "/settings");
+    const progressIdx = items.findIndex((i) => i.href === "/progress");
+    expect(settingsIdx).toBeGreaterThan(progressIdx);
+  });
+
   it("excludes coach and admin items", () => {
     const items = getNavItems("user", false);
     const hrefs = items.map((i) => i.href);
@@ -36,6 +49,11 @@ describe("getNavItems — coach role", () => {
     expect(hrefs).toContain("/dashboard");
     expect(hrefs).toContain("/clients");
     expect(hrefs).toContain("/playbook");
+  });
+
+  it("includes settings", () => {
+    const items = getNavItems("coach", false);
+    expect(items.map((i) => i.href)).toContain("/settings");
   });
 
   it("excludes admin items", () => {
@@ -55,6 +73,7 @@ describe("getNavItems — admin role", () => {
     expect(hrefs).toContain("/playbook");
     expect(hrefs).toContain("/admin/users");
     expect(hrefs).toContain("/admin/programs");
+    expect(hrefs).toContain("/settings");
   });
 });
 

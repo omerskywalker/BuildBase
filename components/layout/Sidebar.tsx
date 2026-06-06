@@ -12,6 +12,7 @@ import {
   UserCog,
   ClipboardList,
   BarChart3,
+  Settings,
 } from "lucide-react";
 import { getNavItems, type NavItem } from "@/lib/profile";
 import type { UserRole } from "@/lib/types";
@@ -26,6 +27,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   UserCog,
   ClipboardList,
   BarChart3,
+  Settings,
 };
 
 interface SidebarProps {
