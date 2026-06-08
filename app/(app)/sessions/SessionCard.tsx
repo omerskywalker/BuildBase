@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight, Play, CheckCircle, Loader2, Video } from "lu
 import { apiFetchJson } from "@/lib/api-helpers";
 import { toast } from "sonner";
 import SetRow from "./SetRow";
+import RestTimer from "./RestTimer";
 import EffortPrompt from "./EffortPrompt";
 import SorenessPrompt from "./SorenessPrompt";
 import SessionDetailModal from "./SessionDetailModal";
@@ -48,6 +49,7 @@ export default function SessionCard({
   const [sorenessPrompted, setSorenessPrompted] = useState(session.soreness_prompted ?? false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showRestTimer, setShowRestTimer] = useState(false);
 
   const isVirtual = session.id.startsWith("virtual-");
   const sessionLogId = realSessionId;
@@ -275,6 +277,7 @@ export default function SessionCard({
                               ? { setLogId: existing.id, weight: existing.weight_used, reps: existing.reps_completed }
                               : undefined
                           }
+                          onSetLogged={() => setShowRestTimer(true)}
                         />
                       );
                     })}
@@ -342,6 +345,10 @@ export default function SessionCard({
             userGender={userGender}
           />
         </CardContent>
+      )}
+
+      {showRestTimer && (
+        <RestTimer onClose={() => setShowRestTimer(false)} />
       )}
     </Card>
   );
