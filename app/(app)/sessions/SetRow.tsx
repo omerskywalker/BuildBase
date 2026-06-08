@@ -21,6 +21,7 @@ interface SetRowProps {
   tier: "pre_baseline" | "default" | "post_baseline";
   gender: "male" | "female" | "other" | "unset";
   existingLog?: LoggedSet;
+  onSetLogged?: () => void;
 }
 
 export default function SetRow({
@@ -30,6 +31,7 @@ export default function SetRow({
   tier,
   gender,
   existingLog,
+  onSetLogged,
 }: SetRowProps) {
   const defaultWeight = getDefaultWeight(templateExercise, tier, gender);
 
@@ -54,6 +56,7 @@ export default function SetRow({
         }),
       });
       setIsLogged(true);
+      onSetLogged?.();
     } catch {
       toast.error("Failed to log set");
     } finally {
