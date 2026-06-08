@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Calendar, Dumbbell, Clock } from "lucide-react";
 import { EFFORT_LABELS } from "@/lib/constants";
+import { ExportButton } from "./ExportButton";
 
 interface SearchParams {
   page?: string;
@@ -304,6 +305,7 @@ export default async function SessionHistoryPage({
             {total} completed {total === 1 ? "session" : "sessions"}
           </p>
         </div>
+        {total > 0 && <ExportButton />}
       </div>
 
       {/* Error state */}
